@@ -1,19 +1,27 @@
 #!/bin/bash
-echo "🧪 Running test..."
 
-if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" || "$(uname -s | grep -i mingw)" ]]; then
-  export SBT_OPTS="-Djline.terminal=none"
-  # On Windows: call PowerShell version
-  powershell.exe -NoProfile -Command "sbt test"
-else
-  # On macOS/Linux
-  sbt test
-fi
+protected_branch='master'
+protected_branch2='dev'
+current_branch=$(git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
+echo $current_branch
+echo $protected_branch
+if [[ $current_branch == $protected_branch || $current_branch == $protected_branch2 ]]; then
+  echo "🧪 Running test..."
 
-if [ $? -ne 0 ]; then
-  echo "❌ Test failed. Your push has been blocked."
-  exit 1
-else
-  echo "✅ Test passed!"
-  exit 0
+  if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" || "$(uname -s | grep -i mingw)" ]]; then
+    export SBT_OPTS="-Djline.terminal=none"
+    # On Windows: call PowerShell version
+    powershell.exe -NoProfile -Command "sbt test"
+  else
+    # On macOS/Linux
+    sbt test
+  fi
+
+  if [ $? -ne 0 ]; then
+    echo "❌ Test failed. Your push has been blocked."
+    exit 1
+  else
+    echo "✅ Test passed!"
+    exit 0
+  fi
 fi
