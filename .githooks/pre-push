@@ -3,8 +3,6 @@
 protected_branch='master'
 protected_branch2='dev'
 current_branch=$(git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
-echo $current_branch
-echo $protected_branch
 if [[ $current_branch == $protected_branch || $current_branch == $protected_branch2 ]]; then
   echo "🧪 Running test..."
 
