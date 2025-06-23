@@ -1,7 +1,8 @@
 {
   "scripts": {
     "docs:dev": "vitepress dev",
-    "docs:build": "vitepress build",
+    "docs:build-master": "VITEPRESS_BASE=/master vitepress build",
+    "docs:build-dev": "VITEPRESS_BASE=/dev vitepress build",
     "docs:preview": "vitepress preview"
   },
   "devDependencies": {
