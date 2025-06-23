@@ -24,6 +24,6 @@ export default defineConfig({
     socialLinks: [
       { icon: 'github', link: 'https://github.com/NickGhignatti/casymo' }
     ],
-    base: '/casymo/',
+    base: '/casymo',
   }
 })
