@@ -1,4 +1,5 @@
 import sbt.Keys.libraryDependencies
+import org.scalajs.linker.interface.ModuleSplitStyle
 
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
@@ -65,9 +66,25 @@ resetHooks := {
 }
 
 lazy val root = (project in file("."))
+  .enablePlugins(ScalaJSPlugin)
   .settings(
     name := "casymo",
-    libraryDependencies += "com.github.sbt" % "junit-interface" % "0.13.3" % Test,
-    // add scala test
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.18" % Test
+    scalaJSUseMainModuleInitializer := true,
+    scalaJSLinkerConfig ~= {
+      _.withModuleKind(ModuleKind.ESModule)
+        .withModuleSplitStyle(
+          ModuleSplitStyle.SmallModulesFor(List("test-drawing")))
+    },
+    libraryDependencies ++= Seq(
+      //Test dependencies
+      "com.github.sbt" % "junit-interface" % "0.13.3" % Test,
+      "org.scalatest" %%% "scalatest" % "3.2.18" % Test,
+
+      //ScalaJs dependencies
+      "org.scalameta" %%% "munit" % "1.1.1" % Test,
+      "org.scala-js" %%% "scalajs-dom" % "2.8.0",
+      "org.scala-js" %%% "scalajs-dom" % "2.8.0",
+      "com.raquo" %%% "laminar" % "17.0.0",
+
+    )
   )
