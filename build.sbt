@@ -5,15 +5,20 @@ ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / scalaVersion := "3.3.5"
 
 // Define a custom task to install Git hooks
-lazy val installGitHooks = taskKey[Unit]("Install Git hooks from the .githooks directory")
+lazy val installGitHooks =
+  taskKey[Unit]("Install Git hooks from the .githooks directory")
 
 installGitHooks := {
   val log = streams.value.log
-  val gitHooksDir = baseDirectory.value / ".githooks" // Directory containing your custom hooks
-  val targetDir = baseDirectory.value / ".git" / "hooks" // Git's hooks directory
+  val gitHooksDir =
+    baseDirectory.value / ".githooks" // Directory containing your custom hooks
+  val targetDir =
+    baseDirectory.value / ".git" / "hooks" // Git's hooks directory
 
   if (!targetDir.exists()) {
-    log.error("[ERROR] .git/hooks directory not found. Is this a Git repository?")
+    log.error(
+      "[ERROR] .git/hooks directory not found. Is this a Git repository?"
+    )
   } else {
     val hooks = (gitHooksDir * "*").get // Retrieve all files in .githooks
     hooks.foreach { hook =>
@@ -29,7 +34,8 @@ installGitHooks := {
 val hookInstalledFlag = file(".git/hooks/.hooks-installed")
 
 // Define a task to install hooks only if they haven't been installed yet
-lazy val installHooksIfNeeded = taskKey[Unit]("Install Git hooks if not yet installed")
+lazy val installHooksIfNeeded =
+  taskKey[Unit]("Install Git hooks if not yet installed")
 installHooksIfNeeded := {
   if (!hookInstalledFlag.exists()) {
     val log = streams.value.log
@@ -58,7 +64,9 @@ lazy val resetHooks = taskKey[Unit]("Remove the Git hooks installation flag")
 resetHooks := {
   if (hookInstalledFlag.exists()) {
     IO.delete(hookInstalledFlag)
-    println("[CLEANUP] Git hooks installation flag removed. Hooks will be reinstalled on next SBT startup.")
+    println(
+      "[CLEANUP] Git hooks installation flag removed. Hooks will be reinstalled on next SBT startup."
+    )
   } else {
     println("[INFO] No installation flag found. No action needed.")
   }
@@ -69,5 +77,7 @@ lazy val root = (project in file("."))
     name := "casymo",
     libraryDependencies += "com.github.sbt" % "junit-interface" % "0.13.3" % Test,
     // add scala test
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.18" % Test
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.18" % Test,
+    // add scalacheck
+    libraryDependencies += "org.scalatestplus" %% "scalacheck-1-18" % "3.2.19.0" % Test
   )
