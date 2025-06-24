@@ -2,8 +2,6 @@ package update
 
 import org.scalatest.funsuite.AnyFunSuite
 import model.SimulationState
-import update.Update
-import update.Event
 
 class TestUpdate extends AnyFunSuite {
 

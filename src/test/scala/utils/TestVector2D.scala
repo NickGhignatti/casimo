@@ -1,7 +1,6 @@
 package utils
 
 import org.scalatest.funsuite.AnyFunSuite
-import utils.Vector2D
 
 class TestVector2D extends AnyFunSuite {
 
