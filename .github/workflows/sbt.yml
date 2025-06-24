@@ -21,8 +21,9 @@ jobs:
         uses: sbt/setup-sbt@v1
       - name: Build and Test
         run: sbt +test
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Codecov
+        run: sbt coverage test coverageReport
+      - uses: codecov/codecov-action@v4
         with:
+          fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: target/scala-*/scoverage-report/scoverage.xml
