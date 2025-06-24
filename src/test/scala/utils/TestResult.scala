@@ -1,47 +1,42 @@
 package utils
 
+import org.scalatest.funsuite.AnyFunSuite
 import utils.Result.{Failure, Success}
-import org.junit.Test
-import org.junit.Assert.*
 
-class TestResult {
-  @Test
-  def testSuccess(): Unit = {
-    val result = Result.Success(42)
-    assertTrue(result.isSuccess)
-    assertFalse(result.isFailure)
-    assertEquals(
-      42,
-      result match
-        case Success(value) => value
-        case Failure(_)     => fail("Expected Success, but got Failure")
-    )
+class TestResult extends AnyFunSuite {
+
+  test("Success should be recognized as success") {
+    val result = Success(42)
+    assert(result.isSuccess)
+    assert(!result.isFailure)
+
+    result match {
+      case Success(value) => assert(value == 42)
+      case Failure(_)     => fail("Expected Success, but got Failure")
+    }
   }
 
-  @Test
-  def testFailure(): Unit = {
-    val result = Result.Failure("Error occurred")
-    assertFalse(result.isSuccess)
-    assertTrue(result.isFailure)
-    assertEquals(
-      "Error occurred",
-      result match
-        case Success(_)     => fail("Expected Failure, but got Success")
-        case Failure(error) => error
-    )
+  test("Failure should be recognized as failure") {
+    val result = Failure("Error occurred")
+    assert(!result.isSuccess)
+    assert(result.isFailure)
+
+    result match {
+      case Success(_)     => fail("Expected Failure, but got Success")
+      case Failure(error) => assert(error == "Error occurred")
+    }
   }
 
-  @Test
-  def testMap(): Unit = {
-    val successResult = Result.Success(10)
+  test("map should transform Success value") {
+    val successResult = Success(10)
     val mappedResult = successResult.map(_ * 2)
-    assertEquals(Result.Success(20), mappedResult)
+    assert(mappedResult == Success(20))
   }
 
-  @Test
-  def testFlatMap(): Unit = {
-    val successResult = Result.Success(5)
-    val flatMappedResult = successResult.flatMap(x => Result.Success(x + 5))
-    assertEquals(Result.Success(10), flatMappedResult)
+  test("flatMap should chain computations for Success") {
+    val successResult = Success(5)
+    val flatMappedResult = successResult.flatMap(x => Success(x + 5))
+    assert(flatMappedResult == Success(10))
   }
+
 }
