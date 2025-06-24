@@ -2,4 +2,4 @@
 
 ### Code coverage
 
-[![codecov](https://codecov.io/gh/NickGhignatti/casimo/branch/master/graph/badge.svg)](https://codecov.io/gh/NickGhignatti/casimo)
+[![codecov](https://codecov.io/gh/NickGhignatti/casimo/graph/badge.svg?token=EDIG866K8C)](https://codecov.io/gh/NickGhignatti/casimo)
