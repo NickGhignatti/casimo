@@ -1,15 +1,17 @@
 package update
 
+import org.scalatest.funsuite.AnyFunSuite
 import model.SimulationState
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import update.Update
+import update.Event
 
-class TestUpdate {
-  val initialState: SimulationState = model.SimulationState(List(), List())
+class TestUpdate extends AnyFunSuite {
 
-  @Test
-  def testUpdateWithoutStateChanges(): Unit = {
+  val initialState: SimulationState = SimulationState(List(), List())
+
+  test("update should leave state unchanged when no events affect it") {
     val endState = Update.update(initialState, Event.SimulationTick)
-    assertEquals(initialState, endState)
+    assert(endState === initialState)
   }
+
 }
