@@ -1,3 +1,3 @@
-package model.customers
+package model.entities.customers
 
 class Customer {}
