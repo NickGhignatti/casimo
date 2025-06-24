@@ -10,9 +10,12 @@ class TestResult {
     val result = Result.Success(42)
     assertTrue(result.isSuccess)
     assertFalse(result.isFailure)
-    assertEquals(42, result match
-      case Success(value) => value
-      case Failure(_) => fail("Expected Success, but got Failure"))
+    assertEquals(
+      42,
+      result match
+        case Success(value) => value
+        case Failure(_)     => fail("Expected Success, but got Failure")
+    )
   }
 
   @Test
@@ -20,9 +23,12 @@ class TestResult {
     val result = Result.Failure("Error occurred")
     assertFalse(result.isSuccess)
     assertTrue(result.isFailure)
-    assertEquals("Error occurred", result match
-      case Success(_) => fail("Expected Failure, but got Success")
-      case Failure(error) => error)
+    assertEquals(
+      "Error occurred",
+      result match
+        case Success(_)     => fail("Expected Failure, but got Success")
+        case Failure(error) => error
+    )
   }
 
   @Test
