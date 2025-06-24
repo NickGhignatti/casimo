@@ -1,61 +1,47 @@
 package utils
 
-import utils.Result.{Failure, Success}
-import org.junit.Test
-import org.junit.Assert.*
+import org.scalatest.funsuite.AnyFunSuite
 
-class TestVector2D {
-  @Test
-  def testAddition(): Unit = {
+class TestVector2D extends AnyFunSuite {
+
+  test("addition of two vectors") {
     val v1 = Vector2D(1.0, 2.0)
     val v2 = Vector2D(3.0, 4.0)
     val result = v1 + v2
-    assertEquals(Vector2D(4.0, 6.0), result)
+    assert(result === Vector2D(4.0, 6.0))
   }
 
-  @Test
-  def testSubtraction(): Unit = {
+  test("subtraction of two vectors") {
     val v1 = Vector2D(5.0, 7.0)
     val v2 = Vector2D(2.0, 3.0)
-    val result = v1 - v2
-    assertEquals(Vector2D(3.0, 4.0), result)
+    assert((v1 - v2) === Vector2D(3.0, 4.0))
   }
 
-  @Test
-  def testMoltiplication(): Unit = {
+  test("multiplication by scalar") {
     val v = Vector2D(2.0, 3.0)
-    val scalar = 4.0
-    val result = v * scalar
-    assertEquals(Vector2D(8.0, 12.0), result)
+    assert((v * 4.0) === Vector2D(8.0, 12.0))
   }
 
-  @Test
-  def testDivision(): Unit = {
+  test("division by scalar") {
     val v = Vector2D(8.0, 12.0)
-    val scalar = 4.0
-    val result = v / scalar
-    assertEquals(Vector2D(2.0, 3.0), result)
+    assert((v / 4.0) === Vector2D(2.0, 3.0))
   }
 
-  @Test
-  def testDotProduct(): Unit = {
+  test("dot product of two vectors") {
     val v1 = Vector2D(1.0, 2.0)
     val v2 = Vector2D(3.0, 4.0)
-    val result = v1 dot v2
-    assertEquals(11.0, result, 0.0001)
+    assert(Math.abs((v1 dot v2) - 11.0) < 1e-6)
   }
 
-  @Test
-  def testNormalization(): Unit = {
+  test("normalization of a vector") {
     val v = Vector2D(3.0, 4.0)
     val normalized = v.normalize
-    assertEquals(Vector2D(0.6, 0.8), normalized)
+    assert(normalized === Vector2D(0.6, 0.8))
   }
 
-  @Test
-  def testEquality(): Unit = {
+  test("equality of identical vectors") {
     val v1 = Vector2D(1.0, 2.0)
     val v2 = Vector2D(1.0, 2.0)
-    assertEquals(v1, v2)
+    assert(v1 === v2)
   }
 }
