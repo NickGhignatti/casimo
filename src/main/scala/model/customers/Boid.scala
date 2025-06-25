@@ -9,21 +9,35 @@ object Boid:
   trait Context:
     def boids: Seq[Boid]
 
-  case class Parameters(maxSpeed: Double, perceptionRadius: Double, avoidRadius: Double,
-                                alignmentWeight: Double, cohesionWeight: Double, separationWeight: Double)
+  case class Parameters(
+      maxSpeed: Double,
+      perceptionRadius: Double,
+      avoidRadius: Double,
+      alignmentWeight: Double,
+      cohesionWeight: Double,
+      separationWeight: Double
+  )
 
-case class Boid(position: Vector2D, velocity: Vector2D = Vector2D.Zero, parameters: Boid.Parameters):
+case class Boid(
+    position: Vector2D,
+    velocity: Vector2D = Vector2D.Zero,
+    parameters: Boid.Parameters
+):
   import Boid.Context
   def update(context: Context): Boid =
     given Context = context
     val nearbyPositions = nearbyBoids.map(_.position)
     val nearbyVelocities = nearbyBoids.map(_.velocity)
 
-    val alignmentForce = parameters.alignmentWeight * alignment(nearbyVelocities)
+    val alignmentForce =
+      parameters.alignmentWeight * alignment(nearbyVelocities)
     val cohesionForce = parameters.cohesionWeight * cohesion(nearbyPositions)
-    val separationForce = parameters.separationWeight * separation(nearbyPositions)
+    val separationForce =
+      parameters.separationWeight * separation(nearbyPositions)
 
-    val newVelocity = (velocity + alignmentForce + cohesionForce + separationForce).capped(parameters.maxSpeed)
+    val newVelocity =
+      (velocity + alignmentForce + cohesionForce + separationForce)
+        .capped(parameters.maxSpeed)
     this.copy(position = position + newVelocity, velocity = newVelocity)
 
   extension (v: Vector2D)
@@ -32,7 +46,9 @@ case class Boid(position: Vector2D, velocity: Vector2D = Vector2D.Zero, paramete
       if mag > max then max * v.normalize else v
 
   private def nearbyBoids(using context: Context): Seq[Boid] =
-    context.boids.filter(boid => distance(boid.position, position) <= parameters.perceptionRadius)
+    context.boids.filter(boid =>
+      distance(boid.position, position) <= parameters.perceptionRadius
+    )
 
   private def alignment(velocities: Seq[Vector2D]): Vector2D =
     if velocities.isEmpty then Vector2D(0, 0)
