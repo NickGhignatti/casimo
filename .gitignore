@@ -1,5 +1,3 @@
-target/
-!.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
@@ -39,6 +37,7 @@ build/
 
 ### VS Code ###
 .vscode/
+!.vscode/extensions.json
 
 ### Mac OS ###
 .DS_Store
@@ -48,3 +47,36 @@ build/
 
 ### IDE ###
 .idea/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# sbt specific
+dist/*
+target/
+lib_managed/
+src_managed/
+../project/boot/
+../project/plugins/project/
+../project/local-plugins.sbt
+.history
+.ensime
+.ensime_cache/
+.sbt-scripted/
+local.sbt
+
+# Metals
+.bloop/
+.metals/
+metals.sbt

@@ -20,3 +20,11 @@ jobs:
         uses: sbt/setup-sbt@v1
       - name: Build and Test
         run: sbt +test
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: sbt clean coverage test coverageReport
+      - uses: codecov/codecov-action@v2
+        with:
+          fail_ci_if_error: true

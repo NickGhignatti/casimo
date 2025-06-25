@@ -1,0 +1,164 @@
+package view
+
+import com.raquo.laminar.api.L.{*, given}
+import org.scalajs.dom
+
+import scala.scalajs
+import scala.scalajs.js
+import scala.scalajs.js.annotation.*
+
+@js.native @JSImport("/javascript.svg", JSImport.Default)
+val javascriptLogo: String = js.native
+
+def InitView(): Unit =
+  renderOnDomContentLoaded(
+    dom.document.getElementById("app"),
+    Main.appElement()
+  )
+
+  object Main:
+    val model = new Model
+    import model.*
+
+    def appElement(): Element =
+      div(
+        h1("Live Chart"),
+        renderDataTable(),
+        renderDataList(),
+        counterButton()
+      )
+
+    def renderDataTable(): Element =
+      table(
+        thead(
+          tr(
+            th("Label"),
+            th("Price"),
+            th("Count"),
+            th("Full price"),
+            th("Action")
+          )
+        ),
+        tbody(children <-- dataSignal.split(_.id) { (id, initial, itemSignal) =>
+          renderDataItem(id, itemSignal)
+        }),
+        tfoot(
+          tr(
+            td(
+              button("➕", onClick --> (_ => addDataItem(DataItem())))
+            )
+          ),
+          td(),
+          td(),
+          td(
+            child.text <-- dataSignal.map(data =>
+              "%.2f".format(data.map(_.fullPrice).sum)
+            )
+          )
+        )
+      )
+
+    def renderDataItem(id: DataItemID, itemSignal: Signal[DataItem]): Element =
+      tr(
+        td(
+          inputForString(
+            itemSignal.map(_.label),
+            makeDataItemUpdater(
+              id,
+              { (item, newLabel) => item.copy(label = newLabel) }
+            )
+          )
+        ),
+        td(
+          inputForDoubles(
+            itemSignal.map(_.price),
+            makeDataItemUpdater(
+              id,
+              { (item, newPrice) => item.copy(price = newPrice) }
+            )
+          )
+        ),
+        td(
+          inputForInt(
+            itemSignal.map(_.count),
+            makeDataItemUpdater(
+              id,
+              { (item, newCount) => item.copy(count = newCount) }
+            )
+          )
+        ),
+        td(
+          child.text <-- itemSignal.map(item => "%.2f".format(item.fullPrice))
+        ),
+        td(button("🗑️", onClick --> (_ => removeDataItem(id))))
+      )
+    def inputForString(
+        valueSignal: Signal[String],
+        valueUpdater: Observer[String]
+    ): Input =
+      input(
+        typ := "text",
+        value <-- valueSignal,
+        onInput.mapToValue --> valueUpdater
+      )
+
+    def inputForDoubles(
+        valueSignal: Signal[Double],
+        valueUpdater: Observer[Double]
+    ): Input =
+      val strValue = Var[String]("")
+      input(
+        typ := "text",
+        value <-- strValue.signal,
+        onInput.mapToValue --> strValue,
+        valueSignal --> strValue.updater[Double] { (prevStr, newValue) =>
+          if prevStr.toDoubleOption.contains(newValue)
+          then prevStr
+          else newValue.toString
+        },
+        strValue.signal --> { valueStr =>
+          valueStr.toDoubleOption.foreach(valueUpdater.onNext)
+        }
+      )
+
+    def inputForInt(
+        valueSignal: Signal[Int],
+        valueUpdater: Observer[Int]
+    ): Input =
+      input(
+        typ := "text",
+        controlled(
+          value <-- valueSignal.map(_.toString),
+          onInput.mapToValue.map(_.toIntOption).collect { case Some(newCount) =>
+            newCount
+          } --> valueUpdater
+        )
+      )
+
+    def makeDataItemUpdater[A](
+        id: DataItemID,
+        f: (DataItem, A) => DataItem
+    ): Observer[A] =
+      dataVar.updater { (data, newValue) =>
+        data.map { item => if item.id == id then f(item, newValue) else item }
+      }
+
+    def renderDataList(): Element =
+      ul(
+        children <-- dataSignal.split(_.id) { (id, initial, itemSignal) =>
+          li(
+            child.text <-- itemSignal.map(item =>
+              s"${item.label}, ${item.price}, ${item.count} "
+            )
+          )
+        }
+      )
+
+  def counterButton(): Element =
+    val counter = Var(0)
+    button(
+      typ := "button",
+      "count is ",
+      child.text <-- counter,
+      onClick --> { event => counter.update(c => c + 1) }
+    )
