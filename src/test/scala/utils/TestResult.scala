@@ -39,4 +39,14 @@ class TestResult extends AnyFunSuite {
     assert(flatMappedResult == Success(10))
   }
 
+  test("getOrElse should return value for Success") {
+    val successResult = Success(100)
+    assert(successResult.getOrElse(0) == 100)
+  }
+
+  test("getOrElse should return default for Failure") {
+    val failureResult = Failure("Something went wrong")
+    assert(failureResult.getOrElse(42) == 42)
+  }
+
 }
