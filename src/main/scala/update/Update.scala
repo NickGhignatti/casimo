@@ -11,7 +11,8 @@ object Update {
   def update(state: SimulationState, event: Event): SimulationState =
     event match {
       case SimulationTick            => update(state, UpdateCustomersPosition)
-      case UpdateCustomersPosition   => update(state, UpdateGames)
+      case UpdateCustomersPosition   =>
+        update(state.copy(customers = state.customers.map(_.update(state))), UpdateGames)
       case UpdateGames               => update(state, UpdateSimulationBankrolls)
       case UpdateSimulationBankrolls => update(state, UpdateCustomersState)
       case UpdateCustomersState      => state

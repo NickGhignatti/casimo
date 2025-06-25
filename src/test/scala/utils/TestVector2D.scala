@@ -1,6 +1,7 @@
 package utils
 
 import org.scalatest.funsuite.AnyFunSuite
+import utils.Vector2D.*
 
 class TestVector2D extends AnyFunSuite {
 
@@ -19,7 +20,7 @@ class TestVector2D extends AnyFunSuite {
 
   test("multiplication by scalar") {
     val v = Vector2D(2.0, 3.0)
-    assert((v * 4.0) === Vector2D(8.0, 12.0))
+    assert((4.0 * v) === Vector2D(8.0, 12.0))
   }
 
   test("division by scalar") {
@@ -43,5 +44,11 @@ class TestVector2D extends AnyFunSuite {
     val v1 = Vector2D(1.0, 2.0)
     val v2 = Vector2D(1.0, 2.0)
     assert(v1 === v2)
+  }
+
+  test("distance of two vectors") {
+    val v1 = Vector2D(1.0, 2.0)
+    val v2 = Vector2D(4.0, 6.0)
+    assert(Math.abs(Vector2D.distance(v1, v2) - 5.0) < 1e-6)
   }
 }
