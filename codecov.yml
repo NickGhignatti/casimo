@@ -1,0 +1,9 @@
+coverage:
+  status:
+    project:
+      master:
+        branches:
+          - master
+      dev:
+        branches:
+          - develop
