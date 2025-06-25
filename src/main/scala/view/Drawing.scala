@@ -1,5 +1,6 @@
 package view
 
+import com.raquo.laminar.api.L.{*, given}
 import model.SimulationState
 import org.scalajs.dom
 
