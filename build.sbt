@@ -67,9 +67,8 @@ resetHooks := {
     println(
       "[CLEANUP] Git hooks installation flag removed. Hooks will be reinstalled on next SBT startup."
     )
-  } else {
+  } else
     println("[INFO] No installation flag found. No action needed.")
-  }
 }
 
 lazy val root = (project in file("."))

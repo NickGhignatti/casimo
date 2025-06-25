@@ -1,3 +1,3 @@
 package model.entities.customers
 
-class Customer {}
+class Customer
