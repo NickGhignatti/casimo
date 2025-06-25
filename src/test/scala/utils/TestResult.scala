@@ -33,10 +33,22 @@ class TestResult extends AnyFunSuite {
     assert(mappedResult == Success(20))
   }
 
+  test("map should return Failure unchanged") {
+    val failureResult = Failure("An error")
+    val mappedResult = failureResult.map(_ => 42)
+    assert(mappedResult == Failure("An error"))
+  }
+
   test("flatMap should chain computations for Success") {
     val successResult = Success(5)
     val flatMappedResult = successResult.flatMap(x => Success(x + 5))
     assert(flatMappedResult == Success(10))
+  }
+
+  test("flatMap should return Failure unchanged") {
+    val failureResult = Failure("An error")
+    val flatMappedResult = failureResult.flatMap(_ => Success(5))
+    assert(flatMappedResult == Failure("An error"))
   }
 
   test("getOrElse should return value for Success") {
