@@ -1,6 +1,5 @@
 package view
 
-import com.raquo.laminar.api.L.{*, given}
 import model.SimulationState
 import org.scalajs.dom
 
@@ -18,159 +17,45 @@ def InitView(): Unit =
   )
 
   object Main:
-    val model = new Model
-    import model.*
-
     def appElement(): Element =
       div(
-        h1("Live Chart"),
-        renderDataTable(),
-        renderDataList(),
-        counterButton(),
-        exampleButton()
-      )
-
-    def renderDataTable(): Element =
-      table(
-        thead(
-          tr(
-            th("Label"),
-            th("Price"),
-            th("Count"),
-            th("Full price"),
-            th("Action")
+        cls := "main-application",
+        height := "98vh",
+        width := "99vw",
+        // Canvas centered
+        div(
+          cls := "canvas-wrapper",
+          canvasTag(
+            cls := "simulation-canvas",
+            onMountCallback { ctx =>
+              val cnv = ctx.thisNode.ref
+              // Kick off drawing loop or simulation here
+              drawInitial(cnv)
+            }
           )
         ),
-        tbody(children <-- dataSignal.split(_.id) { (id, initial, itemSignal) =>
-          renderDataItem(id, itemSignal)
-        }),
-        tfoot(
-          tr(
-            td(
-              button("➕", onClick --> (_ => addDataItem(DataItem())))
-            )
+        // Bottom controls
+        div(
+          cls := "bottom-controls",
+          button(
+            "Start",
+            onClick --> { _ =>
+              update.Update.update(
+                SimulationState(List(), List()),
+                update.Event.SimulationTick
+              )
+            }
           ),
-          td(),
-          td(),
-          td(
-            child.text <-- dataSignal.map(data =>
-              "%.2f".format(data.map(_.fullPrice).sum)
-            )
-          )
+          button("Pause", onClick --> { _ => println("Pause clicked") }),
+          button("Resume", onClick --> { _ => println("Resume clicked") })
         )
       )
 
-    def renderDataItem(id: DataItemID, itemSignal: Signal[DataItem]): Element =
-      tr(
-        td(
-          inputForString(
-            itemSignal.map(_.label),
-            makeDataItemUpdater(
-              id,
-              { (item, newLabel) => item.copy(label = newLabel) }
-            )
-          )
-        ),
-        td(
-          inputForDoubles(
-            itemSignal.map(_.price),
-            makeDataItemUpdater(
-              id,
-              { (item, newPrice) => item.copy(price = newPrice) }
-            )
-          )
-        ),
-        td(
-          inputForInt(
-            itemSignal.map(_.count),
-            makeDataItemUpdater(
-              id,
-              { (item, newCount) => item.copy(count = newCount) }
-            )
-          )
-        ),
-        td(
-          child.text <-- itemSignal.map(item => "%.2f".format(item.fullPrice))
-        ),
-        td(button("🗑️", onClick --> (_ => removeDataItem(id))))
-      )
-    def inputForString(
-        valueSignal: Signal[String],
-        valueUpdater: Observer[String]
-    ): Input =
-      input(
-        typ := "text",
-        value <-- valueSignal,
-        onInput.mapToValue --> valueUpdater
-      )
+    private val signalBus = new EventBus[String] // your MVU dispatch
+    def events: EventStream[String] = signalBus.events
 
-    def inputForDoubles(
-        valueSignal: Signal[Double],
-        valueUpdater: Observer[Double]
-    ): Input =
-      val strValue = Var[String]("")
-      input(
-        typ := "text",
-        value <-- strValue.signal,
-        onInput.mapToValue --> strValue,
-        valueSignal --> strValue.updater[Double] { (prevStr, newValue) =>
-          if prevStr.toDoubleOption.contains(newValue)
-          then prevStr
-          else newValue.toString
-        },
-        strValue.signal --> { valueStr =>
-          valueStr.toDoubleOption.foreach(valueUpdater.onNext)
-        }
-      )
-
-    def inputForInt(
-        valueSignal: Signal[Int],
-        valueUpdater: Observer[Int]
-    ): Input =
-      input(
-        typ := "text",
-        controlled(
-          value <-- valueSignal.map(_.toString),
-          onInput.mapToValue.map(_.toIntOption).collect { case Some(newCount) =>
-            newCount
-          } --> valueUpdater
-        )
-      )
-
-    def makeDataItemUpdater[A](
-        id: DataItemID,
-        f: (DataItem, A) => DataItem
-    ): Observer[A] =
-      dataVar.updater { (data, newValue) =>
-        data.map { item => if item.id == id then f(item, newValue) else item }
-      }
-
-    def renderDataList(): Element =
-      ul(
-        children <-- dataSignal.split(_.id) { (id, initial, itemSignal) =>
-          li(
-            child.text <-- itemSignal.map(item =>
-              s"${item.label}, ${item.price}, ${item.count} "
-            )
-          )
-        }
-      )
-
-  def counterButton(): Element =
-    val counter = Var(0)
-    button(
-      typ := "button",
-      "count is ",
-      child.text <-- counter,
-      onClick --> { event => counter.update(c => c + 1) }
-    )
-
-  def exampleButton(): Element =
-    button(
-      typ := "button",
-      "Click me",
-      onClick --> { event =>
-        update.Update
-          .update(SimulationState(List(), List()), update.Event.SimulationTick)
-      }
-    )
+    def drawInitial(canvas: dom.html.Canvas): Unit =
+      val ctx =
+        canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
+      ctx.fillStyle = "#fff"
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
