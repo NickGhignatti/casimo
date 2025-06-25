@@ -1,6 +1,7 @@
 package view
 
 import com.raquo.laminar.api.L.{*, given}
+import model.SimulationState
 import org.scalajs.dom
 
 import scala.scalajs
@@ -25,7 +26,8 @@ def InitView(): Unit =
         h1("Live Chart"),
         renderDataTable(),
         renderDataList(),
-        counterButton()
+        counterButton(),
+        exampleButton()
       )
 
     def renderDataTable(): Element =
@@ -161,4 +163,14 @@ def InitView(): Unit =
       "count is ",
       child.text <-- counter,
       onClick --> { event => counter.update(c => c + 1) }
+    )
+
+  def exampleButton(): Element =
+    button(
+      typ := "button",
+      "Click me",
+      onClick --> { event =>
+        update.Update
+          .update(SimulationState(List(), List()), update.Event.SimulationTick)
+      }
     )
