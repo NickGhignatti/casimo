@@ -1,21 +1,24 @@
 #!/bin/bash
+ignored_branch='docs'
+current_branch=$(git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
 
-echo "⚙️  Execute scalafmtCheck..."
+if [[ $current_branch != $ignored_branch ]]; then
+  echo "⚙️  Execute scalafmtCheck..."
 
+  if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" || "$(uname -s | grep -i mingw)" ]]; then
+    export SBT_OPTS="-Djline.terminal=none"
+    # On Windows: call PowerShell version
+    powershell.exe -NoProfile -Command "sbt scalafmtCheck"
+  else
+    # On macOS/Linux
+    sbt scalafmtCheck
+  fi
 
-if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" || "$(uname -s | grep -i mingw)" ]]; then
-  export SBT_OPTS="-Djline.terminal=none"
-  # On Windows: call PowerShell version
-  powershell.exe -NoProfile -Command "sbt scalafmtCheck"
-else
-  # On macOS/Linux
-  sbt scalafmtCheck
-fi
-
-if [ $? -ne 0 ]; then
-  echo "❌ Code is not properly formatted. Please run 'sbt scalafmt'."
-  exit 1
-else
-echo "✅ scalafmtCheck passed!"
-exit 0
+  if [ $? -ne 0 ]; then
+    echo "❌ Code is not properly formatted. Please run 'sbt scalafmt'."
+    exit 1
+  else
+  echo "✅ scalafmtCheck passed!"
+  exit 0
+  fi
 fi
