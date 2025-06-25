@@ -19,7 +19,7 @@ class TestGame extends AnyFunSuite {
     val first = game.lock()
     assert(first.isSuccess, "First lock should succeed")
 
-    val lockedGame = first.unpack()
+    val lockedGame = first.getOrElse(game)
     lockedGame.lock() match {
       case Failure(newGame) => assert(newGame === lockedGame)
       case _                => fail("Expected Failure when locking full game")
