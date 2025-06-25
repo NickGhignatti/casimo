@@ -2,7 +2,6 @@ package model.entities.games
 
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.TryValues
-import scala.util.{Success, Failure}
 
 class TestGameState extends AnyFunSuite with TryValues {
 
