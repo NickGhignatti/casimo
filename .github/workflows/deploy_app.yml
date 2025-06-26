@@ -2,26 +2,41 @@ name: WebApp Deployment
 on: [push, pull_request]
 
 jobs:
-  build:
-    strategy:
-      fail-fast: false
+  deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
+
       - name: Setup JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 23
-      - name: Setup sbt launcher
+
+      - name: Setup sbt
         uses: sbt/setup-sbt@v1
-      - uses: actions/checkout@v2
-      - run: npm install && npm run build
-      - name: Publish gh-pages
-        uses: peaceiris/actions-gh-pages@v3
+
+      - name: Build Scala.js + npm assets
+        run: |
+          sbt fastOptJS
+          npm install
+          npm run build
+
+      - name: Prepare docs folder
+        run: |
+          mkdir -p docs/app
+          cp -r dist/* docs/app/
+
+      - name: Deploy via gh-pages action
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist              # where your built app outputs
-          destination_dir: app            # subfolder path on gh-pages
-          keep_files: true                 # keeps root docs intact
+          publish_branch: gh-pages
+          publish_dir: ./docs
+          keep_files: true      # ✅ Preserve existing documentation
+          force_orphan: false
