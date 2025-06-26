@@ -34,21 +34,23 @@ installGitHooks := {
 // Define a flag file to indicate hooks have been installed
 val hookInstalledFlag = file(".git/hooks/.hooks-installed")
 
-// Define a task to install hooks only if they haven't been installed yet
-lazy val installHooksIfNeeded =
-  taskKey[Unit]("Install Git hooks if not yet installed")
-installHooksIfNeeded := {
+lazy val installHooksIfNeeded = taskKey[Unit]("Install Git hooks if not yet installed")
+
+installHooksIfNeeded := Def.taskDyn {
   if (!hookInstalledFlag.exists()) {
-    val log = streams.value.log
-    log.info("Installing Git hooks...")
-    installGitHooks.value
-    IO.write(hookInstalledFlag, "ok") // Create the flag file
-    log.success("Git hooks installed successfully.")
+    Def.task {
+      val log = streams.value.log
+      log.info("Git hooks not found — running installGitHooks...")
+      installGitHooks.value
+      IO.write(hookInstalledFlag, "installed")
+      log.success("Git hooks installation complete.")
+    }
   } else {
-    val log = streams.value.log
-    log.info("Git hooks already installed. Skipping.")
+    Def.task {
+      //streams.value.log.info("Git hooks already installed; skipping.")
+    }
   }
-}
+}.value
 
 // Automatically run the installHooksIfNeeded task when SBT starts
 Global / onLoad := {
@@ -75,12 +77,12 @@ resetHooks := {
 lazy val root = (project in file("."))
   .enablePlugins(ScalaJSPlugin)
   .settings(
-    name := "casymo",
+    name := "casimo",
     scalaJSUseMainModuleInitializer := true,
     scalaJSLinkerConfig ~= {
       _.withModuleKind(ModuleKind.ESModule)
         .withModuleSplitStyle(
-          ModuleSplitStyle.SmallModulesFor(List("test-drawing"))
+          ModuleSplitStyle.SmallModulesFor(List("casimo"))
         )
     },
     libraryDependencies ++= Seq(
