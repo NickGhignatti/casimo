@@ -1,4 +1,4 @@
-name: CI
+name: WebApp Deployment
 on: [push, pull_request]
 
 jobs:
@@ -7,6 +7,15 @@ jobs:
       fail-fast: false
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 23
+      - name: Setup sbt launcher
+        uses: sbt/setup-sbt@v1
       - uses: actions/checkout@v2
       - run: npm install && npm run build
       - name: Publish gh-pages
