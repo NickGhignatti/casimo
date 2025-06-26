@@ -83,16 +83,11 @@ lazy val root = (project in file("."))
           ModuleSplitStyle.SmallModulesFor(List("test-drawing"))
         )
     },
-    libraryDependencies += "com.github.sbt" % "junit-interface" % "0.13.3" % Test,
-    // add scala test
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.18" % Test,
-    // add scalacheck
-    libraryDependencies += "org.scalatestplus" %% "scalacheck-1-18" % "3.2.19.0" % Test,
     libraryDependencies ++= Seq(
       // Test dependencies
       "com.github.sbt" % "junit-interface" % "0.13.3" % Test,
       "org.scalatest" %%% "scalatest" % "3.2.18" % Test,
-
+      "org.scalatestplus" %%% "scalacheck-1-18" % "3.2.19.0" % Test,
       // ScalaJs dependencies
       "org.scalameta" %%% "munit" % "1.1.1" % Test,
       "org.scala-js" %%% "scalajs-dom" % "2.8.0",

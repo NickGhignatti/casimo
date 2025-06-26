@@ -31,11 +31,11 @@ class TestBet extends AnyFunSuite:
 
   test(
     "creating a RouletteBet with empty targets should throw IllegalArgumentException"
-  )
-  val ex = intercept[IllegalArgumentException] {
-    RouletteBet(50.0, List.empty)
-  }
+  ):
+    val ex = intercept[IllegalArgumentException] {
+      RouletteBet(50.0, List.empty)
+    }
 
-  assert(
-    ex.getMessage === "requirement failed: Roulette bet must have at least one target"
-  )
+    assert(
+      ex.getMessage === "requirement failed: Roulette bet must have at least one target"
+    )
