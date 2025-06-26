@@ -22,4 +22,6 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+          publish_dir: ./dist              # where your built app outputs
+          destination_dir: app            # subfolder path on gh-pages
+          keep_files: true                 # keeps root docs intact
