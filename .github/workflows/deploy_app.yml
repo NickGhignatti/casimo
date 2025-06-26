@@ -20,3 +20,6 @@ jobs:
       - run: npm install && npm run build
       - name: Publish gh-pages
         uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.DEPLOY_GH_TOKEN }}
+          publish_dir: ./dist
