@@ -93,7 +93,6 @@ lazy val root = (project in file("."))
       // ScalaJs dependencies
       "org.scalameta" %%% "munit" % "1.1.1" % Test,
       "org.scala-js" %%% "scalajs-dom" % "2.8.0",
-      "org.scala-js" %%% "scalajs-dom" % "2.8.0",
       "com.raquo" %%% "laminar" % "17.0.0"
     )
   )
