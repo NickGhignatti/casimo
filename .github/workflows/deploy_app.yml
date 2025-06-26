@@ -15,34 +15,19 @@ jobs:
         with:
           distribution: temurin
           java-version: 23
-
       - name: Setup sbt launcher
         uses: sbt/setup-sbt@v1
 
-      # Build Scala.js
+      # Add Scala.js build step
       - name: Build Scala.js
         run: sbt fullOptJS
 
-      # Build frontend assets
       - run: npm install && npm run build
-
-      # Prepare deployment with app in subdirectory
-      - name: Prepare deployment
-        run: |
-          # Create app subdirectory
-          mkdir -p dist/app
-          
-          # Move app files to subdirectory
-          cp index.html dist/app/
-          cp style.css dist/app/
-          mkdir -p dist/app/js
-          cp target/scala-3.3.5/casymo-fastopt/*.js dist/app/js/
-          
-          # Keep existing documentation in root
-          # (Assuming your docs are built elsewhere)
 
       - name: Publish gh-pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
+          # Add this to deploy to a separate URL
+          publish_branch: gh-pages-app
