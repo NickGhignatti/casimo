@@ -5,15 +5,23 @@ import update.Event.*
 
 import scala.annotation.tailrec
 
-object Update {
+object Update:
 
   @tailrec
   def update(state: SimulationState, event: Event): SimulationState =
-    event match {
-      case SimulationTick            => update(state, UpdateCustomersPosition)
-      case UpdateCustomersPosition   => update(state, UpdateGames)
-      case UpdateGames               => update(state, UpdateSimulationBankrolls)
-      case UpdateSimulationBankrolls => update(state, UpdateCustomersState)
-      case UpdateCustomersState      => state
-    }
-}
+    event match
+      case SimulationTick =>
+        println("Simulation tick event received, updating state...")
+        update(state, UpdateCustomersPosition)
+      case UpdateCustomersPosition =>
+        println("Updating customers' positions...")
+        update(state, UpdateGames)
+      case UpdateGames =>
+        println("Updating games...")
+        update(state, UpdateSimulationBankrolls)
+      case UpdateSimulationBankrolls =>
+        println("Updating simulation bankrolls...")
+        update(state, UpdateCustomersState)
+      case UpdateCustomersState =>
+        println("Updating customers' state...")
+        state
