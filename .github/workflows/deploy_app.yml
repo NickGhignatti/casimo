@@ -47,7 +47,7 @@ jobs:
 
       - name: Prepare deploy directory
         run: |
-          cp -r target/scala-*/casymo-fastopt/*.js .
+          cp -r casimo/target/scala-*/casymo-fastopt/*.js .
 
       - name: Configure Pages
         uses: actions/configure-pages@v3
