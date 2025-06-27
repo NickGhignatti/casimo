@@ -3,7 +3,7 @@ name: Deploy Scala.js to GitHub Pages
 on:
   push:
     branches:
-      - main  # or master, whichever you use
+      - ci-build
 
 jobs:
   build-deploy:
