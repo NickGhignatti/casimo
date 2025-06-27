@@ -1,33 +1,64 @@
-name: WebApp Deployment
-on: [push, pull_request]
+name: Deploy Scala.js to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main  # or master, whichever you use
 
 jobs:
-  build:
-    strategy:
-      fail-fast: false
+  build-deploy:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
 
-      - name: Setup JDK
-        uses: actions/setup-java@v4
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
         with:
           distribution: temurin
-          java-version: 23
-      - name: Setup sbt launcher
-        uses: sbt/setup-sbt@v1
+          java-version: '17'
 
-      # Add Scala.js build step
-      - name: Build Scala.js
-        run: sbt fullOptJS
-
-      - run: npm install && npm run build
-
-      - name: Publish gh-pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Install Node.js (for Scala.js if needed)
+        uses: actions/setup-node@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-          # Add this to deploy to a separate URL
-          publish_branch: gh-pages-app
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Cache sbt dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.ivy2/cache
+            ~/.sbt
+            ~/.coursier
+          key: ${{ runner.os }}-sbt-${{ hashFiles('**/build.sbt') }}
+
+      - name: Build Scala.js
+        run: |
+          sbt clean fastOptJS fullOptJS
+
+      - name: Prepare deploy directory
+        run: |
+          mkdir -p deploy
+          cp index.html deploy/
+          cp -R target/scala-*/casymo-fastopt/*.js deploy/js/
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v3
+
+      - name: Upload to Pages
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: deploy/
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
