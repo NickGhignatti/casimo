@@ -1,68 +1,16 @@
-name: Deploy Scala.js to GitHub Pages
-
-on:
-  push:
-    branches:
-      - ci-build
+name: deploy_app
+on: [push, pull_request]
 
 jobs:
   build:
+    strategy:
+      fail-fast: false
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
-      - name: Setup Java
-        uses: actions/setup-java@v3
+      - uses: actions/checkout@v2
+      - run: npm install && npm run build
+      - name: Publish gh-pages
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Install Node.js (for Scala.js if needed)
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-         # cache: 'npm'
-
-      - name: Cache sbt dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.ivy2/cache
-            ~/.sbt
-            ~/.coursier
-          key: ${{ runner.os }}-sbt-${{ hashFiles('**/build.sbt') }}
-
-      - name: Setup sbt launcher
-        uses: sbt/setup-sbt@v1
-
-      - name: Build Scala.js
-        run: |
-          sbt clean fastOptJS fullOptJS
-
-      - name: Prepare deploy directory
-        run: |
-          cp -r target/scala-*/casimo-fastopt/*.js .
-
-      - name: Upload to Pages
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: .
-
-  # Deployment job
-  deploy:
-    environment:
-      name: github-pages
-      url: $   steps.deployment.outputs.page_url
-    needs: build
-    runs-on: ubuntu-latest
-    name: Deploy
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
