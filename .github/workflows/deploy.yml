@@ -1,69 +1,66 @@
-# Sample workflow for building and deploying a VitePress site to GitHub Pages
-#
-name: Deploy VitePress site to Pages
+# Simple workflow for deploying static content to GitHub Pages
+name: Deploy static content to Pages
 
 on:
-  # Runs on pushes targeting the `main` branch. Change this to `master` if you're
-  # using the `master` branch as the default branch.
+  # Runs on pushes targeting the default branch
   push:
-    branches: [master]
+    branches: ['master', 'ci-build']
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+# Sets the GITHUB_TOKEN permissions to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+# Allow one concurrent deployment
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: 'pages'
+  cancel-in-progress: true
 
 jobs:
-  # Build job
-  build:
+  # Single deploy job since we're just deploying
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
+      - name: Setup JDK
+        uses: actions/setup-java@v4
         with:
-          fetch-depth: 0 # Not needed if lastUpdated is not enabled
-      # - uses: pnpm/action-setup@v3 # Uncomment this block if you're using pnpm
-      #   with:
-      #     version: 9 # Not needed if you've set "packageManager" in package.json
-      # - uses: oven-sh/setup-bun@v1 # Uncomment this if you're using Bun
-      - name: Setup Node
+          distribution: temurin
+          java-version: 23
+      - name: Setup sbt launcher
+        uses: sbt/setup-sbt@v1
+      - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
-          # cache: npm # or pnpm / yarn
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
+          node-version: lts/*
+          cache: 'npm'
       - name: Install dependencies
-        run: npm ci # or pnpm install / yarn install / bun install
-        working-directory: ./docs
-      - name: Build with VitePress
-        run: npm run docs:build
-        working-directory: ./docs
+        run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Build docs
+        run: |
+          cd ./docs
+          npm ci
+          npm run docs:build
+          cd ..
+          mkdir -p ./dist/docs
+          cp -r ./docs/.vitepress/dist/* ./dist/docs
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/.vitepress/dist
-
-  # Deployment job
-  deploy:
-    environment:
-      name: github-pages
-      url: $   steps.deployment.outputs.page_url
-    needs: build
-    runs-on: ubuntu-latest
-    name: Deploy
-    steps:
+          # Upload dist folder
+          path: './dist'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
