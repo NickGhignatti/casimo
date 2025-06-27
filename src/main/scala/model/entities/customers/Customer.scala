@@ -1,13 +1,11 @@
 package model.entities.customers
 
-import scala.util.Random
+import utils.Vector2D
 
 final class CustomerID
 
-case class Customer(id: CustomerID, x: Double, y: Double)
+case class Customer(id: CustomerID, pos: Vector2D)
 
 object Customer:
-  def apply(x: Double, y: Double): Customer =
-    Customer(CustomerID(), x, y)
-
-type CustomerList = List[Customer]
+  def apply(pos: Vector2D): Customer =
+    Customer(CustomerID(), pos)

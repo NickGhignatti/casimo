@@ -3,126 +3,84 @@ package view
 import com.raquo.laminar.api.L.*
 import com.raquo.laminar.nodes.ReactiveHtmlElement
 import model.SimulationState
-import model.entities.customers.{Customer, CustomerID}
 import org.scalajs.dom
-import org.scalajs.dom.HTMLCanvasElement
-import update.Update
+import org.scalajs.dom.{CanvasRenderingContext2D, HTMLCanvasElement}
+import update.{Event, Update}
+import utils.Vector2D
 
-import scala.:+
 import scala.scalajs.js
-import scala.util.Random
 
-def InitView(): Unit =
-  renderOnDomContentLoaded(
-    dom.document.getElementById("app"),
-    View.appElement()
-  )
-object View:
-  val stage = mainCanvas()
+class View(state: SimulationState):
 
-  val viewModel = ViewModel()
-  import viewModel.*
+  private val canvasWidth = 800
+  private val canvasHeight = 500
 
-  def appElement(): Element =
+  private val model = Var(state)
+  private val eventBus = new EventBus[Event]
+
+  // UPDATE LOGIC
+  eventBus.events
+    .scanLeft(model.now())((m, e) => Update.update(m, e))
+    .foreach(model.set)(unsafeWindowOwner)
+
+  private val stage = mainCanvas()
+  private val ctx =
+    stage.ref.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
+
+  def appElement(): HtmlElement =
     div(
       cls := "main-application",
-      height := "98vh",
-      width := "99vw",
+      h1("Casino Simulation"),
+      div(cls := "canvas-wrapper", stage),
       div(
-        cls := "canvas-wrapper",
-        stage
-      ),
-      controls(),
-      table(
-        thead("ciao"),
-        tbody(
-//          children <-- dataSignal.map(data => data.map { item =>
-//            renderDataItem(item.id, item)
-//          })
+        cls := "bottom-controls",
+        button(
+          "Start",
+          onClick.mapTo(Event.SimulationTick) --> eventBus.writer
+        ),
+        button("Pause", onClick --> (_ => println("Pause clicked"))),
+        button("Resume", onClick --> (_ => println("Resume clicked"))),
+        button(
+          "Generate",
+          onClick.mapTo(Event.AddCustomers(50)) --> eventBus.writer
         )
       )
     )
 
-  def controls(): Element =
-    div(
-      cls := "bottom-controls",
-      button(
-        "Start",
-        onClick --> { _ =>
-          Update.update(
-            SimulationState(List(), List()),
-            update.Event.SimulationTick
-          )
-        }
-      ),
-      button("Pause", onClick --> { _ => println("Pause clicked") }),
-      button("Resume", onClick --> { _ => println("Resume clicked") }),
-      button(
-        "Generate",
-        onClick --> { _ =>
-          println("Generate customers")
-          generateCustomer()
-          dataSignal.map(data => data.map(c => renderCustomer(c.id, c)))
-        }
-      )
-    )
-
-  def renderDataItem(id: CustomerID, item: Customer): Element =
-    tr(
-      td(item.x),
-      td(item.y)
-    )
-
-  def renderCustomer(id: CustomerID, item: Customer): Unit =
-    val canvas = stage.ref
-    val ctx = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    ctx.fillStyle = "#fff"
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-    ctx.beginPath()
-    ctx.arc(item.x, item.y, 5.0, 0, 2 * Math.PI)
-    ctx.fillStyle = "#007acc"
-    ctx.fill()
+  def init(): Unit =
+    render(dom.document.getElementById("app"), appElement())
 
   def mainCanvas(): ReactiveHtmlElement[HTMLCanvasElement] =
     canvasTag(
       cls := "simulation-canvas",
-      widthAttr := 800,
-      heightAttr := 300,
-      onMountCallback { ctx =>
-        val canvas = ctx.thisNode.ref
-        drawInitial(canvas)
+      widthAttr := canvasWidth,
+      heightAttr := canvasHeight,
+      inContext { thisCanvas =>
+        onMountCallback { _ =>
+          val ctx = thisCanvas.ref
+            .getContext("2d")
+            .asInstanceOf[CanvasRenderingContext2D]
+          model.signal.foreach { s =>
+            drawCustomers(s)
+          }(unsafeWindowOwner)
+        }
       }
     )
 
-  def generateCustomer(): Unit =
-    (1 to 50).foreach { _ =>
-      val newCustomer = Customer(
-        x = Random.between(10.0, 790.0),
-        y = Random.between(10.0, 290.0)
-      )
-      addCustomer(newCustomer)
+  private def drawCustomers(state: SimulationState): Unit =
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight)
+    ctx.fillStyle = "#fff"
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight)
+
+    state.customers.foreach { customer =>
+      drawOval(customer.pos)
     }
 
-  private def drawInitial(canvas: dom.html.Canvas): Unit =
-    val ctx = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
-    ctx.fillStyle = "#fff"
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-  private def drawCustomers(customers: Signal[List[Customer]]): Unit =
-    val canvas = stage.ref
-    val ctx = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    ctx.fillStyle = "#fff"
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-    customers.map(_.foreach { c =>
-      ctx.beginPath()
-      ctx.arc(c.x, c.y, 5.0, 0, 2 * Math.PI)
-      ctx.fillStyle = "#007acc"
-      ctx.fill()
-      println(s"customer printed at: ${c.x} ${c.y}")
-    })
+  def drawOval(pos: Vector2D): Unit =
+    ctx.beginPath()
+    ctx.arc(pos.x, pos.y, 10, 0, 2 * Math.PI)
+    ctx.fillStyle = "lightblue" // azzurro chiaro
+    ctx.fill()
+    ctx.lineWidth = 2
+    ctx.strokeStyle = "black"
+    ctx.stroke()

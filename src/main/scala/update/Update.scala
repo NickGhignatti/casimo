@@ -1,9 +1,12 @@
 package update
 
 import model.SimulationState
+import model.entities.customers.Customer
 import update.Event.*
+import utils.Vector2D
 
 import scala.annotation.tailrec
+import scala.util.Random
 
 object Update:
 
@@ -25,3 +28,15 @@ object Update:
       case UpdateCustomersState =>
         println("Updating customers' state...")
         state
+      case AddCustomers(n) =>
+        println("Adding customers to the state...")
+        val newCustomers = List.fill(50)(
+          Customer(
+            Vector2D(
+              x = Random.between(10.0, 750.0),
+              y = Random.between(10.0, 450.0)
+            )
+          )
+        )
+        val updateCustomers = state.customers ++ newCustomers
+        state.copy(customers = updateCustomers)
