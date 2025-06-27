@@ -8,6 +8,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 23
+      - name: Setup sbt launcher
+        uses: sbt/setup-sbt@v1
       - run: npm install && npm run build
       - name: Publish gh-pages
         uses: peaceiris/actions-gh-pages@v3
