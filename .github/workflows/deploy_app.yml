@@ -15,7 +15,7 @@ jobs:
           java-version: 23
       - name: Setup sbt launcher
         uses: sbt/setup-sbt@v1
-      - run: npm ci && npm run build
+      - run: npm install && npm run build
       - name: Publish gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:
