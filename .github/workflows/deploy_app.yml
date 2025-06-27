@@ -38,6 +38,9 @@ jobs:
             ~/.coursier
           key: ${{ runner.os }}-sbt-${{ hashFiles('**/build.sbt') }}
 
+      - name: Setup sbt launcher
+        uses: sbt/setup-sbt@v1
+
       - name: Build Scala.js
         run: |
           sbt clean fastOptJS fullOptJS
