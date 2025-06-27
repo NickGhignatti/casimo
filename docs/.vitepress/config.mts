@@ -4,7 +4,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: "Casimo",
   description: "Casimo website",
-  base: '/casimo',
+  base: '/casimo/docs',
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
