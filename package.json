@@ -5,9 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build --base=/casimo",
+    "build": "vite build",
     "preview": "vite preview",
-    "buildForGithubPages": "vite build --base=/uk-income-tax-demonstrator"
   },
   "devDependencies": {
     "@scala-js/vite-plugin-scalajs": "^1.0.0",
