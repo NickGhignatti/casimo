@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build --base=/casimo",
     "preview": "vite preview",
     "buildForGithubPages": "vite build --base=/uk-income-tax-demonstrator"
   },
