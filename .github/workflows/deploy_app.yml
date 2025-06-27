@@ -26,7 +26,6 @@ jobs:
       - name: Install Node.js (for Scala.js if needed)
         uses: actions/setup-node@v4
         with:
-          cache-dependency-path: package-lock.json
           node-version: '20'
           cache: 'npm'
 
