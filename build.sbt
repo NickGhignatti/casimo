@@ -3,7 +3,7 @@ import org.scalajs.linker.interface.ModuleSplitStyle
 
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
-ThisBuild / scalaVersion := "3.3.5"
+ThisBuild / scalaVersion := "3.3.5-RC3"
 
 // Define a custom task to install Git hooks
 lazy val installGitHooks =
@@ -92,7 +92,7 @@ lazy val root = (project in file("."))
       "org.scalatest" %% "scalatest" % "3.2.18" % Test,
       "org.scalatestplus" %% "scalacheck-1-18" % "3.2.19.0" % Test,
       // ScalaJs dependencies
-      "org.scalameta" %%% "munit" % "1.1.1" % Test,
+//      "org.scalameta" %%% "munit" % "1.1.1" % Test,
       "org.scala-js" %%% "scalajs-dom" % "2.8.0",
       "com.raquo" %%% "laminar" % "17.0.0"
     )

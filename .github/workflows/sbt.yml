@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - 'dev'
+      - 'ci-build'
 jobs:
   test:
     runs-on: ubuntu-latest
