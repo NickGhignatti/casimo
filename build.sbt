@@ -34,7 +34,8 @@ installGitHooks := {
 // Define a flag file to indicate hooks have been installed
 val hookInstalledFlag = file(".git/hooks/.hooks-installed")
 
-lazy val installHooksIfNeeded = taskKey[Unit]("Install Git hooks if not yet installed")
+lazy val installHooksIfNeeded =
+  taskKey[Unit]("Install Git hooks if not yet installed")
 
 installHooksIfNeeded := Def.taskDyn {
   if (!hookInstalledFlag.exists()) {
@@ -45,11 +46,10 @@ installHooksIfNeeded := Def.taskDyn {
       IO.write(hookInstalledFlag, "installed")
       log.success("Git hooks installation complete.")
     }
-  } else {
+  } else
     Def.task {
-      //streams.value.log.info("Git hooks already installed; skipping.")
+      // streams.value.log.info("Git hooks already installed; skipping.")
     }
-  }
 }.value
 
 // Automatically run the installHooksIfNeeded task when SBT starts
@@ -84,6 +84,7 @@ lazy val root = (project in file("."))
         .withModuleSplitStyle(
           ModuleSplitStyle.SmallModulesFor(List("casimo"))
         )
+        .withCheckIR(false)
     },
     libraryDependencies ++= Seq(
       // Test dependencies
