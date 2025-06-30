@@ -18,8 +18,11 @@ The documentation is also automatically generated and deployed to the GitHub Pag
 
 ## Requirement Specification
 ### Business requirements
+The application is intended to be used by the manager of a [casino](https://en.wikipedia.org/wiki/Casino) who wants to simulate the behaviour of customers inside a given configuration of the casino in order to predict the revenue of the facility. The manager can configure the spacial organization of the casino (such walls and games) and the behaviour of both games and customers. 
 
 ### Domain model
+- **Customer**: a person who enters the casino and plays games.
+- **Game**: a game that can be played by customers, such as roulette, blackjack, etc.
 
 ### Functional requirements
 #### User requirements
