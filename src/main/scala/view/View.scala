@@ -21,13 +21,13 @@ class View(state: SimulationState):
   // UPDATE LOGIC
   eventBus.events
     .scanLeft(model.now())((m, e) => Update.update(m, e))
-    .foreach(model.set)(unsafeWindowOwner)
+    .foreach(model.set)(using unsafeWindowOwner)
 
   private val stage = mainCanvas()
   private val ctx =
     stage.ref.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
 
-  def appElement(): HtmlElement =
+  private def appElement(): HtmlElement =
     div(
       cls := "main-application",
       h1("Casino Simulation"),
@@ -50,7 +50,7 @@ class View(state: SimulationState):
   def init(): Unit =
     render(dom.document.getElementById("app"), appElement())
 
-  def mainCanvas(): ReactiveHtmlElement[HTMLCanvasElement] =
+  private def mainCanvas(): ReactiveHtmlElement[HTMLCanvasElement] =
     canvasTag(
       cls := "simulation-canvas",
       widthAttr := canvasWidth,
@@ -62,7 +62,7 @@ class View(state: SimulationState):
             .asInstanceOf[CanvasRenderingContext2D]
           model.signal.foreach { s =>
             drawCustomers(s)
-          }(unsafeWindowOwner)
+          }(using unsafeWindowOwner)
         }
       }
     )
@@ -76,7 +76,7 @@ class View(state: SimulationState):
       drawOval(customer.pos)
     }
 
-  def drawOval(pos: Vector2D): Unit =
+  private def drawOval(pos: Vector2D): Unit =
     ctx.beginPath()
     ctx.arc(pos.x, pos.y, 10, 0, 2 * Math.PI)
     ctx.fillStyle = "lightblue" // azzurro chiaro

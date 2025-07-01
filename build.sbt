@@ -3,7 +3,7 @@ import org.scalajs.linker.interface.ModuleSplitStyle
 
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
-ThisBuild / scalaVersion := "3.3.5-RC3"
+ThisBuild / scalaVersion := "3.3.5"
 
 // Define a custom task to install Git hooks
 lazy val installGitHooks =
@@ -74,12 +74,16 @@ resetHooks := {
     println("[INFO] No installation flag found. No action needed.")
 }
 
+coverageExcludedPackages := ".*view.*"
+
 lazy val root = (project in file("."))
   .enablePlugins(ScalaJSPlugin)
   .settings(
     name := "casimo",
     scalaJSUseMainModuleInitializer := true,
-    scalaJSLinkerConfig ~= {
+    coverageEnabled := true,
+    coverageExcludedPackages := ".*view.*",
+    Compile / compileIncremental / fullLinkJS / scalaJSLinkerConfig ~= {
       _.withModuleKind(ModuleKind.ESModule)
         .withModuleSplitStyle(
           ModuleSplitStyle.SmallModulesFor(List("casimo"))
