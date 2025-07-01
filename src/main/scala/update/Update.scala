@@ -6,7 +6,9 @@ import update.Event.*
 import utils.Vector2D
 
 import scala.annotation.tailrec
-import scala.util.Random
+import scala.util.{Random, Try}
+import scala.concurrent.*
+import scala.concurrent.duration.*
 
 object Update:
 
@@ -18,7 +20,8 @@ object Update:
         update(state, UpdateCustomersPosition)
       case UpdateCustomersPosition =>
         println("Updating customers' positions...")
-        update(state, UpdateGames)
+        val newCustPos = state.customers.map(c => c.move())
+        update(state.copy(customers = newCustPos), UpdateGames)
       case UpdateGames =>
         println("Updating games...")
         update(state, UpdateSimulationBankrolls)
@@ -28,14 +31,17 @@ object Update:
       case UpdateCustomersState =>
         println("Updating customers' state...")
         state
+
       case AddCustomers(n) =>
         println("Adding customers to the state...")
         val newCustomers = List.fill(50)(
           Customer(
+            s"customer-${Random.nextInt()}",
             Vector2D(
               x = Random.between(10.0, 750.0),
               y = Random.between(10.0, 450.0)
-            )
+            ),
+            Vector2D(Random.between(0, 5), Random.between(0, 5))
           )
         )
         val updateCustomers = state.customers ++ newCustomers

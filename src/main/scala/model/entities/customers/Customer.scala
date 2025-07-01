@@ -1,11 +1,15 @@
 package model.entities.customers
 
+import model.entities.Entity
+import model.entities.Movable
 import utils.Vector2D
 
-final class CustomerID
+case class Customer(
+    id: String,
+    position: Vector2D,
+    direction: Vector2D = Vector2D.zero
+) extends Entity,
+      Movable[Customer]:
 
-case class Customer(id: CustomerID, pos: Vector2D)
-
-object Customer:
-  def apply(pos: Vector2D): Customer =
-    Customer(CustomerID(), pos)
+  protected def updatedPosition(newPosition: Vector2D): Customer =
+    this.copy(position = newPosition)

@@ -16,7 +16,11 @@ trait Entity:
 //    (c: Customer) => c.copy(position = c.position + c.direction)
 //
 
-trait Movable:
+trait Movable[T <: Movable[T]]:
   val direction: Vector2D
+  val position: Vector2D
 
-  def move(): Movable
+  def move(): T =
+    updatedPosition(position + direction)
+
+  protected def updatedPosition(newPosition: Vector2D): T

@@ -27,7 +27,7 @@ class View(state: SimulationState):
   private val ctx =
     stage.ref.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
 
-  def appElement(): HtmlElement =
+  private def appElement(): HtmlElement =
     div(
       cls := "main-application",
       h1("Casino Simulation"),
@@ -50,7 +50,7 @@ class View(state: SimulationState):
   def init(): Unit =
     render(dom.document.getElementById("app"), appElement())
 
-  def mainCanvas(): ReactiveHtmlElement[HTMLCanvasElement] =
+  private def mainCanvas(): ReactiveHtmlElement[HTMLCanvasElement] =
     canvasTag(
       cls := "simulation-canvas",
       widthAttr := canvasWidth,
@@ -73,10 +73,10 @@ class View(state: SimulationState):
     ctx.fillRect(0, 0, canvasWidth, canvasHeight)
 
     state.customers.foreach { customer =>
-      drawOval(customer.pos)
+      drawOval(customer.position)
     }
 
-  def drawOval(pos: Vector2D): Unit =
+  private def drawOval(pos: Vector2D): Unit =
     ctx.beginPath()
     ctx.arc(pos.x, pos.y, 10, 0, 2 * Math.PI)
     ctx.fillStyle = "lightblue" // azzurro chiaro
