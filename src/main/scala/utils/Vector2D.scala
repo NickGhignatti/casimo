@@ -1,6 +1,6 @@
 package utils
 
-case class Vector2D(x: Double, y: Double) {
+case class Vector2D(x: Double, y: Double):
   def +(other: Vector2D): Vector2D =
     Vector2D(this.x + other.x, this.y + other.y)
   def -(other: Vector2D): Vector2D =
@@ -10,7 +10,6 @@ case class Vector2D(x: Double, y: Double) {
 
   def magnitude: Double = Math.sqrt(x * x + y * y)
   def normalize: Vector2D = if (magnitude == 0) this else this / magnitude
-}
 
 object Vector2D:
   val Zero: Vector2D = Vector2D(0, 0)

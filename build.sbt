@@ -1,4 +1,5 @@
 import sbt.Keys.libraryDependencies
+import org.scalajs.linker.interface.ModuleSplitStyle
 
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
@@ -33,21 +34,23 @@ installGitHooks := {
 // Define a flag file to indicate hooks have been installed
 val hookInstalledFlag = file(".git/hooks/.hooks-installed")
 
-// Define a task to install hooks only if they haven't been installed yet
 lazy val installHooksIfNeeded =
   taskKey[Unit]("Install Git hooks if not yet installed")
-installHooksIfNeeded := {
+
+installHooksIfNeeded := Def.taskDyn {
   if (!hookInstalledFlag.exists()) {
-    val log = streams.value.log
-    log.info("Installing Git hooks...")
-    installGitHooks.value
-    IO.write(hookInstalledFlag, "ok") // Create the flag file
-    log.success("Git hooks installed successfully.")
-  } else {
-    val log = streams.value.log
-    log.info("Git hooks already installed. Skipping.")
-  }
-}
+    Def.task {
+      val log = streams.value.log
+      log.info("Git hooks not found — running installGitHooks...")
+      installGitHooks.value
+      IO.write(hookInstalledFlag, "installed")
+      log.success("Git hooks installation complete.")
+    }
+  } else
+    Def.task {
+      // streams.value.log.info("Git hooks already installed; skipping.")
+    }
+}.value
 
 // Automatically run the installHooksIfNeeded task when SBT starts
 Global / onLoad := {
@@ -67,17 +70,30 @@ resetHooks := {
     println(
       "[CLEANUP] Git hooks installation flag removed. Hooks will be reinstalled on next SBT startup."
     )
-  } else {
+  } else
     println("[INFO] No installation flag found. No action needed.")
-  }
 }
 
 lazy val root = (project in file("."))
+  .enablePlugins(ScalaJSPlugin)
   .settings(
-    name := "casymo",
-    libraryDependencies += "com.github.sbt" % "junit-interface" % "0.13.3" % Test,
-    // add scala test
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.18" % Test,
-    // add scalacheck
-    libraryDependencies += "org.scalatestplus" %% "scalacheck-1-18" % "3.2.19.0" % Test
+    name := "casimo",
+    scalaJSUseMainModuleInitializer := true,
+    scalaJSLinkerConfig ~= {
+      _.withModuleKind(ModuleKind.ESModule)
+        .withModuleSplitStyle(
+          ModuleSplitStyle.SmallModulesFor(List("casimo"))
+        )
+        .withCheckIR(false)
+    },
+    libraryDependencies ++= Seq(
+      // Test dependencies
+      "com.github.sbt" % "junit-interface" % "0.13.3" % Test,
+      "org.scalatest" %% "scalatest" % "3.2.18" % Test,
+      "org.scalatestplus" %% "scalacheck-1-18" % "3.2.19.0" % Test,
+      // ScalaJs dependencies
+      "org.scalameta" %%% "munit" % "1.1.1" % Test,
+      "org.scala-js" %%% "scalajs-dom" % "2.8.0",
+      "com.raquo" %%% "laminar" % "17.0.0"
+    )
   )

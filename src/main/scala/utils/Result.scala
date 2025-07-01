@@ -12,6 +12,10 @@ enum Result[+T, +E]:
     case Success(value) => f(value)
     case Failure(error) => Failure(error)
 
+  def getOrElse[U >: T](default: U): U = this match
+    case Success(value) => value
+    case Failure(_)     => default
+
   def isSuccess: Boolean = this match
     case Success(_) => true
     case Failure(_) => false

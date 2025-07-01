@@ -52,23 +52,20 @@ case class Boid(
 
   private def alignment(velocities: Seq[Vector2D]): Vector2D =
     if velocities.isEmpty then Vector2D.Zero
-    else {
+    else
       val average = velocities.reduce(_ + _) / velocities.size
       (average - velocity).normalize
-    }
 
   private def cohesion(positions: Seq[Vector2D]): Vector2D =
     if positions.isEmpty then Vector2D.Zero
-    else {
+    else
       val center = positions.reduce(_ + _) / positions.size
       (center - position).normalize
-    }
 
   private def separation(positions: Seq[Vector2D]): Vector2D =
     if positions.isEmpty then Vector2D.Zero
-    else {
+    else
       positions
         .filter(distance(position, _) < parameters.avoidRadius)
         .map(pos => (position - pos).normalize)
         .reduce(_ + _)
-    }

@@ -6,3 +6,4 @@ enum Event:
   case UpdateGames
   case UpdateSimulationBankrolls
   case UpdateCustomersState
+  case AddCustomers(num: Int)
