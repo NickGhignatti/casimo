@@ -1,18 +1,28 @@
 # Casimo Documentation
 
 ## Adopted Development Process
-### Task division methods
+### Task division
+The development process was divided into three main themes:
+- Games logic (assigned to Ghignatti): responsible for implementing the core game logic.
+- Customer movement behaviour (assigned to Patrignani): responsible for implementing the customer movement.
+- Customer in-game behaviour (assigned to Galeri): responsible for implementing the customer in-game behaviour.
 
 ### Planned meetings/interactions
-
-### Ongoing task review methods
+Each week the team holds a sprint start meeting in which the team establishes the tasks to be completed in the next sprint and an effort estimation. Then each task is assigned to a team member according to both the overall effort of each member and the theme of the task.
+When a blocker is encountered during the development of a task, the team holds a meeting to discuss the issue and pair programming methodology is applied.
+At the end of the week a retrospective meeting is held to review the progress of the tasks and to discuss any issues that may have arisen during the week.
 
 ### Choice of test/build/continuous integration tools
+The team has chosen to use GitHub Actions for continuous integration and deployment. In particular a pipeline has been set up to build and run tests of the project. If the build is successful the application is deployed to the GitHub Pages of the repository.
+The documentation is also automatically generated and deployed to the GitHub Pages of the repository.
 
 ## Requirement Specification
 ### Business requirements
+The application is intended to be used by the manager of a [casino](https://en.wikipedia.org/wiki/Casino) who wants to simulate the behaviour of customers inside a given configuration of the casino in order to predict the revenue of the facility. The manager can configure the spacial organization of the casino (such walls and games) and the behaviour of both games and customers. 
 
 ### Domain model
+- **Customer**: a person who enters the casino and plays games.
+- **Game**: a game that can be played by customers, such as roulette, blackjack, etc.
 
 ### Functional requirements
 #### User requirements
