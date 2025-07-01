@@ -19,4 +19,6 @@ case class BoidCustomer(boid: Boid) extends Customer:
   def velocity: Vector2D = boid.velocity
 
   def update(simulationState: SimulationState[BoidCustomer]): BoidCustomer =
-    BoidCustomer(boid.update(ContextImpl(simulationState.customers.map(_.boid))))
+    BoidCustomer(
+      boid.update(ContextImpl(simulationState.customers.map(_.boid)))
+    )

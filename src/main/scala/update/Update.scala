@@ -11,7 +11,10 @@ import scala.util.Random
 object Update:
 
   @tailrec
-  def update(state: SimulationState[BoidCustomer], event: Event): SimulationState[BoidCustomer] =
+  def update(
+      state: SimulationState[BoidCustomer],
+      event: Event
+  ): SimulationState[BoidCustomer] =
     event match
       case SimulationTick =>
         println("Simulation tick event received, updating state...")
@@ -32,11 +35,13 @@ object Update:
       case AddCustomers(n) =>
         println("Adding customers to the state...")
         val newCustomers = List.fill(50)(
-          BoidCustomer(Boid(
-            Vector2D(
-              x = Random.between(10.0, 750.0),
-              y = Random.between(10.0, 450.0)
-            ))
+          BoidCustomer(
+            Boid(
+              Vector2D(
+                x = Random.between(10.0, 750.0),
+                y = Random.between(10.0, 450.0)
+              )
+            )
           )
         )
         val updateCustomers = state.customers ++ newCustomers
