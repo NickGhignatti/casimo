@@ -2,7 +2,9 @@ package view
 
 import com.raquo.laminar.api.L.*
 import com.raquo.laminar.nodes.ReactiveHtmlElement
+import com.raquo.laminar.receivers.FocusReceiver.<--
 import model.SimulationState
+import model.customers.{BoidCustomer, Customer}
 import org.scalajs.dom
 import org.scalajs.dom.{CanvasRenderingContext2D, HTMLCanvasElement}
 import update.{Event, Update}
@@ -10,7 +12,7 @@ import utils.Vector2D
 
 import scala.scalajs.js
 
-class View(state: SimulationState):
+class View(state: SimulationState[BoidCustomer]):
 
   private val canvasWidth = 800
   private val canvasHeight = 500
@@ -18,10 +20,17 @@ class View(state: SimulationState):
   private val model = Var(state)
   private val eventBus = new EventBus[Event]
 
+  // Use the stream to trigger actions, e.g., send to an EventBus
   // UPDATE LOGIC
   eventBus.events
     .scanLeft(model.now())((m, e) => Update.update(m, e))
     .foreach(model.set)(unsafeWindowOwner)
+
+  // Emits an event every 1000 ms (1 second)
+  val tickStream = EventStream.periodic(1000)
+
+  // Map each tick to a custom event or value
+  val simulationTickStream = tickStream.mapTo(Event.SimulationTick)
 
   private val stage = mainCanvas()
   private val ctx =
@@ -48,6 +57,7 @@ class View(state: SimulationState):
     )
 
   def init(): Unit =
+    simulationTickStream --> eventBus.writer
     render(dom.document.getElementById("app"), appElement())
 
   def mainCanvas(): ReactiveHtmlElement[HTMLCanvasElement] =
@@ -61,19 +71,19 @@ class View(state: SimulationState):
             .getContext("2d")
             .asInstanceOf[CanvasRenderingContext2D]
           model.signal.foreach { s =>
-            drawCustomers(s)
+            drawCustomers(s.customers)
           }(unsafeWindowOwner)
         }
       }
     )
 
-  private def drawCustomers(state: SimulationState): Unit =
+  private def drawCustomers(customers: List[Customer]): Unit =
     ctx.clearRect(0, 0, canvasWidth, canvasHeight)
     ctx.fillStyle = "#fff"
     ctx.fillRect(0, 0, canvasWidth, canvasHeight)
 
-    state.customers.foreach { customer =>
-      drawOval(customer.pos)
+    customers.foreach { customer =>
+      drawOval(customer.position)
     }
 
   def drawOval(pos: Vector2D): Unit =

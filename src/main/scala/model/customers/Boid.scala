@@ -1,7 +1,7 @@
 package model.customers
 
 import model.SimulationState
-import model.games.Game
+import model.entities.games.Game
 import utils.Vector2D
 import utils.Vector2D.distance
 
@@ -18,10 +18,19 @@ object Boid:
       separationWeight: Double
   )
 
+  private val defaultParams = Parameters(
+    maxSpeed = 2,
+    perceptionRadius = 1000,
+    avoidRadius = 1,
+    alignmentWeight = 1,
+    cohesionWeight = 1,
+    separationWeight = 1
+  )
+
 case class Boid(
     position: Vector2D,
     velocity: Vector2D = Vector2D.Zero,
-    parameters: Boid.Parameters
+    parameters: Boid.Parameters = defaultParams
 ):
   import Boid.Context
   def update(context: Context): Boid =
