@@ -76,7 +76,6 @@ resetHooks := {
     println("[INFO] No installation flag found. No action needed.")
 }
 
-// Backend-specific implementation (JVM only)
 lazy val backend = crossProject(JSPlatform, JVMPlatform)
   .in(file("backend"))
   .settings(
@@ -97,7 +96,7 @@ lazy val backend = crossProject(JSPlatform, JVMPlatform)
     name := "backendJs",
     coverageEnabled := false,
     // JS-specific settings
-    Compile / scalaSource := baseDirectory.value / "src" / "main" / "scala",
+    Compile / scalaSource := baseDirectory.value.getParentFile / "src" / "main" / "scala",
     Compile / fullLinkJS / scalaJSLinkerConfig ~= {
       _.withModuleKind(ModuleKind.CommonJSModule)
         .withModuleSplitStyle(ModuleSplitStyle.SmallModulesFor(List("casimo")))
