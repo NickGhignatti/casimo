@@ -1,5 +1,5 @@
 import sbt.Keys.libraryDependencies
-import org.scalajs.linker.interface.ModuleSplitStyle
+import org.scalajs.linker.interface.{ModuleSplitStyle, OutputPatterns}
 
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
@@ -81,10 +81,9 @@ lazy val root = (project in file("."))
   .settings(
     name := "casimo",
     scalaJSUseMainModuleInitializer := true,
-    coverageEnabled := true,
     coverageExcludedPackages := ".*view.*",
     Compile / compileIncremental / fullLinkJS / scalaJSLinkerConfig ~= {
-      _.withModuleKind(ModuleKind.ESModule)
+      _.withModuleKind(ModuleKind.CommonJSModule)
         .withModuleSplitStyle(
           ModuleSplitStyle.SmallModulesFor(List("casimo"))
         )
@@ -92,9 +91,9 @@ lazy val root = (project in file("."))
     },
     libraryDependencies ++= Seq(
       // Test dependencies
-      "com.github.sbt" % "junit-interface" % "0.13.3" % Test,
-      "org.scalatest" %% "scalatest" % "3.2.18" % Test,
-      "org.scalatestplus" %% "scalacheck-1-18" % "3.2.19.0" % Test,
+//      "com.github.sbt" % "junit-interface" % "0.13.3" % test,
+      "org.scalatest" %%% "scalatest-funsuite" % "3.2.19" % "test",
+//      "org.scalatestplus" %% "scalacheck-1-18" % "3.2.19.0" % "test",
       // ScalaJs dependencies
 //      "org.scalameta" %%% "munit" % "1.1.1" % Test,
       "org.scala-js" %%% "scalajs-dom" % "2.8.0",
