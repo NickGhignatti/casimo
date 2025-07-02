@@ -98,6 +98,11 @@ lazy val backend = crossProject(JSPlatform, JVMPlatform)
     coverageEnabled := false,
     // JS-specific settings
     Compile / scalaSource := baseDirectory.value / "src" / "main" / "scala",
+    Compile / fullLinkJS / scalaJSLinkerConfig ~= {
+      _.withModuleKind(ModuleKind.CommonJSModule)
+        .withModuleSplitStyle(ModuleSplitStyle.SmallModulesFor(List("casimo")))
+        .withCheckIR(false)
+    },
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "2.8.0",
       "com.raquo" %%% "laminar" % "17.0.0"
