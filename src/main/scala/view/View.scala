@@ -28,7 +28,10 @@ class View(state: SimulationState[BoidCustomer]):
     .scanLeft(model.now())((m, e) => Update.update(m, e))
     .foreach(model.set)(unsafeWindowOwner)
 
-  dom.window.setInterval(() => eventBus.writer.onNext(Event.SimulationTick), period)
+  dom.window.setInterval(
+    () => eventBus.writer.onNext(Event.SimulationTick),
+    period
+  )
 
   private val stage = mainCanvas()
   private val ctx =
