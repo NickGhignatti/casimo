@@ -23,7 +23,7 @@ object Boid:
     perceptionRadius = 1000,
     avoidRadius = 1,
     alignmentWeight = 1,
-    cohesionWeight = 1,
+    cohesionWeight = 0.3,
     separationWeight = 1
   )
 

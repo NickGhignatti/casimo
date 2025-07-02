@@ -7,6 +7,7 @@ import model.SimulationState
 import model.customers.{BoidCustomer, Customer}
 import org.scalajs.dom
 import org.scalajs.dom.{CanvasRenderingContext2D, HTMLCanvasElement}
+import update.Event.SimulationTick
 import update.{Event, Update}
 import utils.Vector2D
 
@@ -16,6 +17,7 @@ class View(state: SimulationState[BoidCustomer]):
 
   private val canvasWidth = 800
   private val canvasHeight = 500
+  private val period = 100
 
   private val model = Var(state)
   private val eventBus = new EventBus[Event]
@@ -26,11 +28,7 @@ class View(state: SimulationState[BoidCustomer]):
     .scanLeft(model.now())((m, e) => Update.update(m, e))
     .foreach(model.set)(unsafeWindowOwner)
 
-  // Emits an event every 1000 ms (1 second)
-  val tickStream = EventStream.periodic(1000)
-
-  // Map each tick to a custom event or value
-  val simulationTickStream = tickStream.mapTo(Event.SimulationTick)
+  dom.window.setInterval(() => eventBus.writer.onNext(Event.SimulationTick), period)
 
   private val stage = mainCanvas()
   private val ctx =
@@ -57,7 +55,6 @@ class View(state: SimulationState[BoidCustomer]):
     )
 
   def init(): Unit =
-    simulationTickStream --> eventBus.writer
     render(dom.document.getElementById("app"), appElement())
 
   def mainCanvas(): ReactiveHtmlElement[HTMLCanvasElement] =
