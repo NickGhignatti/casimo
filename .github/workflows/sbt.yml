@@ -20,7 +20,7 @@ jobs:
       - name: Setup sbt launcher
         uses: sbt/setup-sbt@v1
       - name: Build and Test
-        run: sbt +test
+        run: sbt "+backendJVM/test"
       - name: Codecov
         run: sbt "coverage; backendJVM/test; coverageReport"
       - uses: codecov/codecov-action@v4
