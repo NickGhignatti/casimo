@@ -76,29 +76,36 @@ resetHooks := {
     println("[INFO] No installation flag found. No action needed.")
 }
 
-lazy val shared = crossProject(JSPlatform, JVMPlatform)
-  .in(file("shared"))
-  .settings(
-    name := "casimo-shared",
-    scalaVersion := "3.3.5"
-  )
-
 // Backend-specific implementation (JVM only)
-lazy val backend = project
+lazy val backend = crossProject(JSPlatform, JVMPlatform)
   .in(file("backend"))
   .settings(
-    name := "casimo-backend",
-    scalaVersion := "3.3.5",
+    scalaVersion := "3.3.5"
+  )
+  .jvmSettings(
+    name := "backendJvm",
     coverageEnabled := true,
     // Backend source locations
-    Compile / scalaSource := baseDirectory.value / "src" / "main" / "scala",
-    Test / scalaSource := baseDirectory.value / "src" / "test" / "scala",
+    Compile / scalaSource := baseDirectory.value.getParentFile / "src" / "main" / "scala",
+    Test / scalaSource := baseDirectory.value.getParentFile / "src" / "test" / "scala",
     libraryDependencies ++= Seq(
       "org.scalatest" %% "scalatest" % "3.2.19" % Test,
       "org.scalatestplus" %% "scalacheck-1-18" % "3.2.19.0" % Test
     )
   )
-  .dependsOn(shared.jvm)
+  .jsSettings(
+    name := "backendJs",
+    coverageEnabled := false,
+    // JS-specific settings
+    Compile / scalaSource := baseDirectory.value / "src" / "main" / "scala",
+    libraryDependencies ++= Seq(
+      "org.scala-js" %%% "scalajs-dom" % "2.8.0",
+      "com.raquo" %%% "laminar" % "17.0.0"
+    )
+  )
+
+lazy val backendJvm = backend.jvm
+lazy val backendJs = backend.js
 
 // Frontend-specific implementation (JS only)
 lazy val frontend = project
@@ -123,17 +130,15 @@ lazy val frontend = project
       "com.raquo" %%% "laminar" % "17.0.0"
     )
   )
-  .dependsOn(shared.js, backend)
+  .dependsOn(backendJs)
 
 // Root project aggregates all modules
 lazy val root = project
   .in(file("."))
-  .aggregate(backend, frontend, shared.jvm, shared.js)
+  .aggregate(backendJvm, backendJs, frontend)
   .settings(
     publish := {},
-    publishLocal := {},
-    coverageExcludedPackages := ".*", // Exclude everything in root
-    coverageEnabled := false
+    publishLocal := {}
   )
 
 // command sbt "coverage; backend/test; coverageReport"
