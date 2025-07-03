@@ -41,7 +41,8 @@ object Update:
               x = Random.between(10.0, 750.0),
               y = Random.between(10.0, 450.0)
             ),
-            Vector2D(Random.between(0, 5), Random.between(0, 5))
+            Vector2D(Random.between(0, 5), Random.between(0, 5)),
+            bankroll = Random.between(30, 5000)
           )
         )
         val updateCustomers = state.customers ++ newCustomers
