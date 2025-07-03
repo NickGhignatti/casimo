@@ -4,7 +4,7 @@ import com.raquo.laminar.api.L.*
 import com.raquo.laminar.nodes.ReactiveHtmlElement
 import com.raquo.laminar.receivers.FocusReceiver.<--
 import model.SimulationState
-import model.customers.{BoidCustomer, Customer}
+import model.customers.Customer
 import org.scalajs.dom
 import org.scalajs.dom.{CanvasRenderingContext2D, HTMLCanvasElement}
 import update.Event.SimulationTick
@@ -13,7 +13,7 @@ import utils.Vector2D
 
 import scala.scalajs.js
 
-class View(state: SimulationState[BoidCustomer]):
+class View(state: SimulationState):
 
   private val canvasWidth = 800
   private val canvasHeight = 500
@@ -77,7 +77,7 @@ class View(state: SimulationState[BoidCustomer]):
       }
     )
 
-  private def drawCustomers(customers: List[Customer]): Unit =
+  private def drawCustomers(customers: Seq[Customer]): Unit =
     ctx.clearRect(0, 0, canvasWidth, canvasHeight)
     ctx.fillStyle = "#fff"
     ctx.fillRect(0, 0, canvasWidth, canvasHeight)

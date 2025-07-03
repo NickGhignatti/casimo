@@ -1,7 +1,7 @@
 package update
 
 import model.SimulationState
-import model.customers.{Boid, BoidCustomer, ContextImpl, Customer}
+import model.customers.{Boid, Customer}
 import update.Event.*
 import utils.Vector2D
 
@@ -12,17 +12,16 @@ object Update:
 
   @tailrec
   def update(
-      state: SimulationState[BoidCustomer],
+      state: SimulationState,
       event: Event
-  ): SimulationState[BoidCustomer] =
+  ): SimulationState =
     event match
       case SimulationTick =>
         println("Simulation tick event received, updating state...")
         update(state, UpdateCustomersPosition)
       case UpdateCustomersPosition =>
         println("Updating customers' positions...")
-        val updatedCustomers = state.customers.map(_.update(state))
-        update(state.copy(customers = updatedCustomers), UpdateGames)
+        update(state.update(), UpdateGames)
       case UpdateGames =>
         println("Updating games...")
         update(state, UpdateSimulationBankrolls)
@@ -35,12 +34,10 @@ object Update:
       case AddCustomers(n) =>
         println("Adding customers to the state...")
         val newCustomers = List.fill(50)(
-          BoidCustomer(
-            Boid(
-              Vector2D(
-                x = Random.between(10.0, 750.0),
-                y = Random.between(10.0, 450.0)
-              )
+          Boid(
+            Vector2D(
+              x = Random.between(10.0, 750.0),
+              y = Random.between(10.0, 450.0)
             )
           )
         )

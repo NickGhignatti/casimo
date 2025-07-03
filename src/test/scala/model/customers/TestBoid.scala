@@ -1,9 +1,9 @@
 package model.customers
 
 
+import model.SimulationState
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
-import model.customers.Boid.Context
 import utils.Vector2D.distance
 
 class TestBoid extends AnyFunSuite {
@@ -17,14 +17,16 @@ class TestBoid extends AnyFunSuite {
     separationWeight = 1
   )
 
-  private case class ContextImpl(boids: Seq[Boid]) extends Context
-
+  private object ContextImpl:
+    def apply(boids: Seq[Boid]): SimulationState =
+      SimulationState(boids, Seq.empty)
+      
   test("update should not change velocity if no nearby boids are within perception radius") {
     val boid = Boid(Vector2D(0, 0), Vector2D(1, 1), params.copy(maxSpeed = 10))
     val otherBoid = Boid(Vector2D(10, 10), Vector2D(0, 0), params)
     val context = ContextImpl(Seq(boid, otherBoid))
 
-    val updatedBoid = boid.update(context)
+    val updatedBoid = boid.update(context).customers.find(_.id == boid.id).get
 
     assert(updatedBoid.velocity == boid.velocity)
   }
@@ -34,7 +36,7 @@ class TestBoid extends AnyFunSuite {
     val nearbyBoid = Boid(Vector2D(2, 2), Vector2D(1, 0), params)
     val context = ContextImpl(Seq(boid, nearbyBoid))
 
-    val updatedBoid = boid.update(context)
+    val updatedBoid = boid.update(context).customers.find(_.id == boid.id).get
 
     assert(updatedBoid.velocity.magnitude <= params.maxSpeed)
   }
@@ -48,7 +50,7 @@ class TestBoid extends AnyFunSuite {
     val boid2 = Boid(Vector2D(3, 3), parameters=params)
     val context = ContextImpl(Seq(boid1, boid2))
 
-    val updatedBoid1 = boid1.update(context)
+    val updatedBoid1 = boid1.update(context).customers.find(_.id == boid1.id).get
 
     assert(distance(updatedBoid1.position, boid2.position) < distance(boid1.position, boid2.position))
   }
@@ -59,12 +61,12 @@ class TestBoid extends AnyFunSuite {
       cohesionWeight = 0,
       separationWeight = 0
     )
-    val boids = Seq(
+    val boids = List(
       Boid(Vector2D(0, 0), Vector2D(1, 0), parameters = alignOnly),
       Boid(Vector2D(1, 1), Vector2D(0, 1), parameters = alignOnly)
-    )
+    ).sorted(Ordering.by(_.id))
     val context = ContextImpl(boids)
-    val newBoids = boids.map(_.update(context))
+    val newBoids = context.update().customers.sorted(Ordering.by(_.id))
     assert((newBoids(0).velocity dot newBoids(1).velocity) > 0)
   }
 
@@ -75,12 +77,15 @@ class TestBoid extends AnyFunSuite {
       separationWeight = 1,
       avoidRadius = 1
     )
-    val boid1 = Boid(Vector2D(0, 0), parameters = separationOnly)
-    val boid2 = Boid(Vector2D(0.5, 0.5), parameters = separationOnly)
-    val context = ContextImpl(Seq(boid1, boid2))
+    val boids = List(
+      Boid(Vector2D(0, 0), parameters = separationOnly),
+      Boid(Vector2D(0.5, 0.5), parameters = separationOnly)
+    ).sorted(Ordering.by(_.id))
+    val context = ContextImpl(boids)
 
-    val updatedBoid1 = boid1.update(context)
+    val updatedBoids = context.update().customers.sorted(Ordering.by(_.id))
 
-    assert(distance(updatedBoid1.position, boid2.position) > distance(boid1.position, boid2.position))
+    assert(distance(updatedBoids(0).position, updatedBoids(1).position) > 
+      distance(boids(0).position, boids(1).position))
   }
 }

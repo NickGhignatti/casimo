@@ -6,8 +6,6 @@ import utils.Vector2D
 import utils.Vector2D.distance
 
 object Boid:
-  trait Context:
-    def boids: Seq[Boid]
 
   case class Parameters(
       maxSpeed: Double,
@@ -30,13 +28,13 @@ object Boid:
 case class Boid(
     position: Vector2D,
     velocity: Vector2D = Vector2D.Zero,
-    parameters: Boid.Parameters = defaultParams
-):
-  import Boid.Context
-  def update(context: Context): Boid =
-    given Context = context
-    val nearbyPositions = nearbyBoids.map(_.position)
-    val nearbyVelocities = nearbyBoids.map(_.velocity)
+    parameters: Boid.Parameters = defaultParams,
+    id: String = java.util.UUID.randomUUID().toString
+) extends Customer:
+  def update(simulationState: SimulationState): SimulationState =
+    val nearbyPositions = nearbyBoids(simulationState.customers).map(_.position)
+    val nearbyVelocities =
+      nearbyBoids(simulationState.customers).map(_.velocity)
 
     val alignmentForce =
       parameters.alignmentWeight * alignment(nearbyVelocities)
@@ -47,15 +45,22 @@ case class Boid(
     val newVelocity =
       (velocity + alignmentForce + cohesionForce + separationForce)
         .capped(parameters.maxSpeed)
-    this.copy(position = position + newVelocity, velocity = newVelocity)
+    val newThis =
+      this.copy(position = position + newVelocity, velocity = newVelocity)
+    simulationState.copy(
+      customers = simulationState.customers.map(customer =>
+        if customer.id == this.id then newThis
+        else customer
+      )
+    )
 
   extension (v: Vector2D)
     private def capped(max: Double): Vector2D =
       val mag = v.magnitude
       if mag > max then max * v.normalize else v
 
-  private def nearbyBoids(using context: Context): Seq[Boid] =
-    context.boids.filter(boid =>
+  private def nearbyBoids(boids: Seq[Customer]): Seq[Customer] =
+    boids.filter(boid =>
       distance(boid.position, position) <= parameters.perceptionRadius
     )
 
