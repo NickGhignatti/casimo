@@ -1,11 +1,14 @@
 import sbt.Keys.libraryDependencies
 import org.scalajs.linker.interface.{ModuleSplitStyle, OutputPatterns}
-import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
+import sbt.internal.SysProp.semanticdb
+import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 import scalajscrossproject.ScalaJSCrossPlugin.autoImport.*
+
 
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
 ThisBuild / scalaVersion := "3.3.5"
+ThisBuild / semanticdbEnabled := true
 
 // Define a custom task to install Git hooks
 lazy val installGitHooks =
@@ -81,6 +84,7 @@ lazy val backend = crossProject(JSPlatform, JVMPlatform)
   .settings(
     scalaVersion := "3.3.5"
   )
+  .jsConfigure(_.disablePlugins(ScalafixPlugin))
   .jvmSettings(
     name := "backendJvm",
     coverageEnabled := true,

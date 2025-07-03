@@ -1,14 +1,12 @@
 package update
 
+import scala.annotation.tailrec
+import scala.util.Random
+
 import model.SimulationState
 import model.entities.customers.Customer
-import update.Event.*
+import update.Event._
 import utils.Vector2D
-
-import scala.annotation.tailrec
-import scala.util.{Random, Try}
-import scala.concurrent.*
-import scala.concurrent.duration.*
 
 object Update:
 

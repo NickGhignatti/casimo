@@ -1,7 +1,8 @@
 package model.managers
 import model.GlobalConfig
+import model.entities.BoredomFrustration
 import model.entities.CustState.Idle
-import model.entities.{BoredomFrustration, CustomerState}
+import model.entities.CustomerState
 
 //TODO: add complex behaviour, maybe based on riskProfile
 class PersistenceManager[A <: BoredomFrustration[A] & CustomerState[A]]

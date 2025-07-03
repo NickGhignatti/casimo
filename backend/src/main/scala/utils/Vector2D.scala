@@ -10,7 +10,7 @@ case class Vector2D(x: Double, y: Double):
   def dot(other: Vector2D): Double = this.x * other.x + this.y * other.y
 
   private def magnitude: Double = Math.sqrt(x * x + y * y)
-  def normalize: Vector2D = if (magnitude == 0) this else this / magnitude
+  def normalize: Vector2D = if (magnitude == 0.0) this else this / magnitude
 
 object Vector2D:
   val zero: Vector2D = Vector2D(0.0, 0.0)
