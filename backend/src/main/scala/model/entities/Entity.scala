@@ -4,7 +4,6 @@ import utils.Vector2D
 
 trait Entity:
   val id: String
-  val position: Vector2D
 
 // TRAIT MOVABLE CAN BE DONE BY COMPOSITION
 //trait Movable[E <: Entity]

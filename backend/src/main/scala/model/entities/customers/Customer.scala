@@ -26,7 +26,7 @@ case class Customer(
       Movable[Customer],
       Bankroll[Customer],
       StatusProfile,
-      CustomerState,
+      CustomerState[Customer],
       HasGameStrategy:
 
   protected def updatedPosition(newPosition: Vector2D): Customer =
@@ -34,3 +34,6 @@ case class Customer(
 
   protected def updatedBankroll(newRoll: Double): Customer =
     this.copy(bankroll = newRoll)
+
+  protected def changedState(newState: CustState): Customer =
+    this.copy(customerState = newState)
