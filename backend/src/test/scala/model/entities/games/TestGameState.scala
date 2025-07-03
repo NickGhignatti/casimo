@@ -1,7 +1,7 @@
 package model.entities.games
 
-import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.TryValues
+import org.scalatest.funsuite.AnyFunSuite
 
 class TestGameState extends AnyFunSuite with TryValues:
 

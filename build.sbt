@@ -1,5 +1,7 @@
 import sbt.Keys.libraryDependencies
-import org.scalajs.linker.interface.ModuleSplitStyle
+import org.scalajs.linker.interface.{ModuleSplitStyle, OutputPatterns}
+import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
+import scalajscrossproject.ScalaJSCrossPlugin.autoImport.*
 
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
@@ -74,26 +76,73 @@ resetHooks := {
     println("[INFO] No installation flag found. No action needed.")
 }
 
-lazy val root = (project in file("."))
-  .enablePlugins(ScalaJSPlugin)
+lazy val backend = crossProject(JSPlatform, JVMPlatform)
+  .in(file("backend"))
   .settings(
-    name := "casimo",
-    scalaJSUseMainModuleInitializer := true,
-    scalaJSLinkerConfig ~= {
-      _.withModuleKind(ModuleKind.ESModule)
-        .withModuleSplitStyle(
-          ModuleSplitStyle.SmallModulesFor(List("casimo"))
-        )
+    scalaVersion := "3.3.5"
+  )
+  .jvmSettings(
+    name := "backendJvm",
+    coverageEnabled := true,
+    // Backend source locations
+    Compile / scalaSource := baseDirectory.value.getParentFile / "src" / "main" / "scala",
+    Test / scalaSource := baseDirectory.value.getParentFile / "src" / "test" / "scala",
+    libraryDependencies ++= Seq(
+      "org.scalatest" %% "scalatest" % "3.2.19" % Test,
+      "org.scalatestplus" %% "scalacheck-1-18" % "3.2.19.0" % Test
+    )
+  )
+  .jsSettings(
+    name := "backendJs",
+    coverageEnabled := false,
+    // JS-specific settings
+    Compile / scalaSource := baseDirectory.value.getParentFile / "src" / "main" / "scala",
+    Compile / fullLinkJS / scalaJSLinkerConfig ~= {
+      _.withModuleKind(ModuleKind.CommonJSModule)
+        .withModuleSplitStyle(ModuleSplitStyle.SmallModulesFor(List("casimo")))
         .withCheckIR(false)
     },
     libraryDependencies ++= Seq(
-      // Test dependencies
-      "com.github.sbt" % "junit-interface" % "0.13.3" % Test,
-      "org.scalatest" %% "scalatest" % "3.2.18" % Test,
-      "org.scalatestplus" %% "scalacheck-1-18" % "3.2.19.0" % Test,
-      // ScalaJs dependencies
-      "org.scalameta" %%% "munit" % "1.1.1" % Test,
       "org.scala-js" %%% "scalajs-dom" % "2.8.0",
       "com.raquo" %%% "laminar" % "17.0.0"
     )
   )
+
+lazy val backendJvm = backend.jvm
+lazy val backendJs = backend.js
+
+// Frontend-specific implementation (JS only)
+lazy val frontend = project
+  .in(file("frontend"))
+  .enablePlugins(ScalaJSPlugin)
+  .settings(
+    name := "casimo-frontend",
+    scalaVersion := "3.3.5",
+    coverageEnabled := false,
+    // Frontend source locations
+    Compile / scalaSource := baseDirectory.value / "src" / "main" / "scala",
+    Test / scalaSource := baseDirectory.value / "src" / "test" / "scala",
+    scalaJSUseMainModuleInitializer := true,
+    moduleName := "casimo",
+    Compile / fullLinkJS / scalaJSLinkerConfig ~= {
+      _.withModuleKind(ModuleKind.CommonJSModule)
+        .withModuleSplitStyle(ModuleSplitStyle.SmallModulesFor(List("casimo")))
+        .withCheckIR(false)
+    },
+    libraryDependencies ++= Seq(
+      "org.scala-js" %%% "scalajs-dom" % "2.8.0",
+      "com.raquo" %%% "laminar" % "17.0.0"
+    )
+  )
+  .dependsOn(backendJs)
+
+// Root project aggregates all modules
+lazy val root = project
+  .in(file("."))
+  .aggregate(backendJvm, backendJs, frontend)
+  .settings(
+    publish := {},
+    publishLocal := {}
+  )
+
+// command sbt "coverage; backend/test; coverageReport"
