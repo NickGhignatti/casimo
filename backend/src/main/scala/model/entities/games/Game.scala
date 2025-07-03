@@ -1,8 +1,9 @@
 package model.entities.games
 
 import model.entities.Entity
+import utils.Result
 import utils.Result.Success
-import utils.{Result, Vector2D}
+import utils.Vector2D
 
 class Game(
     val id: String,

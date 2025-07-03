@@ -1,8 +1,8 @@
 package model.entities.games
 
-import utils.Result
-
 import scala.util.Random
+
+import utils.Result
 
 trait GameStrategy[B <: Bet]:
   def use(bet: B): Result[Double, Double]

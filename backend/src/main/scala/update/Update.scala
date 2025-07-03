@@ -1,12 +1,12 @@
 package update
 
-import model.SimulationState
-import model.entities.customers.Customer
-import update.Event.*
-import utils.Vector2D
-
 import scala.annotation.tailrec
 import scala.util.Random
+
+import model.SimulationState
+import model.entities.customers.Customer
+import update.Event._
+import utils.Vector2D
 
 object Update:
 
