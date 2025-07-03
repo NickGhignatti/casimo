@@ -20,7 +20,8 @@ case class Customer(
     direction: Vector2D = Vector2D.zero,
     bankroll: Double,
     riskProfile: RiskProfile = Regular,
-    customerState: CustState = Idle
+    customerState: CustState = Idle,
+    gameStrategyID: String = "none"
 ) extends Entity,
       Movable[Customer],
       Bankroll[Customer],
