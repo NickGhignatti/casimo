@@ -78,7 +78,7 @@ class View(state: SimulationState):
     ctx.fillRect(0, 0, canvasWidth, canvasHeight)
 
     state.customers.foreach { customer =>
-      drawOval(customer.pos, ctx)
+      drawOval(customer.position, ctx)
     }
 
 def drawOval(pos: Vector2D, ctx: CanvasRenderingContext2D): Unit =

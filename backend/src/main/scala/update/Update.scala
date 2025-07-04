@@ -1,9 +1,10 @@
 package update
 
 import scala.annotation.tailrec
-import scala.util.{Random, Try}
-import scala.concurrent.*
-import scala.concurrent.duration.*
+import scala.concurrent._
+import scala.concurrent.duration._
+import scala.util.Random
+import scala.util.Try
 
 import model.SimulationState
 import model.entities.customers.Customer
