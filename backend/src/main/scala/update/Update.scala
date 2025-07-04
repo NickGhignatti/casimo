@@ -10,7 +10,6 @@ import model.GlobalConfig
 import model.SimulationState
 import model.entities.customers.Customer
 import model.entities.customers.DefaultMovementManager
-import model.managers.movements.SeparationManager
 import update.Event._
 import utils.Vector2D
 

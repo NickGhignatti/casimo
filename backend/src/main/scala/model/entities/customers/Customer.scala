@@ -14,8 +14,9 @@ import model.entities.RiskProfile
 import model.entities.RiskProfile.Regular
 import model.entities.StatusProfile
 import model.managers.BaseManager
-import model.managers.movements.MoverManager
-import model.managers.movements.SeparationManager
+import model.managers.movements.Boids.CohesionManager
+import model.managers.movements.Boids.MoverManager
+import model.managers.movements.Boids.SeparationManager
 import utils.Vector2D
 
 case class Customer(
@@ -67,4 +68,6 @@ case class DefaultMovementManager(
   override def update(slice: Seq[Customer])(using
       config: GlobalConfig
   ): Seq[Customer] =
-    boidManager.update(slice) pipe moverManager.update
+    boidManager.update(
+      slice
+    ) pipe CohesionManager().update pipe moverManager.update
