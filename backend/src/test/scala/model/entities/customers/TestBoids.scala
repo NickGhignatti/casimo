@@ -2,7 +2,7 @@ package model.entities.customers
 
 import model.GlobalConfig
 import model.entities.Movable
-import model.managers.movements.Boids.{AlignmentManager, CohesionManager, MoverManager, SeparationManager}
+import model.managers.movements.Boids.{AlignmentManager, VelocityLimiterManager, CohesionManager, MoverManager, SeparationManager}
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
 import utils.Vector2D.distance
@@ -43,3 +43,11 @@ class TestBoids extends AnyFunSuite:
     val newBoids = manager.update(boids)
     assert((newBoids(0).direction dot newBoids(1).direction) >
       (boids(0).direction dot boids(1).direction))
+
+  test("The boids velocity's magnitude cannot be bigger than a given parameter"):
+    val boids = Seq(Boid(Vector2D(0, 0), Vector2D(1000, 0)))
+    val manager = VelocityLimiterManager[Boid](
+      maxSpeed = 10
+    )
+    val newBoids = manager.update(boids)
+    assert(newBoids(0).direction.magnitude <= 10)

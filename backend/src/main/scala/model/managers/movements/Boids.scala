@@ -57,3 +57,12 @@ object Boids:
       else
         val average = velocities.reduce(_ + _) / velocities.size
         (average - boid.direction).normalize
+
+  case class VelocityLimiterManager[M <: Movable[M]](maxSpeed: Double)
+      extends BaseManager[Seq[M]]:
+    extension (v: Vector2D)
+      private def capped(max: Double): Vector2D =
+        if v.magnitude < max then v else v.normalize * max
+
+    override def update(slice: Seq[M])(using config: GlobalConfig): Seq[M] =
+      slice.map(boid => boid.updatedDirection(boid.direction.capped(maxSpeed)))
