@@ -1,15 +1,18 @@
 package view
 
-import com.raquo.laminar.api.L.*
+import scala.scalajs.js
+import scala.scalajs.js.annotation.JSGlobal
+
+import com.raquo.laminar.api.L._
 import com.raquo.laminar.nodes.ReactiveHtmlElement
 import model.SimulationState
 import org.scalajs.dom
-import org.scalajs.dom.{CanvasRenderingContext2D, HTMLCanvasElement, document}
-import update.{Event, Update}
+import org.scalajs.dom.CanvasRenderingContext2D
+import org.scalajs.dom.HTMLCanvasElement
+import org.scalajs.dom.document
+import update.Event
+import update.Update
 import utils.Vector2D
-
-import scala.scalajs.js
-import scala.scalajs.js.annotation.JSGlobal
 
 class View(state: SimulationState):
 

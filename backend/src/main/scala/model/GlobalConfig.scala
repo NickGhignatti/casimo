@@ -1,3 +1,3 @@
 package model
 
-case class GlobalConfig ()
+case class GlobalConfig()
