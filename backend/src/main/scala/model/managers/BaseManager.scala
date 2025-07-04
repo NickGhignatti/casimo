@@ -1,3 +1,6 @@
 package model.managers
 
-class BaseManager
+import model.GlobalConfig
+
+trait BaseManager[A]:
+  def update(slice: A)(using config: GlobalConfig): A
