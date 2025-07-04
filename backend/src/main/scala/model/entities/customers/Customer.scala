@@ -56,11 +56,7 @@ case class DefaultMovementManager(
 ) extends BaseManager[Seq[Customer]]:
 
   private val boidManager = SeparationManager[Customer](
-    perceptionRadius = 200,
-    avoidRadius = 10,
-    alignmentWeight = 0.5,
-    cohesionWeight = 0.5,
-    separationWeight = 0.5
+    avoidRadius = 10
   )
 
   private val moverManager = MoverManager[Customer]()

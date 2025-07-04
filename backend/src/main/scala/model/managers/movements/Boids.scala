@@ -14,11 +14,7 @@ object Boids:
       slice.map(boid => boid.updatedPosition(boid.position + boid.direction))
 
   case class SeparationManager[M <: Movable[M]](
-      perceptionRadius: Double,
-      avoidRadius: Double,
-      alignmentWeight: Double,
-      cohesionWeight: Double,
-      separationWeight: Double
+      avoidRadius: Double
   ) extends BaseManager[Seq[M]]:
 
     override def update(slice: Seq[M])(using config: GlobalConfig): Seq[M] =
@@ -47,3 +43,17 @@ object Boids:
       else
         val center = positions.reduce(_ + _) / positions.size
         (center - boid.position).normalize
+
+  case class AlignmentManager[M <: Movable[M]]() extends BaseManager[Seq[M]]:
+    override def update(slice: Seq[M])(using config: GlobalConfig): Seq[M] =
+      slice.map(boid =>
+        boid.updatedDirection(
+          boid.direction + alignment(boid, slice.map(_.direction))
+        )
+      )
+
+    private def alignment(boid: M, velocities: Seq[Vector2D]): Vector2D =
+      if velocities.isEmpty then Vector2D.zero
+      else
+        val average = velocities.reduce(_ + _) / velocities.size
+        (average - boid.direction).normalize
