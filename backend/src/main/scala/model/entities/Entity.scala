@@ -4,7 +4,6 @@ import utils.Vector2D
 
 trait Entity:
   val id: String
-  val position: Vector2D
 
 // TRAIT MOVABLE CAN BE DONE BY COMPOSITION
 //trait Movable[E <: Entity]
@@ -16,7 +15,11 @@ trait Entity:
 //    (c: Customer) => c.copy(position = c.position + c.direction)
 //
 
-trait Movable:
+trait Movable[T <: Movable[T]]:
   val direction: Vector2D
+  val position: Vector2D
 
-  def move(): Movable
+  def move(): T =
+    updatedPosition(position + direction)
+
+  protected def updatedPosition(newPosition: Vector2D): T

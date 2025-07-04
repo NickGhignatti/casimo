@@ -1,11 +1,37 @@
 package model.entities.customers
 
+import model.entities.Bankroll
+import model.entities.CustState
+import model.entities.CustState.Idle
+import model.entities.CustomerState
+import model.entities.Entity
+import model.entities.HasGameStrategy
+import model.entities.Movable
+import model.entities.RiskProfile
+import model.entities.RiskProfile.Regular
+import model.entities.StatusProfile
 import utils.Vector2D
 
-final class CustomerID
+case class Customer(
+    id: String,
+    position: Vector2D,
+    direction: Vector2D = Vector2D.zero,
+    bankroll: Double,
+    riskProfile: RiskProfile = Regular,
+    customerState: CustState = Idle,
+    gameStrategyID: String = "none"
+) extends Entity,
+      Movable[Customer],
+      Bankroll[Customer],
+      StatusProfile,
+      CustomerState[Customer],
+      HasGameStrategy:
 
-case class Customer(id: CustomerID, pos: Vector2D)
+  protected def updatedPosition(newPosition: Vector2D): Customer =
+    this.copy(position = newPosition)
 
-object Customer:
-  def apply(pos: Vector2D): Customer =
-    Customer(CustomerID(), pos)
+  protected def updatedBankroll(newRoll: Double): Customer =
+    this.copy(bankroll = newRoll)
+
+  protected def changedState(newState: CustState): Customer =
+    this.copy(customerState = newState)
