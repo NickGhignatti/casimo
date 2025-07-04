@@ -19,7 +19,6 @@ trait Movable[T <: Movable[T]]:
   val direction: Vector2D
   val position: Vector2D
 
-  def move(): T =
-    updatedPosition(position + direction)
+  def updatedPosition(newPosition: Vector2D): T
 
-  protected def updatedPosition(newPosition: Vector2D): T
+  def updatedDirection(newDirection: Vector2D): T
