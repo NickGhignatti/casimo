@@ -5,10 +5,12 @@ trait BoredomFrustration[T <: BoredomFrustration[T]]:
   val frustration: Double
 
   def updateBoredom(boredomGain: Double): T =
-    updatedBoredom(boredom + boredomGain)
+    val newBoredom = boredom + boredomGain
+    updatedBoredom((newBoredom max 0.0) min 100.0)
 
   def updateFrustration(frustrationGain: Double): T =
-    updatedFrustration(frustration + frustrationGain)
+    val newFrustration = frustration + frustrationGain
+    updatedFrustration((newFrustration max 0.0) min 100.0)
 
   protected def updatedBoredom(newBoredom: Double): T
 
