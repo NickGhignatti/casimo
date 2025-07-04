@@ -1,7 +1,13 @@
 package view
 
 import org.scalajs.dom
-import org.scalajs.dom.{DataTransferDropEffectKind, DragEvent, HTMLElement}
+import org.scalajs.dom.{
+  DataTransferDropEffectKind,
+  DataTransferEffectAllowedKind,
+  DragEvent,
+  HTMLElement,
+  console
+}
 
 object DragDrop:
   private var canvasManager: Option[CanvasManager] = None
@@ -16,7 +22,7 @@ object DragDrop:
       "dragstart",
       { (e: DragEvent) =>
         e.dataTransfer.setData("text/plain", element.dataset("type"))
-        e.dataTransfer.dropEffect = DataTransferDropEffectKind.copy
+        e.dataTransfer.effectAllowed = DataTransferEffectAllowedKind.copy
       }
     )
 
@@ -24,7 +30,7 @@ object DragDrop:
     canvas.addEventListener(
       "dragover",
       { (e: DragEvent) =>
-        e.preventDefault() // Allow drop
+        e.preventDefault()
         e.dataTransfer.dropEffect = DataTransferDropEffectKind.copy
       }
     )

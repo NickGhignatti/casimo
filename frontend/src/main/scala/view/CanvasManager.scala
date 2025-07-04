@@ -13,6 +13,7 @@ class CanvasManager:
     resizeCanvas()
     dom.window.addEventListener("resize", { _ => resizeCanvas() })
     clearCanvas()
+    DragDrop.registerCanvasManager(this)
 
   private def resizeCanvas(): Unit =
     val container = canvas.parentElement
