@@ -14,19 +14,26 @@ class CanvasManager:
 
   def init(): Unit =
     resizeCanvas()
+    dom.window.addEventListener(
+      "resize",
+      { _ =>
+        resizeCanvas()
+        redrawAllComponents()
+      }
+    )
     clearCanvas()
     DragDrop.registerCanvasManager(this)
 
+  private def redrawAllComponents(): Unit = components.foreach { c =>
+    drawComponent(
+      c.x * (canvas.width / c.originalX),
+      c.y * (canvas.height / c.originalY),
+      c.componentType
+    )
+  }
+
   private def resizeCanvas(): Unit =
     val container = canvas.parentElement
-    components.foreach(c =>
-      drawComponent(
-        c.x,
-        c.y,
-        c.componentType
-      )
-    )
-
     canvas.width = container.clientWidth
     canvas.height = container.clientHeight
 
@@ -35,7 +42,7 @@ class CanvasManager:
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
   def addComponent(x: Double, y: Double, componentType: String): Unit =
-    components += Component(x, y, componentType)
+    components += Component(x, y, componentType, canvas.width, canvas.height)
     drawComponent(x, y, componentType)
 
   private def drawComponent(x: Double, y: Double, componentType: String): Unit =
