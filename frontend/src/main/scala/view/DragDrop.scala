@@ -44,6 +44,6 @@ object DragDrop:
         val x = e.clientX - rect.left
         val y = e.clientY - rect.top
 
-        canvasManager.foreach(_.drawComponent(x, y, componentType))
+        canvasManager.foreach(_.addComponent(x, y, componentType))
       }
     )
