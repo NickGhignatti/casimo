@@ -22,7 +22,7 @@ jobs:
       - name: Build and Test
         run: sbt "+backendJVM/test"
       - name: Scalafix check
-        run: sbt "backendJVM/scalafix --check"
+        run: sbt "scalafix --check"
       - name: Codecov
         run: sbt "coverage; backendJVM/test; coverageReport"
       - uses: codecov/codecov-action@v4
