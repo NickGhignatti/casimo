@@ -1,21 +1,15 @@
 package view
 
 import org.scalajs.dom
-import org.scalajs.dom.{
-  DataTransferDropEffectKind,
-  DataTransferEffectAllowedKind,
-  DragEvent,
-  HTMLElement,
-  console
-}
+import org.scalajs.dom.DataTransferDropEffectKind
+import org.scalajs.dom.DataTransferEffectAllowedKind
+import org.scalajs.dom.DragEvent
+import org.scalajs.dom.HTMLElement
+import org.scalajs.dom.console
 
 object DragDrop:
-  private var canvasManager: Option[CanvasManager] = None
 
-  def registerCanvasManager(manager: CanvasManager): Unit =
-    canvasManager = Some(manager)
-
-  def makeDraggable(element: HTMLElement): Unit =
+  def makeDraggable(element: HTMLElement, canvasManager: CanvasManager): Unit =
     element.draggable = true
 
     element.addEventListener(
@@ -44,6 +38,6 @@ object DragDrop:
         val x = e.clientX - rect.left
         val y = e.clientY - rect.top
 
-        canvasManager.foreach(_.addComponent(x, y, componentType))
+        canvasManager.addComponent(x, y, componentType)
       }
     )

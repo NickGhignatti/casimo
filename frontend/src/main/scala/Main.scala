@@ -1,6 +1,8 @@
 import model.SimulationState
 import org.scalajs.dom.document
-import view.{ButtonBar, CanvasManager, Sidebar}
+import view.ButtonBar
+import view.CanvasManager
+import view.Sidebar
 
 @main
 def main(): Unit =
@@ -13,7 +15,7 @@ def main(): Unit =
       val buttonBar = new ButtonBar()
 
       canvasManager.init()
-      sidebar.init()
+      sidebar.init(canvasManager)
       buttonBar.init()
     }
   )

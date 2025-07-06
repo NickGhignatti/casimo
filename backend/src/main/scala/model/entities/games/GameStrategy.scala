@@ -1,9 +1,9 @@
 package model.entities.games
 
-import utils.Result
-
 import scala.annotation.tailrec
 import scala.util.Random
+
+import utils.Result
 
 trait GameStrategy:
   def use(): Result[Double, Double]

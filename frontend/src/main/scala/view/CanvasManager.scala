@@ -1,9 +1,9 @@
 package view
 
+import scala.collection.mutable.ListBuffer
+
 import org.scalajs.dom
 import org.scalajs.dom.html
-
-import scala.collection.mutable.ListBuffer
 
 class CanvasManager:
   private val canvas =
@@ -22,7 +22,6 @@ class CanvasManager:
       }
     )
     clearCanvas()
-    DragDrop.registerCanvasManager(this)
 
   private def redrawAllComponents(): Unit = components.foreach { c =>
     drawComponent(
