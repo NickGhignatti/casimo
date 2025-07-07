@@ -14,8 +14,11 @@ import model.entities.RiskProfile
 import model.entities.RiskProfile.Regular
 import model.entities.StatusProfile
 import model.managers.BaseManager
-import model.managers.movements.MoverManager
-import model.managers.movements.SeparationManager
+import model.managers.movements.Boids.AlignmentManager
+import model.managers.movements.Boids.CohesionManager
+import model.managers.movements.Boids.MoverManager
+import model.managers.movements.Boids.SeparationManager
+import model.managers.movements.Boids.VelocityLimiterManager
 import utils.Vector2D
 
 case class Customer(
@@ -55,16 +58,15 @@ case class DefaultMovementManager(
 ) extends BaseManager[Seq[Customer]]:
 
   private val boidManager = SeparationManager[Customer](
-    perceptionRadius = 200,
-    avoidRadius = 10,
-    alignmentWeight = 0.5,
-    cohesionWeight = 0.5,
-    separationWeight = 0.5
+    avoidRadius = 10
   )
-
   private val moverManager = MoverManager[Customer]()
 
   override def update(slice: Seq[Customer])(using
       config: GlobalConfig
   ): Seq[Customer] =
-    boidManager.update(slice) pipe moverManager.update
+    SeparationManager[Customer](avoidRadius).update(
+      slice
+    ) pipe CohesionManager().update pipe AlignmentManager().update pipe VelocityLimiterManager(
+      maxSpeed
+    ).update pipe moverManager.update
