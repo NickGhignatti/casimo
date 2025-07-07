@@ -5,7 +5,6 @@ import org.scalajs.dom.DataTransferDropEffectKind
 import org.scalajs.dom.DataTransferEffectAllowedKind
 import org.scalajs.dom.DragEvent
 import org.scalajs.dom.HTMLElement
-import org.scalajs.dom.console
 
 object DragDrop:
 

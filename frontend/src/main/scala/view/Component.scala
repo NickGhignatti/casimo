@@ -1,7 +1,5 @@
 package view
 
-import org.scalajs.dom.DragEvent
-
 case class Component(
     x: Double,
     y: Double,
