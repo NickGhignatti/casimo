@@ -1,9 +1,7 @@
 package model.managers
 import model.GlobalConfig
-import model.entities.Bankroll
-import model.entities.BoredomFrustration
-import model.entities.CustState.Idle
-import model.entities.CustomerState
+import model.entities.customers.CustState.Idle
+import model.entities.customers.{Bankroll, BoredomFrustration, CustomerState}
 
 //TODO: implement reasonable rule like if you have less bankroll than the minimum bet of the game
 class PersistenceManager[

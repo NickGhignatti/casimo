@@ -1,9 +1,9 @@
 package model.managers
 
 import model.GlobalConfig
-import model.entities.CustState.{Idle, Playing}
-import model.entities.{Bankroll, BoredomFrustration, CustState, CustomerState}
-import model.entities.customers.Customer
+import model.entities.customers.CustState.{Idle, Playing}
+import model.entities.customers.{Bankroll, BoredomFrustration, CustState, Customer, CustomerState}
+import model.entities.games.{Game, GameState}
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
 
@@ -34,7 +34,7 @@ class TestPersistenceManager extends AnyFunSuite:
     given config: GlobalConfig = GlobalConfig()
     val testPersistenceManager = PersistenceManager[MockCustomer]()
     val mockCustomer = MockCustomer(
-      customerState = Playing,
+      customerState = Playing(Game("test",Vector2D.zero,GameState(1,8))),
       boredom = 81,
       frustration = 50,
       bankroll = 40.0
@@ -47,7 +47,7 @@ class TestPersistenceManager extends AnyFunSuite:
 
     val testPersistenceManager = PersistenceManager[MockCustomer]()
     val mockCustomer = MockCustomer(
-      customerState = Playing,
+      customerState = Playing(Game("test",Vector2D.zero,GameState(1,8))),
       boredom = 30,
       frustration = 61,
       bankroll = 40.0
@@ -61,7 +61,7 @@ class TestPersistenceManager extends AnyFunSuite:
 
     val testPersistenceManager = PersistenceManager[MockCustomer]()
     val mockCustomer = MockCustomer(
-      customerState = Playing,
+      customerState = Playing(Game("test",Vector2D.zero,GameState(1,8))),
       boredom = 50,
       frustration = 50,
       bankroll = 40.0
