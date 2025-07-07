@@ -1,7 +1,6 @@
 package model.entities.customers
 
 import org.scalatest.funsuite.AnyFunSuite
-import model.entities.customers.Bankroll
 
 case class MockBankroll(bankroll: Double)
   extends Bankroll[MockBankroll]:

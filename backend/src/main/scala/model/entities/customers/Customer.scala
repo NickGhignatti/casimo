@@ -1,9 +1,9 @@
 package model.entities.customers
 
-import CustState.Idle
 import model.entities.Entity
 import model.entities.Movable
-import RiskProfile.Regular
+import model.entities.customers.CustState.Idle
+import model.entities.customers.RiskProfile.Regular
 import utils.Vector2D
 
 case class Customer(
