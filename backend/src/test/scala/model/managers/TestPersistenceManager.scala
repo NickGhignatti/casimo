@@ -3,7 +3,7 @@ package model.managers
 import model.GlobalConfig
 import model.entities.customers.CustState.{Idle, Playing}
 import model.entities.customers.{Bankroll, BoredomFrustration, CustState, Customer, CustomerState}
-import model.entities.games.{Game, GameState}
+import model.entities.games.{Game, GameState, RouletteStrategy, RouletteStrategyInstance, SlotStrategy, SlotStrategyInstance}
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
 
@@ -29,7 +29,7 @@ case class MockCustomer(
   protected def updatedBankroll(newBankroll: Double): MockCustomer =
     this.copy(bankroll = newBankroll)
 
-val mockGame = Game("test",Vector2D.zero,GameState(1,8))
+val mockGame = Game("test",Vector2D.zero,GameState(1,8),SlotStrategyInstance(5,() => true))
 class TestPersistenceManager extends AnyFunSuite:
   test("Customer should leave the table when too bored"):
     given config: GlobalConfig = GlobalConfig()

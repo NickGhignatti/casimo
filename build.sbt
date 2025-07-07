@@ -91,6 +91,9 @@ lazy val backend = crossProject(JSPlatform, JVMPlatform)
     // Backend source locations
     Compile / scalaSource := baseDirectory.value.getParentFile / "src" / "main" / "scala",
     Test / scalaSource := baseDirectory.value.getParentFile / "src" / "test" / "scala",
+    Compile / scalacOptions ++= Seq(
+      "-Wunused:imports"
+    ),
     libraryDependencies ++= Seq(
       "org.scalatest" %% "scalatest" % "3.2.19" % Test,
       "org.scalatestplus" %% "scalacheck-1-18" % "3.2.19.0" % Test
@@ -126,6 +129,9 @@ lazy val frontend = project
     // Frontend source locations
     Compile / scalaSource := baseDirectory.value / "src" / "main" / "scala",
     Test / scalaSource := baseDirectory.value / "src" / "test" / "scala",
+    Compile / scalacOptions ++= Seq(
+      "-Wunused:imports"
+    ),
     scalaJSUseMainModuleInitializer := true,
     moduleName := "casimo",
     Compile / fullLinkJS / scalaJSLinkerConfig ~= {

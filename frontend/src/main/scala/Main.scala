@@ -1,3 +1,4 @@
+import com.raquo.laminar.api.L.Var
 import model.SimulationState
 import org.scalajs.dom.document
 import view.ButtonBar
@@ -10,9 +11,11 @@ def main(): Unit =
   document.addEventListener(
     "DOMContentLoaded",
     { _ =>
-      val canvasManager = new CanvasManager()
+      val modelVar = Var(model)
+
+      val canvasManager = new CanvasManager(modelVar)
       val sidebar = new Sidebar()
-      val buttonBar = new ButtonBar()
+      val buttonBar = new ButtonBar(model, modelVar)
 
       canvasManager.init()
       sidebar.init(canvasManager)
