@@ -1,17 +1,14 @@
 package model.entities.games
 
 import model.entities.Entity
-import model.entities.games.GameType.Blackjack
-import model.entities.games.GameType.Roulette
-import model.entities.games.GameType.SlotMachine
 import utils.Result
 import utils.Result.Success
 import utils.Vector2D
 
-enum GameType:
-  case SlotMachine
-  case Roulette
-  case Blackjack
+trait GameType
+object SlotMachine extends GameType
+object Roulette extends GameType
+object Blackjack extends GameType
 
 class Game(
     val id: String,
