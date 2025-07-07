@@ -1,16 +1,12 @@
 package update
 
 import scala.annotation.tailrec
-import scala.concurrent._
-import scala.concurrent.duration._
 import scala.util.Random
-import scala.util.Try
 
 import model.GlobalConfig
 import model.SimulationState
 import model.entities.customers.Customer
 import model.entities.customers.DefaultMovementManager
-import model.managers.movements.SeparationManager
 import update.Event._
 import utils.Vector2D
 
