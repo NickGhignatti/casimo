@@ -2,8 +2,13 @@ package model.managers
 
 import model.GlobalConfig
 import model.entities.customers.CustState.{Idle, Playing}
-import model.entities.customers.{Bankroll, BoredomFrustration, CustState, Customer, CustomerState}
-import model.entities.games.{Game, GameState, RouletteStrategy, RouletteStrategyInstance, SlotStrategy, SlotStrategyInstance}
+import model.entities.customers.{
+  Bankroll,
+  BoredomFrustration,
+  CustState,
+  CustomerState
+}
+import model.entities.games.{Game, GameState, SlotStrategyInstance}
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
 
@@ -86,3 +91,17 @@ class TestPersistenceManager extends AnyFunSuite:
     val shouldLeave = testPersistenceManager.update(Seq(lowBankroll)).head
     assert(shouldStillPlay.customerState === Playing(mockGame))
     assert(shouldLeave.customerState === Idle)
+
+  test("Customer should Remain Idle if already Idle"):
+
+    given config: GlobalConfig = GlobalConfig()
+
+    val testPersistenceManager = PersistenceManager[MockCustomer]()
+    val mockCustomer = MockCustomer(
+      customerState = Idle,
+      boredom = 50,
+      frustration = 50,
+      bankroll = 40.0
+    )
+    val shouldBeIdle = testPersistenceManager.update(Seq(mockCustomer)).head
+    assert(shouldBeIdle.customerState === Idle)
