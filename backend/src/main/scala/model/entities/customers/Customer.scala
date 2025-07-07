@@ -1,15 +1,9 @@
 package model.entities.customers
 
-import model.entities.Bankroll
-import model.entities.CustState
-import model.entities.CustState.Idle
-import model.entities.CustomerState
+import CustState.Idle
 import model.entities.Entity
-import model.entities.HasGameStrategy
 import model.entities.Movable
-import model.entities.RiskProfile
-import model.entities.RiskProfile.Regular
-import model.entities.StatusProfile
+import RiskProfile.Regular
 import utils.Vector2D
 
 case class Customer(
