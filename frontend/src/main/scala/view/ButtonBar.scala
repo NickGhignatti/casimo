@@ -1,11 +1,20 @@
 package view
 
+import com.raquo.laminar.api.L.*
+import model.SimulationState
 import org.scalajs.dom
 import org.scalajs.dom.html
+import update.{Event, Update}
 
-class ButtonBar:
+class ButtonBar(state: SimulationState, model: Var[SimulationState]):
   private val buttonBar = dom.document.getElementById("button-bar")
-  private val buttons = List("Run", "Reset", "Save", "Load")
+  private val buttons = List("Add", "Run", "Reset", "Save", "Load")
+
+  private val eventBus = new EventBus[Event]
+
+  eventBus.events
+    .scanLeft(model.now())((m, e) => Update.update(m, e))
+    .foreach(model.set)(using unsafeWindowOwner)
 
   def init(): Unit =
     buttons.foreach { text =>
@@ -18,11 +27,11 @@ class ButtonBar:
     }
 
   private def handleButtonClick(action: String): Unit =
-    action match
-      case "Run" => dom.console.log("Simulation started")
-      case "Reset" =>
-        dom.console.log("Simulation reset")
-//        CanvasManager.clearCanvas()
-      case "Save" => dom.console.log("State saved")
-      case "Load" => dom.console.log("State loaded")
-      case _      => // Ignore
+    val event: Event = action match
+      case "Add"   => Event.AddCustomers(50)
+      case "Run"   => Event.SimulationTick
+      case "Reset" => ???
+      case "Save"  => ???
+      case "Load"  => ???
+      case _       => ???
+    eventBus.writer.onNext(event)

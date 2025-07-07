@@ -1,16 +1,25 @@
 package view
 
-import scala.collection.mutable.ListBuffer
+import com.raquo.laminar.api.L.Var
+import com.raquo.laminar.api.L.unsafeWindowOwner
+import model.SimulationState
 
+import scala.collection.mutable.ListBuffer
 import org.scalajs.dom
 import org.scalajs.dom.html
 
-class CanvasManager:
+class CanvasManager(model: Var[SimulationState]):
   private val canvas =
     dom.document.getElementById("main-canvas").asInstanceOf[html.Canvas]
   private val ctx =
     canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
   private val components = ListBuffer.empty[Component]
+
+  model.signal.foreach { state =>
+    clearCanvas()
+    redrawAllComponents()
+    drawCustomers(state)
+  }(using unsafeWindowOwner)
 
   def init(): Unit =
     resizeCanvas()
@@ -55,3 +64,12 @@ class CanvasManager:
     ctx.textAlign = "center"
     ctx.textBaseline = "middle"
     ctx.fillText(componentType.take(2), x, y)
+
+  private def drawCustomers(state: SimulationState): Unit =
+    state.customers.foreach { customer =>
+      ctx.beginPath()
+      ctx.arc(customer.position.x, customer.position.y, 3, 0, Math.PI * 2)
+      ctx.fillStyle = "green"
+      ctx.fill()
+      ctx.stroke()
+    }
