@@ -11,7 +11,7 @@ trait Bankroll[T <: Bankroll[T]]:
     val newBankroll = bankroll + netValue
     require(
       newBankroll >= 0,
-      s"Bankroll amount must be positive, instead is $bankroll"
+      s"Bankroll amount must be positive, instead is $newBankroll"
     )
     updatedBankroll(newBankroll)
 
