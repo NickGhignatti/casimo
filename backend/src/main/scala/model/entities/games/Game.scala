@@ -6,9 +6,11 @@ import utils.Result.Success
 import utils.Vector2D
 
 trait GameType
-object SlotMachine extends GameType
-object Roulette extends GameType
-object Blackjack extends GameType
+
+object GameType:
+  object SlotMachine extends GameType
+  object Roulette extends GameType
+  object Blackjack extends GameType
 
 class Game(
     val id: String,
@@ -18,9 +20,9 @@ class Game(
 ) extends Entity:
 
   def getGameType: GameType = strategy match
-    case _: RouletteStrategyInstance  => Roulette
-    case _: SlotStrategyInstance      => SlotMachine
-    case _: BlackJackStrategyInstance => Blackjack
+    case _: RouletteStrategyInstance  => GameType.Roulette
+    case _: SlotStrategyInstance      => GameType.SlotMachine
+    case _: BlackJackStrategyInstance => GameType.Blackjack
 
   def lock(): Result[Game, Game] = gameState.addPlayer() match
     case Success(newGameState) =>

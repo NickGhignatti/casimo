@@ -18,3 +18,6 @@ object Vector2D:
 
   def distance(u: Vector2D, v: Vector2D): Double =
     (v - u).magnitude
+
+  def direction(from: Vector2D, to: Vector2D): Vector2D =
+    (to - from).normalize

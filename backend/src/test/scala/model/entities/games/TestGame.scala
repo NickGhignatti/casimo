@@ -1,5 +1,6 @@
 package model.entities.games
 
+import model.entities.games.GameType.*
 import model.entities.games.dsl.use
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Result.{Failure, Success}

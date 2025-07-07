@@ -13,6 +13,7 @@ import model.entities.Movable
 import model.entities.RiskProfile
 import model.entities.RiskProfile.Regular
 import model.entities.StatusProfile
+import model.entities.games.GameType
 import model.managers.BaseManager
 import model.managers.movements.Boids.AlignmentManager
 import model.managers.movements.Boids.CohesionManager
@@ -28,7 +29,8 @@ case class Customer(
     bankroll: Double,
     riskProfile: RiskProfile = Regular,
     customerState: CustState = Idle,
-    gameStrategyID: String = "none"
+    gameStrategyID: String = "none",
+    favouriteGames: Seq[GameType] = Seq(GameType.SlotMachine)
 ) extends Entity,
       Movable[Customer],
       Bankroll[Customer],
@@ -57,16 +59,13 @@ case class DefaultMovementManager(
     separationWeight: Double = 1
 ) extends BaseManager[Seq[Customer]]:
 
-  private val boidManager = SeparationManager[Customer](
-    avoidRadius = 10
-  )
   private val moverManager = MoverManager[Customer]()
 
   override def update(slice: Seq[Customer])(using
       config: GlobalConfig
   ): Seq[Customer] =
-    SeparationManager[Customer](avoidRadius).update(
-      slice
-    ) pipe CohesionManager().update pipe AlignmentManager().update pipe VelocityLimiterManager(
-      maxSpeed
-    ).update pipe moverManager.update
+    SeparationManager[Customer](avoidRadius).update(slice) pipe
+      CohesionManager().update pipe
+      AlignmentManager().update pipe
+      VelocityLimiterManager(maxSpeed).update pipe
+      moverManager.update
