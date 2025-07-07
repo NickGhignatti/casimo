@@ -1,5 +1,6 @@
 package model.entities.games
 
+import model.entities.games.GameType.{Blackjack, Roulette, SlotMachine}
 import model.entities.games.dsl.use
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Result.{Failure, Success}
@@ -35,3 +36,20 @@ class TestGame extends AnyFunSuite:
     game.unlock() match
       case Failure(newGame) => assert(newGame === game)
       case _ => fail("Expected Failure when unlocking empty game")
+
+  test("GameType should be roulette when applied RouletteStrategy"):
+    val rouletteStrategy = use(RouletteStrategy) bet 5.0 when (true)
+    val game =
+      Game("TestGame", Vector2D.zero, GameState(0, 1), rouletteStrategy)
+    assert(game.getGameType == Roulette)
+
+  test("GameType should be slot when applied SlotMachineStrategy"):
+    val game =
+      Game("TestGame", Vector2D.zero, GameState(0, 1), strategy)
+    assert(game.getGameType == SlotMachine)
+
+  test("GameType should be blackjack when applied BlackJackStrategy"):
+    val blackJackStrategy = use(BlackJackStrategy) bet 5.0 when (true)
+    val game =
+      Game("TestGame", Vector2D.zero, GameState(0, 1), blackJackStrategy)
+    assert(game.getGameType == Blackjack)

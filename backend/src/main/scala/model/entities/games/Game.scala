@@ -1,7 +1,9 @@
 package model.entities.games
 
 import model.entities.Entity
-import model.entities.games.GameType.{Blackjack, Roulette, SlotMachine}
+import model.entities.games.GameType.Blackjack
+import model.entities.games.GameType.Roulette
+import model.entities.games.GameType.SlotMachine
 import utils.Result
 import utils.Result.Success
 import utils.Vector2D
