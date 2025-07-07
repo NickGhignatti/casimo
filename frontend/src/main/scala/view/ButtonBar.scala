@@ -27,11 +27,14 @@ class ButtonBar(state: SimulationState, model: Var[SimulationState]):
     }
 
   private def handleButtonClick(action: String): Unit =
-    val event: Event = action match
-      case "Add"   => Event.AddCustomers(50)
-      case "Run"   => Event.SimulationTick
+    action match
+      case "Add" => eventBus.writer.onNext(Event.AddCustomers(50))
+      case "Run" =>
+        dom.window.setInterval(
+          () => eventBus.writer.onNext(Event.SimulationTick),
+          500
+        )
       case "Reset" => ???
       case "Save"  => ???
       case "Load"  => ???
       case _       => ???
-    eventBus.writer.onNext(event)
