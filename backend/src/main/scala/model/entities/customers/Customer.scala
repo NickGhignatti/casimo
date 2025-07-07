@@ -3,16 +3,10 @@ package model.entities.customers
 import scala.util.chaining.scalaUtilChainingOps
 
 import model.GlobalConfig
-import model.entities.Bankroll
-import model.entities.CustState
-import model.entities.CustState.Idle
-import model.entities.CustomerState
 import model.entities.Entity
-import model.entities.HasGameStrategy
 import model.entities.Movable
-import model.entities.RiskProfile
-import model.entities.RiskProfile.Regular
-import model.entities.StatusProfile
+import model.entities.customers.CustState.Idle
+import model.entities.customers.RiskProfile.Regular
 import model.managers.BaseManager
 import model.managers.movements.Boids.AlignmentManager
 import model.managers.movements.Boids.CohesionManager
