@@ -1,10 +1,10 @@
 package view
 
+import scala.collection.mutable.ListBuffer
+
 import com.raquo.laminar.api.L.Var
 import com.raquo.laminar.api.L.unsafeWindowOwner
 import model.SimulationState
-
-import scala.collection.mutable.ListBuffer
 import org.scalajs.dom
 import org.scalajs.dom.html
 

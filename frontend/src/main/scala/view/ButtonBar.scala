@@ -1,10 +1,11 @@
 package view
 
-import com.raquo.laminar.api.L.*
+import com.raquo.laminar.api.L._
 import model.SimulationState
 import org.scalajs.dom
 import org.scalajs.dom.html
-import update.{Event, Update}
+import update.Event
+import update.Update
 
 class ButtonBar(state: SimulationState, model: Var[SimulationState]):
   private val buttonBar = dom.document.getElementById("button-bar")
