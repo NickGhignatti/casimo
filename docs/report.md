@@ -68,12 +68,93 @@ Cornerstone component is the update function, which has been designed in a way t
 
 ## Implementation
 ### Student contributions
-For each student: description of what was done/co-done and with whom
+Nicolò Ghignatti
+#### Result
+Having to deal with data which can have two states (win or loss for a bet, for example) can be quite annoying so, I've 
+decided to implement a monad which can do it for us. Basically it is a enum which can have 2 states: a 
+`Success` or a `Failure`:
+```scala
+package utils
 
+enum Result[+T, +E]:
+  case Success(value: T)
+  case Failure(error: E)
+
+  def map[U](f: T => U): Result[U, E] = this match
+    case Success(value) => Success(f(value))
+    case Failure(error) => Failure(error)
+
+  def flatMap[U, F](f: T => Result[U, F]): Result[U, E | F] = this match
+    case Success(value) => f(value)
+    case Failure(error) => Failure(error)
+
+  def getOrElse[U >: T](default: U): U = this match
+    case Success(value) => value
+    case Failure(_)     => default
+
+  def isSuccess: Boolean = this match
+    case Success(_) => true
+    case Failure(_) => false
+
+  def isFailure: Boolean = !isSuccess
+```
+This kind of implementation help also in the error handling
+
+#### Games
+I've dealt with the game implementation in their totality. The crucial point was dealing with the customers, so useful APIs
+have been implemented, allowing the players to join games and play them.
+```scala
+class Game extends Entity:
+  def gameType: GameType
+  def lock: Result
+  def unlock: Result
+  def play: Result
+```
+An important task was to manage the customers joining a game, allowing the to join if possible, otherwise block them.
+This mechanism has been implemented in a `GameState` which manage the join/leave mechanism:
+Instead the logic of the games was implemented using an internal DSL, which expose useful stuff to implement strategies
+in an easy way:
+```scala
+// this is an example of how the game strategy DSL was implemented
+trait GameStrategy:
+    def use(): Result[Double, Double]
+
+object SlotStrategy:
+    def apply: SlotStrategyBuilder = SlotStrategyBuilder()
+
+case class SlotStrategyBuilder( betAmount, condition):
+    def bet(amount: Double): SlotStrategyBuilder =
+      require(amount > 0.0, "Bet amount must be positive")
+    this.copy(betAmount = Some(amount))
+
+def when(cond: => Boolean): SlotStrategyInstance =
+  SlotStrategyInstance(betAmount.getOrElse(0.0), () => cond)
+
+case class SlotStrategyInstance(betAmount, condition) extends GameStrategy:
+    override def use(): Result[Double, Double] =
+        val values =
+          for _ <- 1 to 5 yield Random.nextInt(5) + 1
+        if condition() && values.distinct.size == 1 then
+          Result.Success(betAmount * 10)
+        else Result.Failure(betAmount)
+```
+Allowing an easy creation like the following:
+```scala 3
+val bankroll = 10.0
+use(SlotStrategy) bet 5.0 when (bankRoll > 0.0)
+```
 ### Important implementation aspects
 
 ## Testing
 ### Technologies used
+For testing our code we used ScalaTest, probably, the most widely used and flexible testing framework for Scala.
+The choice of this testing technology has different pros:
+- **Rich Testing Styles**: With multiple built-in styles—such as FlatSpec, FunSuite, FunSpec, WordSpec, FreeSpec, 
+    PropSpec, and FeatureSpec—ScalaTest enables you to write tests in the style that best fits your needs: xUnit, BDD, 
+    nested specification, or property-based testing
+- **Powerful Matchers & DSL**: ScalaTest includes expressive matchers that allow fluent assertions
+- **Deep Ecosystem Integration**: ScalaTest integrates with build tools and frameworks including sbt, Maven, Gradle, 
+    IntelliJ, Eclipse, and testing tools like JUnit, TestNG, ScalaCheck, JMock, EasyMock, Mockito, and Selenium
 
 ### Coverage level
 
