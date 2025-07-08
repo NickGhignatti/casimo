@@ -47,6 +47,39 @@ Cornerstone of this architecture is the unidirectional data flow, where at the c
 sent by the view and produces a new model. This kind of update function is what allow this architecture to simulate the loop of a traditional simulation application, 
 maintaining the purely functional nature of the application.
 
+#### Customer Composition
+
+We choose to implement the `Customer` behavior using **F‑bounded polymorphic traits**. This choice brings some great feature enabling a **modular** and **extensible** design.
+<pre><code id="customer-block" class="language-scala"></code></pre>
+
+<!-- PrismJS for syntax highlighting -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-scala.min.js"></script>
+
+<script>
+fetch('https://github.com/NickGhignatti/casimo/blob/dev/backend/src/main/scala/model/entities/customers/Customer.scala')
+  .then(response => response.text())
+  .then(code => {
+    document.getElementById('customer-block').textContent = code;
+    Prism.highlightAll();
+  });
+</script>
+
+The key strength of this design are:
+
+- **Strong type safety**  
+  F‑bounded traits restrict generic parameters to subtypes of the trait itself, preventing accidental type error at compile time.
+
+- **Precise APIs and seamless mvu updates**  
+  By encoding the concrete subtype via `C <: Trait[C]`, trait methods can return `C` directly, enabling `.copy(...)` function to produce a new instance in a clean and optimize way. This avoids casts or losing type specificity in method returns making updating state easier.
+
+- **Modular and extensible architecture**  
+  Each behavior (e.g., bankroll, boredom, status) is isolated within its own trait. This allows introducing new behaviour without altering existing implementations by just defining the trait and mix it in.
+
+By leveraging these traits composition system, our `Customer` model stays **type safe**, **cohesive**, and easy to evolve, supporting future expansion of behaviors and customer types without compromising the maintainability.
+
+
 ### Description of architectural patterns used
 
 ### Any distributed system components
