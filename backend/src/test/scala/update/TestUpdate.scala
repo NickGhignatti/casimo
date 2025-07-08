@@ -1,7 +1,7 @@
 package update
 
-import org.scalatest.funsuite.AnyFunSuite
 import model.SimulationState
+import org.scalatest.funsuite.AnyFunSuite
 
 class TestUpdate extends AnyFunSuite:
 
