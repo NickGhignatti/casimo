@@ -75,12 +75,14 @@ We choose to implement the `Customer` behavior using **F‑bounded polymorphic t
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-scala.min.js"></script>
 
 <script>
+if (typeof window !== 'undefined') {
 fetch('https://github.com/NickGhignatti/casimo/blob/dev/backend/src/main/scala/model/entities/customers/Customer.scala')
   .then(response => response.text())
   .then(code => {
     document.getElementById('customer-block').textContent = code;
     Prism.highlightAll();
   });
+}
 </script>
 </ClientOnly>
 
