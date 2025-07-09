@@ -39,11 +39,11 @@ object Update:
         val newCustomers = List.fill(50)(
           Customer(
             s"customer-${Random.nextInt()}",
-            Vector2D(
+            position = Vector2D(
               x = Random.between(10.0, 750.0),
               y = Random.between(10.0, 450.0)
             ),
-            Vector2D(Random.between(0, 5), Random.between(0, 5)),
+            direction = Vector2D(Random.between(0, 50), Random.between(0, 50)),
             bankroll = Random.between(30, 5000)
           )
         )

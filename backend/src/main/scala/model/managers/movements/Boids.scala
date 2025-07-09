@@ -5,7 +5,6 @@ import model.entities.Movable
 import model.managers.BaseManager
 import utils.Vector2D
 import utils.Vector2D.distance
-import model.managers.|
 
 object Boids:
   case class State[M <: Movable[M]](boid: M, others: Seq[M])
@@ -28,7 +27,8 @@ object Boids:
     override def update(slice: State[M])(using config: GlobalConfig): State[M] =
       slice.copy(
         boid = slice.boid.updatedDirection(
-          separation(slice.boid, slice.others.map(_.position))
+          slice.boid.direction +
+            separation(slice.boid, slice.others.map(_.position))
         )
       )
 

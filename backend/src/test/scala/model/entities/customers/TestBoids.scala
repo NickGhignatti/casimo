@@ -91,8 +91,13 @@ class TestBoids extends AnyFunSuite:
         | MoverManager()
 
   test("Boids should move"):
+    val boids = Seq(
+      Boid(Vector2D(0, 0), Vector2D(1, 0)),
+      Boid(Vector2D(50, 0), Vector2D(0, 1)),
+      Boid(Vector2D(100, 0), Vector2D(-1, 0))
+    )
     val manager = BoidsManager(
-      perceptionRadius = 100,
+      perceptionRadius = 1000,
       avoidRadius = 10,
       maxSpeed = 10
     )
