@@ -66,25 +66,40 @@ Cornerstone component is the update function, which has been designed in a way t
 #### Customer Composition
 
 We choose to implement the `Customer` behavior using **F‑bounded polymorphic traits**. This choice brings some great feature enabling a **modular** and **extensible** design.
-<ClientOnly>
-<pre><code id="customer-block" class="language-scala"></code></pre>
 
-<!-- PrismJS for syntax highlighting -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-scala.min.js"></script>
+```scala 3
+case class Customer(
+    id: String,
+    bankroll: Double,
+    customerState: CustState = Idle
+) extends Entity,
+      Bankroll[Customer],
+      CustomerState[Customer]:
 
-<script>
-if (typeof window !== 'undefined') {
-fetch('https://github.com/NickGhignatti/casimo/blob/dev/backend/src/main/scala/model/entities/customers/Customer.scala')
-  .then(response => response.text())
-  .then(code => {
-    document.getElementById('customer-block').textContent = code;
-    Prism.highlightAll();
-  });
-}
-</script>
-</ClientOnly>
+  protected def updatedBankroll(newRoll: Double): Customer =
+    this.copy(bankroll = newRoll)
+
+  protected def changedState(newState: CustState): Customer =
+    this.copy(customerState = newState)
+```
+```scala 3
+trait Bankroll[T <: Bankroll[T]]:
+  val bankroll: Double
+  require(
+    bankroll >= 0,
+    s"Bankroll amount must be positive, instead is $bankroll"
+  )
+
+  def updateBankroll(netValue: Double): T =
+    val newBankroll = bankroll + netValue
+    require(
+      newBankroll >= 0,
+      s"Bankroll amount must be positive, instead is $newBankroll"
+    )
+    updatedBankroll(newBankroll)
+
+  protected def updatedBankroll(newBankroll: Double): T
+```
 
 The key strength of this design are:
 
@@ -92,11 +107,27 @@ The key strength of this design are:
   F‑bounded traits restrict generic parameters to subtypes of the trait itself, preventing accidental type error at compile time.
 
 - **Precise APIs and seamless mvu updates**  
-  By encoding the concrete subtype via `C <: Trait[C]`, trait methods can return `C` directly, enabling `.copy(...)` function to produce a new instance in a clean and optimize way. This avoids casts or losing type specificity in method returns making updating state easier.
+  By encoding the concrete subtype via `C <: Trait[C]`, trait methods can return `C` directly, enabling `.copy(...)` function in the Customer producing a new instance in a clean and optimize way. This avoids casts or losing type specificity in method returns making updating state easier.
 
+```scala 3
+val newCustomer = Customer(id = "myCustomer", bankroll = 50.0)
+val updatedCustomer = newCustomer.updateBankroll(-20.0)
+// ad-hoc method for update that checks that bankroll don't go below zero
+```
 - **Modular and extensible architecture**  
   Each behavior (e.g., bankroll, boredom, status) is isolated within its own trait. This allows introducing new behaviour without altering existing implementations by just defining the trait and mix it in.
+```scala 3
+case class Customer(
+id: String,
+bankroll: Double,
+customerState: CustState = Idle,
+boredom: Double
+) extends Entity,
+Bankroll[Customer],
+CustomerState[Customer],
+Boredom[Customer]: // Just adding a new behaviour to the Customer by composition
 
+```
 By leveraging these traits composition system, our `Customer` model stays **type safe**, **cohesive**, and easy to evolve, supporting future expansion of behaviors and customer types without compromising the maintainability.
 
 ### Design patterns
