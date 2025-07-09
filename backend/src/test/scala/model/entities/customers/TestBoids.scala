@@ -3,13 +3,11 @@ package model.entities.customers
 import model.GlobalConfig
 import model.entities.Movable
 import model.managers.movements.Boids
-import model.managers.{BaseManager, |}
+import model.managers.|
 import model.managers.movements.Boids.{AdapterManager, AlignmentManager, CohesionManager, MoverManager, PerceptionLimiterManager, SeparationManager, VelocityLimiterManager}
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
 import utils.Vector2D.distance
-
-import scala.util.chaining.scalaUtilChainingOps
 
 class TestBoids extends AnyFunSuite:
 
