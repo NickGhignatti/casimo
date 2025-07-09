@@ -2,15 +2,21 @@ package update
 
 import scala.annotation.tailrec
 import scala.util.Random
-
 import model.GlobalConfig
 import model.SimulationState
+import model.data.DataManager
 import model.entities.customers.Customer
 import model.entities.customers.DefaultMovementManager
-import update.Event._
+import model.entities.games.GameResolver
+import update.Event.*
 import utils.Vector2D
 
 object Update:
+
+  def updateSimulationManager(
+      dataManager: DataManager,
+      state: SimulationState
+  ): DataManager = dataManager.copy(state = state)
 
   @tailrec
   def update(state: SimulationState, event: Event): SimulationState =
@@ -26,7 +32,9 @@ object Update:
         update(state.copy(customers = newCustPos), UpdateGames)
       case UpdateGames =>
         println("Updating games...")
-        update(state, UpdateSimulationBankrolls)
+        val updatedGames =
+          GameResolver.update(state.customers.toList, state.games)
+        update(state.copy(games = updatedGames), UpdateSimulationBankrolls)
       case UpdateSimulationBankrolls =>
         println("Updating simulation bankrolls...")
         update(state, UpdateCustomersState)
