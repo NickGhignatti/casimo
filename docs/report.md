@@ -54,7 +54,15 @@ maintaining the purely functional nature of the application.
 ### Any distributed system components
 
 ### Crucial technological choices for architecture
+#### Scala.js + Laminar: Reactive Frontend & Continuous Deployment
 
+The application rely on a browser-native UI built using **Scala.js** with **Laminar**. This choice was driven by the ability to have a continuous deployment via GitHub Pages while also adopting well to the MVU architecture. 
+
+Laminar **fine-grained reactivity** ensures that view components update automatically when the model changes, perfectly complementing the MVU dataflow `Model → View → Update` cycle. Rather than manually propagating new state, Laminar delivers updates precisely where they’re needed.
+Also, DOM changes are direct without the need of virtual-DOM abstraction, avoiding performance bottlenecks and potential stale-state problem common with other web framework.
+
+- **Continuous Deployment**  
+  Since Scala.js outputs JavaScript and HTML, our pipeline can **automatically build, test, and deploy** the application on every change. This continuous deployment setup ensures the latest version is always live without manual intervention needed.
 ### Diagrams
 
 ## Detailed Design
