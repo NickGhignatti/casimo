@@ -6,16 +6,15 @@ import utils.Result.{Failure, Success}
 import utils.Vector2D
 
 class TestGame extends AnyFunSuite:
-  val strategy: SlotStrategyInstance = use(SlotStrategy) bet 5.0 when (true)
 
   test("lock should succeed when under capacity"):
-    val game = Game("TestGame", Vector2D(0.0, 0.0), GameState(0, 1), strategy)
+    val game = GameBuilder.slot(Vector2D.zero)
     game.lock() match
       case Success(newGame) => assert(newGame.gameState.currentPlayers === 1)
       case _                => fail("Expected Success when locking game")
 
   test("lock should fail when at capacity"):
-    val game = Game("TestGame", Vector2D(0.0, 0.0), GameState(0, 1), strategy)
+    val game = GameBuilder.slot(Vector2D.zero)
     val first = game.lock()
     assert(first.isSuccess, "First lock should succeed")
 
@@ -25,30 +24,51 @@ class TestGame extends AnyFunSuite:
       case _                => fail("Expected Failure when locking full game")
 
   test("unlock should succeed when players present"):
-    val game = Game("TestGame", Vector2D(0.0, 0.0), GameState(1, 1), strategy)
-    game.unlock() match
+    val game = GameBuilder.slot(Vector2D.zero)
+    val first = game.lock()
+    assert(first.isSuccess, "First lock should succeed")
+    first.getOrElse(game).unlock() match
       case Success(newGame) => assert(newGame.gameState.currentPlayers === 0)
       case _                => fail("Expected Success when unlocking game")
 
   test("unlock should fail when no players"):
-    val game = Game("TestGame", Vector2D(0.0, 0.0), GameState(0, 1), strategy)
+    val game = GameBuilder.slot(Vector2D.zero)
     game.unlock() match
       case Failure(newGame) => assert(newGame === game)
       case _ => fail("Expected Failure when unlocking empty game")
 
-  test("GameType should be roulette when applied RouletteStrategy"):
-    val rouletteStrategy = use(RouletteStrategy) bet 5.0 when (true)
-    val game =
-      Game("TestGame", Vector2D.zero, GameState(0, 1), rouletteStrategy)
-    assert(game.getGameType == Roulette)
+  test("GameType should be roulette when created a roulette"):
+    val game = GameBuilder.roulette(Vector2D.zero)
+    assert(game.gameType == Roulette)
 
-  test("GameType should be slot when applied SlotMachineStrategy"):
-    val game =
-      Game("TestGame", Vector2D.zero, GameState(0, 1), strategy)
-    assert(game.getGameType == SlotMachine)
+  test("GameType should be slot when created a slot"):
+    val game = GameBuilder.slot(Vector2D.zero)
+    assert(game.gameType == SlotMachine)
 
-  test("GameType should be blackjack when applied BlackJackStrategy"):
-    val blackJackStrategy = use(BlackJackStrategy) bet 5.0 when (true)
-    val game =
-      Game("TestGame", Vector2D.zero, GameState(0, 1), blackJackStrategy)
-    assert(game.getGameType == Blackjack)
+  test("GameType should be blackjack when created a blackjack"):
+    val game = GameBuilder.blackjack(Vector2D.zero)
+    assert(game.gameType == Blackjack)
+
+  test("Roulette should not fail if applied RouletteBet"):
+    val game = GameBuilder.roulette(Vector2D.zero)
+    assert(game.play(RouletteBet(10.0, List(10))).isSuccess)
+
+  test("Roulette should fail if not applied RouletteBet"):
+    val game = GameBuilder.roulette(Vector2D.zero)
+    assert(game.play(SlotBet(10.0)).isFailure)
+
+  test("SlotMachine should not fail if applied SlotBet"):
+    val game = GameBuilder.slot(Vector2D.zero)
+    assert(game.play(SlotBet(10.0)).isSuccess)
+
+  test("SlotMachine should fail if not applied SlotBet"):
+    val game = GameBuilder.slot(Vector2D.zero)
+    assert(game.play(RouletteBet(10.0, List(10))).isFailure)
+
+  test("BlackJack should not fail if applied BlackJackBet"):
+    val game = GameBuilder.blackjack(Vector2D.zero)
+    assert(game.play(BlackJackBet(10.0, 18)).isSuccess)
+
+  test("BlackJack should fail if not applied RouletteBet"):
+    val game = GameBuilder.blackjack(Vector2D.zero)
+    assert(game.play(SlotBet(10.0)).isFailure)
