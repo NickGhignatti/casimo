@@ -6,34 +6,35 @@ import utils.Result.{Failure, Success}
 import utils.Vector2D
 
 class TestGame extends AnyFunSuite:
+  val mockId = "test"
 
   test("lock should succeed when under capacity"):
     val game = GameBuilder.slot(Vector2D.zero)
-    game.lock() match
+    game.lock(mockId) match
       case Success(newGame) => assert(newGame.gameState.currentPlayers === 1)
       case _                => fail("Expected Success when locking game")
 
   test("lock should fail when at capacity"):
     val game = GameBuilder.slot(Vector2D.zero)
-    val first = game.lock()
+    val first = game.lock(mockId)
     assert(first.isSuccess, "First lock should succeed")
 
     val lockedGame = first.getOrElse(game)
-    lockedGame.lock() match
+    lockedGame.lock(mockId) match
       case Failure(newGame) => assert(newGame === lockedGame)
       case _                => fail("Expected Failure when locking full game")
 
   test("unlock should succeed when players present"):
     val game = GameBuilder.slot(Vector2D.zero)
-    val first = game.lock()
+    val first = game.lock(mockId)
     assert(first.isSuccess, "First lock should succeed")
-    first.getOrElse(game).unlock() match
+    first.getOrElse(game).unlock(mockId) match
       case Success(newGame) => assert(newGame.gameState.currentPlayers === 0)
       case _                => fail("Expected Success when unlocking game")
 
   test("unlock should fail when no players"):
     val game = GameBuilder.slot(Vector2D.zero)
-    game.unlock() match
+    game.unlock(mockId) match
       case Failure(newGame) => assert(newGame === game)
       case _ => fail("Expected Failure when unlocking empty game")
 
