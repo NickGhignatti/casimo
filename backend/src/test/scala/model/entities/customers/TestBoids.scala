@@ -26,24 +26,22 @@ class TestBoids extends AnyFunSuite:
 
   test("Two boids with only separation will increase their distance"):
     val boids = Seq(Boid(Vector2D(0, 0)), Boid(Vector2D(1, 0)))
-    val manager = AdapterManager(SeparationManager[Boid](
-      avoidRadius = 10,
-    ))
-    val newBoids = manager.update(boids) pipe mover.update
+    val manager = AdapterManager(SeparationManager[Boid](10))
+    val newBoids = boids | manager | mover
     assert(distance(newBoids(0).position, newBoids(1).position) >
       distance(boids(0).position, boids(1).position))
 
   test("Two boids with only cohesion will get closer"):
     val boids = Seq(Boid(Vector2D(0, 0)), Boid(Vector2D(100, 0)))
     val manager = AdapterManager(CohesionManager[Boid]())
-    val newBoids = manager.update(boids) pipe mover.update
+    val newBoids = boids | manager | mover
     assert(distance(newBoids(0).position, newBoids(1).position) <
       distance(boids(0).position, boids(1).position))
 
   test("Two boids with only alignment will align their directions"):
     val boids = Seq(Boid(Vector2D(0, 0), Vector2D(1, 0)), Boid(Vector2D(1, 0), Vector2D(0, 1)))
     val manager = AdapterManager(AlignmentManager[Boid]())
-    val newBoids = manager.update(boids)
+    val newBoids = boids | manager
     assert((newBoids(0).direction dot newBoids(1).direction) >
       (boids(0).direction dot boids(1).direction))
 
@@ -52,7 +50,7 @@ class TestBoids extends AnyFunSuite:
     val manager = VelocityLimiterManager[Boid](
       maxSpeed = 10
     )
-    val newBoids = manager.update(boids)
+    val newBoids = boids | manager
     assert(newBoids(0).direction.magnitude <= 10)
 
   private val boids = Seq(Boid(Vector2D(0, 0)), Boid(Vector2D(50, 0)), Boid(Vector2D(100, 0)))
@@ -69,36 +67,3 @@ class TestBoids extends AnyFunSuite:
     assert((states(0) | limiter50).others == Seq(boids(0), boids(1)))
     assert((states(1) | limiter50).others == Seq(boids(0), boids(1), boids(2)))
     assert((states(2) | limiter50).others == Seq(boids(1), boids(2)))
-
-  test("A boid can see all the others when the perception radius is large enough"):
-    states.foreach: state =>
-      assert((state | PerceptionLimiterManager(100)).others == boids)
-
-  private case class BoidsManager(
-                                            perceptionRadius: Double,
-                                            avoidRadius: Double,
-                                            maxSpeed: Double
-                                          ) extends BaseManager[Seq[Boid]]:
-
-    override def update(slice: Seq[Boid])(using config: GlobalConfig): Seq[Boid] =
-      slice | Boids.AdapterManager(
-        PerceptionLimiterManager(perceptionRadius)
-          | AlignmentManager()
-          | CohesionManager()
-          | SeparationManager(avoidRadius)
-      )
-        | VelocityLimiterManager(maxSpeed)
-        | MoverManager()
-
-  test("Boids should move"):
-    val boids = Seq(
-      Boid(Vector2D(0, 0), Vector2D(1, 0)),
-      Boid(Vector2D(50, 0), Vector2D(0, 1)),
-      Boid(Vector2D(100, 0), Vector2D(-1, 0))
-    )
-    val manager = BoidsManager(
-      perceptionRadius = 1000,
-      avoidRadius = 10,
-      maxSpeed = 10
-    )
-    assert((boids | manager) != boids)

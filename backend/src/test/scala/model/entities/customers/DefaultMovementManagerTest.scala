@@ -6,7 +6,7 @@ import model.managers.|
 import model.given_GlobalConfig
 
 class DefaultMovementManagerTest extends AnyFunSuite:
-  test("DefaultMovementManager should not diverge"):
+  test("DefaultMovementManager should move the customers"):
     val customers = Seq(
       Customer(
         id = "Alice",
