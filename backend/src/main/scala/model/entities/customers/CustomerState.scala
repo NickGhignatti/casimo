@@ -1,4 +1,6 @@
-package model.entities
+package model.entities.customers
+
+import model.entities.games.Game
 
 trait CustomerState[T <: CustomerState[T]]:
   val customerState: CustState
@@ -9,4 +11,5 @@ trait CustomerState[T <: CustomerState[T]]:
   protected def changedState(newState: CustState): T
 
 enum CustState:
-  case Playing, Idle, Exited
+  case Playing(game: Game)
+  case Idle

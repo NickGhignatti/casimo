@@ -1,4 +1,4 @@
-package model.entities
+package model.entities.customers
 
 trait StatusProfile:
   val riskProfile: RiskProfile
