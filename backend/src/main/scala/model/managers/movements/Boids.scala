@@ -5,8 +5,16 @@ import model.entities.Movable
 import model.managers.BaseManager
 import utils.Vector2D
 import utils.Vector2D.distance
+import model.managers.|
 
 object Boids:
+  case class State[M <: Movable[M]](boid: M, others: Seq[M])
+
+  case class AdapterManager[M <: Movable[M]](
+      manager: BaseManager[State[M]]
+  ) extends BaseManager[Seq[M]]:
+    override def update(slice: Seq[M])(using config: GlobalConfig): Seq[M] =
+      slice.map(boid => manager.update(State(boid, slice)).boid)
 
   case class MoverManager[M <: Movable[M]]() extends BaseManager[Seq[M]]:
 
@@ -15,11 +23,13 @@ object Boids:
 
   case class SeparationManager[M <: Movable[M]](
       avoidRadius: Double
-  ) extends BaseManager[Seq[M]]:
+  ) extends BaseManager[State[M]]:
 
-    override def update(slice: Seq[M])(using config: GlobalConfig): Seq[M] =
-      slice.map(boid =>
-        boid.updatedDirection(separation(boid, slice.map(_.position)))
+    override def update(slice: State[M])(using config: GlobalConfig): State[M] =
+      slice.copy(
+        boid = slice.boid.updatedDirection(
+          separation(slice.boid, slice.others.map(_.position))
+        )
       )
 
     private def separation(boid: M, positions: Seq[Vector2D]): Vector2D =
@@ -30,11 +40,14 @@ object Boids:
           .map(pos => (boid.position - pos).normalize)
           .reduce(_ + _)
 
-  case class CohesionManager[M <: Movable[M]]() extends BaseManager[Seq[M]]:
-    override def update(slice: Seq[M])(using config: GlobalConfig): Seq[M] =
-      slice.map(boid =>
-        boid.updatedDirection(
-          boid.direction + cohesion(boid, slice.map(_.position))
+  case class CohesionManager[M <: Movable[M]]() extends BaseManager[State[M]]:
+    override def update(slice: State[M])(using config: GlobalConfig): State[M] =
+      slice.copy(
+        boid = slice.boid.updatedDirection(
+          slice.boid.direction + cohesion(
+            slice.boid,
+            slice.others.map(_.position)
+          )
         )
       )
 
@@ -44,11 +57,14 @@ object Boids:
         val center = positions.reduce(_ + _) / positions.size
         (center - boid.position).normalize
 
-  case class AlignmentManager[M <: Movable[M]]() extends BaseManager[Seq[M]]:
-    override def update(slice: Seq[M])(using config: GlobalConfig): Seq[M] =
-      slice.map(boid =>
-        boid.updatedDirection(
-          boid.direction + alignment(boid, slice.map(_.direction))
+  case class AlignmentManager[M <: Movable[M]]() extends BaseManager[State[M]]:
+    override def update(slice: State[M])(using config: GlobalConfig): State[M] =
+      slice.copy(
+        boid = slice.boid.updatedDirection(
+          slice.boid.direction + alignment(
+            slice.boid,
+            slice.others.map(_.direction)
+          )
         )
       )
 
@@ -66,3 +82,12 @@ object Boids:
 
     override def update(slice: Seq[M])(using config: GlobalConfig): Seq[M] =
       slice.map(boid => boid.updatedDirection(boid.direction.capped(maxSpeed)))
+
+  case class PerceptionLimiterManager[M <: Movable[M]](perceptionRadius: Double)
+      extends BaseManager[State[M]]:
+    override def update(slice: State[M])(using config: GlobalConfig): State[M] =
+      slice.copy(
+        others = slice.others.filter(other =>
+          distance(slice.boid.position, other.position) <= perceptionRadius
+        )
+      )

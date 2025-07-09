@@ -1,7 +1,5 @@
 package model.entities.customers
 
-import scala.util.chaining.scalaUtilChainingOps
-
 import model.GlobalConfig
 import model.entities.Bankroll
 import model.entities.CustState
@@ -15,11 +13,14 @@ import model.entities.RiskProfile.Regular
 import model.entities.StatusProfile
 import model.entities.games.GameType
 import model.managers.BaseManager
+import model.managers.movements.Boids
 import model.managers.movements.Boids.AlignmentManager
 import model.managers.movements.Boids.CohesionManager
 import model.managers.movements.Boids.MoverManager
+import model.managers.movements.Boids.PerceptionLimiterManager
 import model.managers.movements.Boids.SeparationManager
 import model.managers.movements.Boids.VelocityLimiterManager
+import model.managers.|
 import utils.Vector2D
 
 case class Customer(
@@ -51,21 +52,22 @@ case class Customer(
     this.copy(direction = newDirection)
 
 case class DefaultMovementManager(
-    maxSpeed: Double = 5,
-    perceptionRadius: Double = 200,
+    maxSpeed: Double = 50000,
+    perceptionRadius: Double = 200000,
     avoidRadius: Double = 10,
     alignmentWeight: Double = 0,
     cohesionWeight: Double = 0,
     separationWeight: Double = 1
 ) extends BaseManager[Seq[Customer]]:
 
-  private val moverManager = MoverManager[Customer]()
-
   override def update(slice: Seq[Customer])(using
       config: GlobalConfig
   ): Seq[Customer] =
-    SeparationManager[Customer](avoidRadius).update(slice) pipe
-      CohesionManager().update pipe
-      AlignmentManager().update pipe
-      VelocityLimiterManager(maxSpeed).update pipe
-      moverManager.update
+    slice | Boids.AdapterManager(
+      PerceptionLimiterManager(perceptionRadius)
+        | AlignmentManager()
+        | CohesionManager()
+        | SeparationManager(avoidRadius)
+    )
+      | VelocityLimiterManager(maxSpeed)
+      | MoverManager()
