@@ -1,6 +1,7 @@
 package model.entities.games
 
-import model.entities.customers.{CustState, Customer}
+import model.entities.customers.CustState
+import model.entities.customers.Customer
 import utils.Result
 import utils.Result.Failure
 

@@ -1,12 +1,13 @@
 package model.entities.games
 
+import scala.util.Random
+
 import model.entities.Entity
 import model.entities.games.dsl.use
 import utils.Result
-import utils.Result.{Failure, Success}
+import utils.Result.Failure
+import utils.Result.Success
 import utils.Vector2D
-
-import scala.util.Random
 
 trait GameType
 object SlotMachine extends GameType
