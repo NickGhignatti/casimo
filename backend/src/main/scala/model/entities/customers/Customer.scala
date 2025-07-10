@@ -22,13 +22,13 @@ case class Customer(
     bankroll: Double,
     riskProfile: RiskProfile = Regular,
     customerState: CustState = Idle,
-    gameStrategyID: String = "none"
+    betStrategy: BettingStrategy[Customer] = FlatBetting(5.0, 1)
 ) extends Entity,
       Movable[Customer],
       Bankroll[Customer],
       StatusProfile,
       CustomerState[Customer],
-      HasGameStrategy:
+      BetStrategy[Customer]:
 
   def updatedPosition(newPosition: Vector2D): Customer =
     this.copy(position = newPosition)
@@ -41,6 +41,11 @@ case class Customer(
 
   override def updatedDirection(newDirection: Vector2D): Customer =
     this.copy(direction = newDirection)
+
+  protected def changedBetStrategy(
+      newStrat: BettingStrategy[Customer]
+  ): Customer =
+    this.copy(betStrategy = newStrat)
 
 case class DefaultMovementManager(
     maxSpeed: Double = 5,
