@@ -36,5 +36,5 @@ object Update:
 
       case AddCustomers(n) =>
         state.copy(spawner =
-          Some(Spawner(Random.nextString(12), Vector2D.zero, n, 10))
+          Some(Spawner(Random.nextString(12), Vector2D(20.0, 10.0), n, 10))
         )
