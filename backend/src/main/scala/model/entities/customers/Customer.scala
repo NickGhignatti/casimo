@@ -43,9 +43,9 @@ case class Customer(
     this.copy(direction = newDirection)
 
 case class DefaultMovementManager(
-    maxSpeed: Double = 5,
+    maxSpeed: Double = 400.0,
     perceptionRadius: Double = 200,
-    avoidRadius: Double = 10,
+    avoidRadius: Double = 100.0,
     alignmentWeight: Double = 0,
     cohesionWeight: Double = 0,
     separationWeight: Double = 1
