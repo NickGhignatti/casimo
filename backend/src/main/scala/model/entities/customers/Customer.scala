@@ -1,18 +1,18 @@
 package model.entities.customers
 
-import scala.util.chaining.scalaUtilChainingOps
-
 import model.GlobalConfig
+import model.SimulationState
 import model.entities.Entity
-import model.entities.Movable
+import model.entities.GamesAttracted
 import model.entities.customers.CustState.Idle
 import model.entities.customers.RiskProfile.Regular
+import model.entities.games.GameType
 import model.managers.BaseManager
-import model.managers.movements.Boids.AlignmentManager
-import model.managers.movements.Boids.CohesionManager
-import model.managers.movements.Boids.MoverManager
-import model.managers.movements.Boids.SeparationManager
-import model.managers.movements.Boids.VelocityLimiterManager
+import model.managers.movements.Boids
+import model.managers.movements.Boids._
+import model.managers.movements.Context
+import model.managers.movements.GamesAttractivenessManager
+import model.managers.|
 import utils.Vector2D
 
 case class Customer(
@@ -22,9 +22,11 @@ case class Customer(
     bankroll: Double,
     riskProfile: RiskProfile = Regular,
     customerState: CustState = Idle,
-    gameStrategyID: String = "none"
+    gameStrategyID: String = "none",
+    favouriteGames: Seq[GameType] = Seq(GameType.SlotMachine)
 ) extends Entity,
       Movable[Customer],
+      GamesAttracted[Customer],
       Bankroll[Customer],
       StatusProfile,
       CustomerState[Customer],
@@ -43,24 +45,45 @@ case class Customer(
     this.copy(direction = newDirection)
 
 case class DefaultMovementManager(
-    maxSpeed: Double = 400.0,
-    perceptionRadius: Double = 200,
-    avoidRadius: Double = 100.0,
-    alignmentWeight: Double = 0,
-    cohesionWeight: Double = 0,
-    separationWeight: Double = 1
-) extends BaseManager[Seq[Customer]]:
+    maxSpeed: Double = 1000,
+    perceptionRadius: Double = 200000,
+    avoidRadius: Double = 50
+) extends BaseManager[SimulationState]:
 
-  private val boidManager = SeparationManager[Customer](
-    avoidRadius = 10
-  )
-  private val moverManager = MoverManager[Customer]()
-
-  override def update(slice: Seq[Customer])(using
+  override def update(slice: SimulationState)(using
       config: GlobalConfig
-  ): Seq[Customer] =
-    SeparationManager[Customer](avoidRadius).update(
-      slice
-    ) pipe CohesionManager().update pipe AlignmentManager().update pipe VelocityLimiterManager(
-      maxSpeed
-    ).update pipe moverManager.update
+  ): SimulationState =
+    slice
+      | GamesAttractivenessAdapter(GamesAttractivenessManager())
+      | BoidsAdapter(
+        PerceptionLimiterManager(perceptionRadius)
+          | AlignmentManager()
+          | CohesionManager()
+          | SeparationManager(avoidRadius)
+          | VelocityLimiterManager(maxSpeed)
+          | MoverManager()
+      )
+
+case class GamesAttractivenessAdapter(manager: BaseManager[Context[Customer]])
+    extends BaseManager[SimulationState]:
+  override def update(
+      slice: SimulationState
+  )(using config: GlobalConfig): SimulationState =
+    slice.copy(
+      customers = slice.customers
+        .map(Context(_, slice.games))
+        .map(_ | manager)
+        .map(_.customer)
+    )
+
+case class BoidsAdapter(manager: BaseManager[Boids.State[Customer]])
+    extends BaseManager[SimulationState]:
+  override def update(
+      slice: SimulationState
+  )(using config: GlobalConfig): SimulationState =
+    slice.copy(
+      customers = slice.customers
+        .map(Boids.State(_, slice.customers))
+        .map(_ | manager)
+        .map(_.boid)
+    )
