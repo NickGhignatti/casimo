@@ -2,12 +2,13 @@ package update
 
 import scala.annotation.tailrec
 import scala.util.Random
+
 import model.GlobalConfig
 import model.SimulationState
 import model.entities.Spawner
 import model.entities.customers.Customer
 import model.entities.customers.DefaultMovementManager
-import update.Event.*
+import update.Event._
 import utils.Vector2D
 
 object Update:
