@@ -47,10 +47,7 @@ case class Customer(
 case class DefaultMovementManager(
     maxSpeed: Double = 1000,
     perceptionRadius: Double = 200000,
-    avoidRadius: Double = 50,
-    alignmentWeight: Double = 0,
-    cohesionWeight: Double = 0,
-    separationWeight: Double = 1
+    avoidRadius: Double = 50
 ) extends BaseManager[SimulationState]:
 
   override def update(slice: SimulationState)(using

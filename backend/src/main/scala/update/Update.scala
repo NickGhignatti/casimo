@@ -5,6 +5,7 @@ import scala.util.Random
 
 import model.GlobalConfig
 import model.SimulationState
+import model.entities.Spawner
 import model.entities.customers.Customer
 import model.entities.customers.DefaultMovementManager
 import model.managers.|
@@ -17,20 +18,20 @@ object Update:
   def update(state: SimulationState, event: Event): SimulationState =
     event match
       case SimulationTick =>
-        println("Simulation tick event received, updating state...")
-        update(state, UpdateCustomersPosition)
+        state.spawner match
+          case None => update(state, UpdateCustomersPosition)
+          case Some(value) if value.customerQuantity == state.customers.size =>
+            update(state, UpdateCustomersPosition)
+          case Some(value) =>
+            update(value.spawn(state), UpdateCustomersPosition)
       case UpdateCustomersPosition =>
-        println("Updating customers' positions...")
         given GlobalConfig = GlobalConfig()
         update(state | DefaultMovementManager(), UpdateGames)
       case UpdateGames =>
-        println("Updating games...")
         update(state, UpdateSimulationBankrolls)
       case UpdateSimulationBankrolls =>
-        println("Updating simulation bankrolls...")
         update(state, UpdateCustomersState)
       case UpdateCustomersState =>
-        println("Updating customers' state...")
         state
 
       case AddCustomers(n) =>
@@ -47,5 +48,8 @@ object Update:
             bankroll = Random.between(30, 5000)
           )
         )
-        val updateCustomers = state.customers ++ newCustomers
-        state.copy(customers = updateCustomers)
+        state.copy(
+          customers = state.customers ++ newCustomers,
+          spawner =
+            Some(Spawner(Random.nextString(12), Vector2D(20.0, 10.0), n, 10)),
+        )

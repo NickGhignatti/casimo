@@ -23,5 +23,6 @@ class DefaultMovementManagerTest extends AnyFunSuite:
         )
       ),
       games = List.empty,
+      spawner = None
     )
     assert((simulationState | DefaultMovementManager()).customers.map(_.position) != simulationState.customers.map(_.position))
