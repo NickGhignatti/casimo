@@ -42,7 +42,8 @@ object Update:
               x = Random.between(10.0, 750.0),
               y = Random.between(10.0, 450.0)
             ),
-            direction = Vector2D(Random.between(-50, 50), Random.between(-50, 50)),
+            direction =
+              Vector2D(Random.between(-50, 50), Random.between(-50, 50)),
             bankroll = Random.between(30, 5000)
           )
         )
