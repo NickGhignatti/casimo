@@ -1,7 +1,6 @@
 package model.entities.customers
 
 import model.GlobalConfig
-import model.entities.Movable
 import model.managers.movements.Boids
 import model.managers.|
 import model.managers.movements.Boids.{AdapterManager, AlignmentManager, CohesionManager, MoverManager, PerceptionLimiterManager, SeparationManager, VelocityLimiterManager}

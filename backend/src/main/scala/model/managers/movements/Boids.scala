@@ -1,7 +1,7 @@
 package model.managers.movements
 
 import model.GlobalConfig
-import model.entities.Movable
+import model.entities.customers.Movable
 import model.managers.BaseManager
 import utils.Vector2D
 import utils.Vector2D.distance
