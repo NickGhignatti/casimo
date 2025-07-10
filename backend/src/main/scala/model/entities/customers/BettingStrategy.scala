@@ -3,7 +3,7 @@ package model.entities.customers
 import model.entities.customers.CustState.{Idle, Playing}
 import model.entities.games.*
 
-trait BetStrategy[T <: BetStrategy[T] & Bankroll[T] & CustomerState[T]]:
+trait HasBetStrategy[T <: HasBetStrategy[T] & Bankroll[T] & CustomerState[T]]:
   val betStrategy: BettingStrategy[T]
 
   def changeBetStrategy(newStrat: BettingStrategy[T]): T =

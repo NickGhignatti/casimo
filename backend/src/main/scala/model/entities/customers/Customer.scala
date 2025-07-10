@@ -28,7 +28,7 @@ case class Customer(
       Bankroll[Customer],
       StatusProfile,
       CustomerState[Customer],
-      BetStrategy[Customer]:
+      HasBetStrategy[Customer]:
 
   def updatedPosition(newPosition: Vector2D): Customer =
     this.copy(position = newPosition)
