@@ -2,8 +2,8 @@ package model.entities.customers
 
 import model.GlobalConfig
 import model.managers.movements.Boids
-import model.managers.|
-import model.managers.movements.Boids.{AdapterManager, AlignmentManager, CohesionManager, MoverManager, PerceptionLimiterManager, SeparationManager, VelocityLimiterManager}
+import model.managers.{BaseManager, |}
+import model.managers.movements.Boids.{AlignmentManager, CohesionManager, MoverManager, PerceptionLimiterManager, SeparationManager, State, VelocityLimiterManager}
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
 import utils.Vector2D.distance
@@ -17,21 +17,27 @@ class TestBoids extends AnyFunSuite:
     override def updatedDirection(newDirection: Vector2D): Boid =
       copy(direction = newDirection)
 
-  private val mover = MoverManager[Boid]()
+  case class AdapterManager[M <: Movable[M]](manager: BaseManager[State[M]]) extends BaseManager[Seq[M]]:
+
+    override def update(slice: Seq[M])(using config: GlobalConfig): Seq[M] =
+      slice
+        .map(boid => State(boid, slice))
+        .map(_ | manager)
+        .map(_.boid)
 
   private given GlobalConfig = GlobalConfig()
 
   test("Two boids with only separation will increase their distance"):
     val boids = Seq(Boid(Vector2D(0, 0)), Boid(Vector2D(1, 0)))
-    val manager = AdapterManager(SeparationManager[Boid](10))
-    val newBoids = boids | manager | mover
+    val manager = AdapterManager(SeparationManager[Boid](10) | MoverManager())
+    val newBoids = boids | manager
     assert(distance(newBoids(0).position, newBoids(1).position) >
       distance(boids(0).position, boids(1).position))
 
   test("Two boids with only cohesion will get closer"):
     val boids = Seq(Boid(Vector2D(0, 0)), Boid(Vector2D(100, 0)))
-    val manager = AdapterManager(CohesionManager[Boid]())
-    val newBoids = boids | manager | mover
+    val manager = AdapterManager(CohesionManager[Boid]() | MoverManager())
+    val newBoids = boids | manager
     assert(distance(newBoids(0).position, newBoids(1).position) <
       distance(boids(0).position, boids(1).position))
 
@@ -43,15 +49,11 @@ class TestBoids extends AnyFunSuite:
       (boids(0).direction dot boids(1).direction))
 
   test("The boids velocity's magnitude cannot be bigger than a given parameter"):
-    val boids = Seq(Boid(Vector2D(0, 0), Vector2D(1000, 0)))
-    val manager = VelocityLimiterManager[Boid](
-      maxSpeed = 10
-    )
-    val newBoids = boids | manager
-    assert(newBoids(0).direction.magnitude <= 10)
+    val boid = Boid(Vector2D(0, 0), Vector2D(1000, 0))
+    assert((boid | VelocityLimiterManager(10)).direction.magnitude <= 10)
 
   private val boids = Seq(Boid(Vector2D(0, 0)), Boid(Vector2D(50, 0)), Boid(Vector2D(100, 0)))
-  private val states = boids.map(Boids.State(_, boids))
+  private val states = boids.map(State(_, boids))
 
   test("A boid can only see itself when its perception radius is 0"):
     states.foreach: state =>

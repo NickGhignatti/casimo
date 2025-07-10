@@ -9,6 +9,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
 import utils.Vector2D.distance
 import model.given_GlobalConfig
+import model.managers.|
 
 import scala.util.chaining.scalaUtilChainingOps
 
@@ -31,14 +32,9 @@ class TestGamesAttracted extends AnyFunSuite:
     Game("Roulette", Vector2D(0.0, 1.0), GameState(0, 1), use(RouletteStrategy) bet 5.0 when true),
   )
 
-  private val mover = MoverManager[Customer]()
-
   test("A customer should get closer to its favourite game"):
     val customer = Customer(Vector2D(1, 1), favouriteGames = Seq(GameType.SlotMachine))
-    val manager = GamesAttractivenessManager[Customer]()
-    val context: Context[Customer] = Context(Seq(customer), games)
-    manager.update(context).customers pipe mover.update match
-      case Seq(updatedCustomer) =>
-        assert(distance(updatedCustomer.position, games.head.position) <
-          distance(customer.position, games.head.position))
-      case _ => fail("Expected one updated customer")
+    val context: Context[Customer] = Context(customer, games)
+    val updatedCustomer = context | GamesAttractivenessManager() | MoverManager()
+    assert(distance(updatedCustomer.position, games.head.position) <
+      distance(customer.position, games.head.position))

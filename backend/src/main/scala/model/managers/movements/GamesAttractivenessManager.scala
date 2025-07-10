@@ -2,11 +2,21 @@ package model.managers.movements
 
 import model.GlobalConfig
 import model.entities.GamesAttracted
+import model.entities.customers.Movable
 import model.entities.games.Game
 import model.managers.BaseManager
+import utils.Vector2D
 import utils.Vector2D.direction
 
-case class Context[C <: GamesAttracted[C]](customers: Seq[C], games: Seq[Game])
+case class Context[C <: GamesAttracted[C]](customer: C, games: Seq[Game])
+    extends Movable[Context[C]]:
+  override def updatedPosition(newPosition: Vector2D): Context[C] =
+    this.copy(customer = customer.updatedPosition(newPosition))
+
+  override def updatedDirection(newDirection: Vector2D): Context[C] =
+    this.copy(customer = customer.updatedDirection(newDirection))
+
+  export customer.{position, direction}
 
 case class GamesAttractivenessManager[C <: GamesAttracted[C]]()
     extends BaseManager[Context[C]]:
@@ -14,7 +24,8 @@ case class GamesAttractivenessManager[C <: GamesAttracted[C]]()
       slice: Context[C]
   )(using config: GlobalConfig): Context[C] =
     slice.copy(
-      customers = slice.customers.map { customer =>
+      customer =
+        val customer = slice.customer
         val bestGame =
           slice.games.find(_.getGameType == customer.favouriteGames.head)
         bestGame match
@@ -23,5 +34,4 @@ case class GamesAttractivenessManager[C <: GamesAttracted[C]]()
               direction(customer.position, game.position)
             )
           case _ => customer
-      }
     )

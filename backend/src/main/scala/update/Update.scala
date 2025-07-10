@@ -7,6 +7,7 @@ import model.GlobalConfig
 import model.SimulationState
 import model.entities.customers.Customer
 import model.entities.customers.DefaultMovementManager
+import model.managers.|
 import update.Event._
 import utils.Vector2D
 
@@ -21,9 +22,7 @@ object Update:
       case UpdateCustomersPosition =>
         println("Updating customers' positions...")
         given GlobalConfig = GlobalConfig()
-        val boidManager = DefaultMovementManager()
-        val newCustPos = boidManager.update(state.customers)
-        update(state.copy(customers = newCustPos), UpdateGames)
+        update(state | DefaultMovementManager(), UpdateGames)
       case UpdateGames =>
         println("Updating games...")
         update(state, UpdateSimulationBankrolls)
@@ -43,7 +42,7 @@ object Update:
               x = Random.between(10.0, 750.0),
               y = Random.between(10.0, 450.0)
             ),
-            direction = Vector2D(Random.between(0, 50), Random.between(0, 50)),
+            direction = Vector2D(Random.between(-50, 50), Random.between(-50, 50)),
             bankroll = Random.between(30, 5000)
           )
         )

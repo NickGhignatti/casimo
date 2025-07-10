@@ -1,18 +1,17 @@
 package model.entities.customers
 
 import model.GlobalConfig
+import model.SimulationState
 import model.entities.Entity
+import model.entities.GamesAttracted
 import model.entities.customers.CustState.Idle
 import model.entities.customers.RiskProfile.Regular
 import model.entities.games.GameType
 import model.managers.BaseManager
 import model.managers.movements.Boids
-import model.managers.movements.Boids.AlignmentManager
-import model.managers.movements.Boids.CohesionManager
-import model.managers.movements.Boids.MoverManager
-import model.managers.movements.Boids.PerceptionLimiterManager
-import model.managers.movements.Boids.SeparationManager
-import model.managers.movements.Boids.VelocityLimiterManager
+import model.managers.movements.Boids._
+import model.managers.movements.Context
+import model.managers.movements.GamesAttractivenessManager
 import model.managers.|
 import utils.Vector2D
 
@@ -27,6 +26,7 @@ case class Customer(
     favouriteGames: Seq[GameType] = Seq(GameType.SlotMachine)
 ) extends Entity,
       Movable[Customer],
+      GamesAttracted[Customer],
       Bankroll[Customer],
       StatusProfile,
       CustomerState[Customer],
@@ -51,16 +51,42 @@ case class DefaultMovementManager(
     alignmentWeight: Double = 0,
     cohesionWeight: Double = 0,
     separationWeight: Double = 1
-) extends BaseManager[Seq[Customer]]:
+) extends BaseManager[SimulationState]:
 
-  override def update(slice: Seq[Customer])(using
+  override def update(slice: SimulationState)(using
       config: GlobalConfig
-  ): Seq[Customer] =
-    slice | Boids.AdapterManager(
-      PerceptionLimiterManager(perceptionRadius)
-        | AlignmentManager()
-        | CohesionManager()
-        | SeparationManager(avoidRadius)
+  ): SimulationState =
+    slice
+      | GamesAttractivenessAdapter(GamesAttractivenessManager())
+      | BoidsAdapter(
+        PerceptionLimiterManager(perceptionRadius)
+          | AlignmentManager()
+          | CohesionManager()
+          | SeparationManager(avoidRadius)
+          | VelocityLimiterManager(maxSpeed)
+          | MoverManager()
+      )
+
+case class GamesAttractivenessAdapter(manager: BaseManager[Context[Customer]])
+    extends BaseManager[SimulationState]:
+  override def update(
+      slice: SimulationState
+  )(using config: GlobalConfig): SimulationState =
+    slice.copy(
+      customers = slice.customers
+        .map(Context(_, slice.games))
+        .map(_ | manager)
+        .map(_.customer)
     )
-      | VelocityLimiterManager(maxSpeed)
-      | MoverManager()
+
+case class BoidsAdapter(manager: BaseManager[Boids.State[Customer]])
+    extends BaseManager[SimulationState]:
+  override def update(
+      slice: SimulationState
+  )(using config: GlobalConfig): SimulationState =
+    slice.copy(
+      customers = slice.customers
+        .map(Boids.State(_, slice.customers))
+        .map(_ | manager)
+        .map(_.boid)
+    )
