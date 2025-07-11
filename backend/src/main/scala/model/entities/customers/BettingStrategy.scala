@@ -1,10 +1,14 @@
 package model.entities.customers
 
-import model.entities.customers.CustState.{Idle, Playing}
-import model.entities.games.*
+import model.entities.customers.CustState.Idle
+import model.entities.customers.CustState.Playing
+import model.entities.games._
 
 trait HasBetStrategy[T <: HasBetStrategy[T] & Bankroll[T] & CustomerState[T]]:
+  this: T =>
   val betStrategy: BettingStrategy[T]
+
+  def placeBet(): Bet = betStrategy.placeBet(using this)
 
   def changeBetStrategy(newStrat: BettingStrategy[T]): T =
     changedBetStrategy(newStrat)
@@ -12,18 +16,23 @@ trait HasBetStrategy[T <: HasBetStrategy[T] & Bankroll[T] & CustomerState[T]]:
   protected def changedBetStrategy(newStrat: BettingStrategy[T]): T
 
 trait BettingStrategy[A]:
+  val betAmount: Double
+  require(
+    betAmount >= 0,
+    s"Bet amount must be positive, instead is $betAmount"
+  )
 
-  def placeBet(ctx: A): Bet
+  def placeBet(using ctx: A): Bet
   def updateAfter(result: BetResult): BettingStrategy[A]
 
 case class FlatBetting[A <: Bankroll[A] & CustomerState[A]](
-    amount: Double,
+    betAmount: Double,
     option: Int*
 ) extends BettingStrategy[A]:
-  def placeBet(ctx: A): Bet =
+  def placeBet(using ctx: A): Bet =
     require(
-      amount <= ctx.bankroll,
-      s"Bet amount must be equal or less of the total bankroll, instead is $amount when the bankroll is ${ctx.bankroll}"
+      betAmount <= ctx.bankroll,
+      s"Bet amount must be equal or less of the total bankroll, instead is $betAmount when the bankroll is ${ctx.bankroll}"
     )
     require(
       ctx.customerState != Idle,
@@ -32,9 +41,9 @@ case class FlatBetting[A <: Bankroll[A] & CustomerState[A]](
     ctx.customerState match
       case Playing(game) =>
         game.gameType match
-          case SlotMachine => SlotBet(amount)
-          case Roulette    => RouletteBet(amount, option.toList)
-          case Blackjack   => BlackJackBet(amount, option.head)
+          case SlotMachine => SlotBet(betAmount)
+          case Roulette    => RouletteBet(betAmount, option.toList)
+          case Blackjack   => BlackJackBet(betAmount, option.head)
           case _           => ???
 
   def updateAfter(result: BetResult): FlatBetting[A] = this

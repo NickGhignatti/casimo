@@ -1,17 +1,17 @@
-//package model.managers
-//
-//import model.GlobalConfig
-//import model.entities.customers.Bankroll
-//import model.entities.customers.CustomerState
-//import model.entities.customers.BettingStrategy
-///*TODO: make this manage which strategy the customer is using:
-//    checking the game is playing
-//    the bankroll available
-//    (optional) boredom and frustration
-// */
-////TODO: run scalafix -deprecation
-//class CustomerStrategyManager[
-//    A <: BettingStrategy & CustomerState[A] & Bankroll[A]
-//] extends BaseManager[Seq[A]]:
-//
-//  def update(slice: Seq[A])(using config: GlobalConfig): Seq[A] = ???
+package model.managers
+
+import model.GlobalConfig
+import model.entities.customers.Bankroll
+import model.entities.customers.CustomerState
+import model.entities.customers.HasBetStrategy
+/*TODO: make this manage which strategy the customer is using:
+    checking the game is playing
+    the bankroll available
+    (optional) boredom and frustration
+ */
+//TODO: run scalafix -deprecation
+class CustomerStrategyManager[
+    A <: HasBetStrategy[A] & CustomerState[A] & Bankroll[A]
+] extends BaseManager[Seq[A]]:
+
+  def update(slice: Seq[A])(using config: GlobalConfig): Seq[A] = ???
