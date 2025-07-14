@@ -1,24 +1,29 @@
 package model.managers
 
-import model.{GlobalConfig, given_GlobalConfig}
+import model.given_GlobalConfig
 import org.scalatest.funsuite.AnyFunSuite
-import model.managers.WeightedMovable.*
+import model.managers.movements.Boids
+import Boids.*
+import model.managers.WeightedManager.*
+import model.entities.customers.Movable
+import utils.Vector2D
 
 class TestWeightedMovable extends AnyFunSuite:
-  test("WeightedMovable should apply weight to direction"):
-    import model.entities.customers.Movable
-    import utils.Vector2D
+  private case class TestMovable(position: Vector2D, direction: Vector2D) extends Movable[TestMovable]:
+    override def updatedPosition(newPosition: Vector2D): TestMovable =
+      this.copy(position = newPosition)
+    override def updatedDirection(newDirection: Vector2D): TestMovable =
+      this.copy(direction = newDirection)
 
-    case class TestMovable(position: Vector2D, direction: Vector2D) extends Movable[TestMovable]:
-      override def updatedPosition(newPosition: Vector2D): TestMovable =
-        this.copy(position = newPosition)
-      override def updatedDirection(newDirection: Vector2D): TestMovable =
-        this.copy(direction = direction + newDirection)
-
-    case class Manager() extends BaseManager[Movable[TestMovable]]:
-      override def update(slice: Movable[TestMovable])(using config: GlobalConfig): Movable[TestMovable] =
-        slice.updatedDirection(Vector2D(1, 0))
-
-    val movable = TestMovable(Vector2D(0, 0), Vector2D(1, 0))
-
-    assert((movable |(2 * Manager())).direction == Vector2D(3, 0))
+  test("Weighting should work with cohesion, alignment and separation"):
+    val boid = TestMovable(Vector2D(0, 0), Vector2D(0, 0))
+    val state = Boids.State(boid,
+      Seq(boid, TestMovable(Vector2D(1, 0), Vector2D(0, 1)))
+    )
+    Seq(CohesionManager[TestMovable](), AlignmentManager[TestMovable](), SeparationManager[TestMovable](Double.PositiveInfinity))
+      .foreach { manager =>
+        assert(
+          (state | 2 * manager).direction == (state | manager).direction * 2,
+          manager.getClass.getName
+        )
+      }
