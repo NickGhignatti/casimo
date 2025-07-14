@@ -73,7 +73,7 @@ class TestBettingStrategy extends AnyFunSuite:
     val mock = MockCustomer(
       customerState = Playing(GameBuilder.blackjack(Vector2D.zero)),
       bankroll = 80.0,
-      betStrategy = FlatBetting[MockCustomer](10.0, targetList: _*)
+      betStrategy = FlatBetting[MockCustomer](10.0, targetList)
     )
     val bjBet = mock.placeBet()
     val roulette = mock.changeState(Playing(GameBuilder.roulette(Vector2D.zero)))
