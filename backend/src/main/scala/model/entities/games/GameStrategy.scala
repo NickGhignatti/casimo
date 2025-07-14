@@ -6,7 +6,7 @@ import scala.util.Random
 import utils.Result
 
 trait GameStrategy:
-  def use(): Result[Double, Double]
+  def use(): BetResult
 
 object SlotStrategy:
   def apply: SlotStrategyBuilder = SlotStrategyBuilder()
@@ -30,7 +30,7 @@ case class SlotStrategyBuilder(
 
 case class SlotStrategyInstance(betAmount: Double, condition: () => Boolean)
     extends GameStrategy:
-  override def use(): Result[Double, Double] =
+  override def use(): BetResult =
     val values =
       for _ <- 1 to 5 yield Random.nextInt(5) + 1
     if condition() && values.distinct.size == 1 then
@@ -61,7 +61,7 @@ case class RouletteStrategyInstance(
     targets: List[Int],
     condition: () => Boolean
 ) extends GameStrategy:
-  override def use(): Result[Double, Double] =
+  override def use(): BetResult =
     if condition() then
       val winningNumber = Random.nextInt(37)
       if targets.contains(winningNumber) then
@@ -99,7 +99,7 @@ case class BlackJackStrategyInstance(
     if currentValue > stopValue then currentValue
     else dealCard(currentValue, stopValue)
 
-  override def use(): Result[Double, Double] =
+  override def use(): BetResult =
     val dealerValue = dealCard(0, 17)
     val playerValue = dealCard(0, minimumValue)
     if condition() && (dealerValue > 21 || (playerValue > dealerValue && playerValue <= 21))

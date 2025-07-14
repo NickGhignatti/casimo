@@ -5,14 +5,21 @@ import scala.util.Random
 
 import model.GlobalConfig
 import model.SimulationState
+import model.data.DataManager
 import model.entities.Spawner
 import model.entities.customers.Customer
 import model.entities.customers.DefaultMovementManager
+import model.entities.games.GameResolver
 import model.managers.|
 import update.Event._
 import utils.Vector2D
 
 object Update:
+
+  def updateSimulationManager(
+      dataManager: DataManager,
+      state: SimulationState
+  ): DataManager = dataManager.copy(state = state)
 
   @tailrec
   def update(state: SimulationState, event: Event): SimulationState =
@@ -24,13 +31,19 @@ object Update:
             update(state, UpdateCustomersPosition)
           case Some(value) =>
             update(value.spawn(state), UpdateCustomersPosition)
+
       case UpdateCustomersPosition =>
         given GlobalConfig = GlobalConfig()
         update(state | DefaultMovementManager(), UpdateGames)
+
       case UpdateGames =>
-        update(state, UpdateSimulationBankrolls)
+        val updatedGames =
+          GameResolver.update(state.customers.toList, state.games)
+        update(state.copy(games = updatedGames), UpdateSimulationBankrolls)
+
       case UpdateSimulationBankrolls =>
         update(state, UpdateCustomersState)
+
       case UpdateCustomersState =>
         state
 

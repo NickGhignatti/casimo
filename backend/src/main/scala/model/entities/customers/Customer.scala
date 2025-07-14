@@ -7,6 +7,7 @@ import model.entities.GamesAttracted
 import model.entities.customers.CustState.Idle
 import model.entities.customers.RiskProfile.Regular
 import model.entities.games.GameType
+import model.entities.games.SlotMachine
 import model.managers.BaseManager
 import model.managers.movements.Boids
 import model.managers.movements.Boids._
@@ -22,15 +23,15 @@ case class Customer(
     bankroll: Double,
     riskProfile: RiskProfile = Regular,
     customerState: CustState = Idle,
-    gameStrategyID: String = "none",
-    favouriteGames: Seq[GameType] = Seq(GameType.SlotMachine)
+    betStrategy: BettingStrategy[Customer] = FlatBetting(5.0, 1),
+    favouriteGames: Seq[GameType] = Seq(SlotMachine)
 ) extends Entity,
       Movable[Customer],
       GamesAttracted[Customer],
       Bankroll[Customer],
       StatusProfile,
       CustomerState[Customer],
-      HasGameStrategy:
+      HasBetStrategy[Customer]:
 
   def updatedPosition(newPosition: Vector2D): Customer =
     this.copy(position = newPosition)
@@ -43,6 +44,11 @@ case class Customer(
 
   override def updatedDirection(newDirection: Vector2D): Customer =
     this.copy(direction = newDirection)
+
+  protected def changedBetStrategy(
+      newStrat: BettingStrategy[Customer]
+  ): Customer =
+    this.copy(betStrategy = newStrat)
 
 case class DefaultMovementManager(
     maxSpeed: Double = 1000,

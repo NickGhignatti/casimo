@@ -27,7 +27,7 @@ case class GamesAttractivenessManager[C <: GamesAttracted[C]]()
       customer =
         val customer = slice.customer
         val bestGame =
-          slice.games.find(_.getGameType == customer.favouriteGames.head)
+          slice.games.find(_.gameType == customer.favouriteGames.head)
         bestGame match
           case Some(game) =>
             customer.updatedDirection(
