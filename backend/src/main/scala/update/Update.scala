@@ -48,21 +48,7 @@ object Update:
         state
 
       case AddCustomers(n) =>
-        println("Adding customers to the state...")
-        val newCustomers = List.fill(50)(
-          Customer(
-            s"customer-${Random.nextInt()}",
-            position = Vector2D(
-              x = Random.between(10.0, 750.0),
-              y = Random.between(10.0, 450.0)
-            ),
-            direction =
-              Vector2D(Random.between(-50, 50), Random.between(-50, 50)),
-            bankroll = Random.between(30, 5000)
-          )
-        )
         state.copy(
-          customers = state.customers ++ newCustomers,
           spawner =
             Some(Spawner(Random.nextString(12), Vector2D(20.0, 10.0), n, 10)),
         )
