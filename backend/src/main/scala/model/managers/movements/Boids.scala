@@ -1,25 +1,35 @@
 package model.managers.movements
 
 import model.GlobalConfig
-import model.entities.Movable
+import model.entities.customers.Movable
 import model.managers.BaseManager
 import utils.Vector2D
 import utils.Vector2D.distance
 
 object Boids:
+  case class State[M <: Movable[M]](boid: M, others: Seq[M])
+      extends Movable[State[M]]:
+    override def updatedPosition(newPosition: Vector2D): State[M] =
+      this.copy(boid = boid.updatedPosition(newPosition))
 
-  case class MoverManager[M <: Movable[M]]() extends BaseManager[Seq[M]]:
+    override def updatedDirection(newDirection: Vector2D): State[M] =
+      this.copy(boid = boid.updatedDirection(newDirection))
 
-    override def update(slice: Seq[M])(using config: GlobalConfig): Seq[M] =
-      slice.map(boid => boid.updatedPosition(boid.position + boid.direction))
+    export boid.{position, direction}
+
+  case class MoverManager[M <: Movable[M]]() extends BaseManager[M]:
+
+    override def update(slice: M)(using config: GlobalConfig): M =
+      slice.updatedPosition(slice.position + slice.direction)
 
   case class SeparationManager[M <: Movable[M]](
       avoidRadius: Double
-  ) extends BaseManager[Seq[M]]:
+  ) extends BaseManager[State[M]]:
 
-    override def update(slice: Seq[M])(using config: GlobalConfig): Seq[M] =
-      slice.map(boid =>
-        boid.updatedDirection(separation(boid, slice.map(_.position)))
+    override def update(slice: State[M])(using config: GlobalConfig): State[M] =
+      slice.updatedDirection(
+        slice.direction +
+          separation(slice.boid, slice.others.map(_.position))
       )
 
     private def separation(boid: M, positions: Seq[Vector2D]): Vector2D =
@@ -30,11 +40,12 @@ object Boids:
           .map(pos => (boid.position - pos).normalize)
           .reduce(_ + _)
 
-  case class CohesionManager[M <: Movable[M]]() extends BaseManager[Seq[M]]:
-    override def update(slice: Seq[M])(using config: GlobalConfig): Seq[M] =
-      slice.map(boid =>
-        boid.updatedDirection(
-          boid.direction + cohesion(boid, slice.map(_.position))
+  case class CohesionManager[M <: Movable[M]]() extends BaseManager[State[M]]:
+    override def update(slice: State[M])(using config: GlobalConfig): State[M] =
+      slice.updatedDirection(
+        slice.boid.direction + cohesion(
+          slice.boid,
+          slice.others.map(_.position)
         )
       )
 
@@ -44,14 +55,14 @@ object Boids:
         val center = positions.reduce(_ + _) / positions.size
         (center - boid.position).normalize
 
-  case class AlignmentManager[M <: Movable[M]]() extends BaseManager[Seq[M]]:
-    override def update(slice: Seq[M])(using config: GlobalConfig): Seq[M] =
-      slice.map(boid =>
-        boid.updatedDirection(
-          boid.direction + alignment(boid, slice.map(_.direction))
+  case class AlignmentManager[M <: Movable[M]]() extends BaseManager[State[M]]:
+    override def update(slice: State[M])(using config: GlobalConfig): State[M] =
+      slice.updatedDirection(
+        slice.direction + alignment(
+          slice.boid,
+          slice.others.map(_.direction)
         )
       )
-
     private def alignment(boid: M, velocities: Seq[Vector2D]): Vector2D =
       if velocities.isEmpty then Vector2D.zero
       else
@@ -59,10 +70,19 @@ object Boids:
         (average - boid.direction).normalize
 
   case class VelocityLimiterManager[M <: Movable[M]](maxSpeed: Double)
-      extends BaseManager[Seq[M]]:
+      extends BaseManager[M]:
     extension (v: Vector2D)
       private def capped(max: Double): Vector2D =
         if v.magnitude < max then v else v.normalize * max
 
-    override def update(slice: Seq[M])(using config: GlobalConfig): Seq[M] =
-      slice.map(boid => boid.updatedDirection(boid.direction.capped(maxSpeed)))
+    override def update(slice: M)(using config: GlobalConfig): M =
+      slice.updatedDirection(slice.direction.capped(maxSpeed))
+
+  case class PerceptionLimiterManager[M <: Movable[M]](perceptionRadius: Double)
+      extends BaseManager[State[M]]:
+    override def update(slice: State[M])(using config: GlobalConfig): State[M] =
+      slice.copy(others =
+        slice.others.filter(other =>
+          distance(slice.boid.position, other.position) <= perceptionRadius
+        )
+      )
