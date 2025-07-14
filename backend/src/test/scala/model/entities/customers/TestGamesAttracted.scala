@@ -2,7 +2,7 @@ package model.entities.customers
 
 import model.entities.GamesAttracted
 import model.entities.games.dsl.use
-import model.entities.games.{BlackJackStrategy, Game, GameState, GameType, RouletteStrategy, SlotStrategy}
+import model.entities.games.{BlackJackStrategy, Game, GameBuilder, GameState, GameType, RouletteStrategy, SlotMachine, SlotStrategy}
 import model.managers.movements.Boids.MoverManager
 import model.managers.movements.{Context, GamesAttractivenessManager}
 import org.scalatest.funsuite.AnyFunSuite
@@ -27,13 +27,13 @@ class TestGamesAttracted extends AnyFunSuite:
       copy(direction = newDirection)
 
   private val games = Seq(
-    Game("Slot", Vector2D(0.0, 0.0), GameState(0, 1), use(SlotStrategy) bet 5.0 when true),
-    Game("BlackJack", Vector2D(1.0, 0.0), GameState(0, 1), use(BlackJackStrategy) bet 5.0 when true),
-    Game("Roulette", Vector2D(0.0, 1.0), GameState(0, 1), use(RouletteStrategy) bet 5.0 when true),
+    GameBuilder.slot(Vector2D.zero),
+    GameBuilder.blackjack(Vector2D.zero),
+    GameBuilder.roulette(Vector2D.zero)
   )
 
   test("A customer should get closer to its favourite game"):
-    val customer = Customer(Vector2D(1, 1), favouriteGames = Seq(GameType.SlotMachine))
+    val customer = Customer(Vector2D(1, 1), favouriteGames = Seq(SlotMachine))
     val context: Context[Customer] = Context(customer, games)
     val updatedCustomer = context | GamesAttractivenessManager() | MoverManager()
     assert(distance(updatedCustomer.position, games.head.position) <

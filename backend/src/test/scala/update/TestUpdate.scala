@@ -14,10 +14,10 @@ class TestUpdate extends AnyFunSuite:
     assert(endState === initialState)
 
   test("update should update the data manager"):
-    val initState = SimulationState(List.empty, List.empty)
+    val initState = SimulationState(List.empty, List.empty, None)
     val manager = DataManager(initState)
     val finalState =
-      SimulationState(List.empty, List.fill(1)(GameBuilder.slot(Vector2D.zero)))
+      SimulationState(List.empty, List.fill(1)(GameBuilder.slot(Vector2D.zero)), None)
 
     assert(
       Update.updateSimulationManager(manager, finalState).state == finalState
