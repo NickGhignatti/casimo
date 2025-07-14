@@ -1,6 +1,8 @@
+import com.raquo.airstream.core.Signal
 import com.raquo.laminar.api.L.Var
 import model.SimulationState
 import model.entities.customers.DefaultMovementManager
+import model.managers.BaseManager
 import org.scalajs.dom.document
 import update.Update
 import view.ButtonBar
@@ -15,12 +17,7 @@ def main(): Unit =
     "DOMContentLoaded",
     { _ =>
       val modelVar = Var(model)
-      val updateVar = Var(
-        Update(
-          DefaultMovementManager(
-          )
-        )
-      )
+      val updateVar = Var(Update(DefaultMovementManager()))
 
       val canvasManager = CanvasManager(modelVar)
       val sidebar = Sidebar()
@@ -30,7 +27,7 @@ def main(): Unit =
       sidebar.init(canvasManager)
       buttonBar.init()
       document.body.appendChild(
-        ConfigForm.init().ref
+        ConfigForm(updateVar).init().ref
       )
     }
   )

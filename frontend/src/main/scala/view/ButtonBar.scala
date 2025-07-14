@@ -1,7 +1,8 @@
 package view
 
-import com.raquo.laminar.api.L._
+import com.raquo.laminar.api.L.*
 import model.SimulationState
+import model.managers.BaseManager
 import org.scalajs.dom
 import org.scalajs.dom.html
 import update.Event

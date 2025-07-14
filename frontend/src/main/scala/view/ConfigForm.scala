@@ -1,69 +1,93 @@
 package view
 
-import com.raquo.laminar.api.L._
+import com.raquo.laminar.api.L.*
+import com.raquo.laminar.api.L.unsafeWindowOwner
 import model.entities.customers.DefaultMovementManager
+import update.Update
 
-object ConfigForm:
+case class ConfigForm(update: Var[Update]):
 
+  given Owner = unsafeWindowOwner
+  private val maxSpeedVar = Var("1000.0")
+  private val perceptionRadiusVar = Var("200000.0")
+  private val avoidRadiusVar = Var("50.0")
+
+//  Signal.combineWithFn(maxSpeedVar, perceptionRadiusVar, avoidRadiusVar)(DefaultMovementManager(_, _, _))
+//    .map(Update(_))
+//    .addObserver(update.toObserver)
+
+
+
+//  update.signal
+//    .map(_.customerManager)
+//    .map(_.asInstanceOf[DefaultMovementManager])
+//    .foreach { data =>
+//      println(
+//        s"Current values:\nMax Speed: ${data.maxSpeed}\n" +
+//          s"Perception Radius: ${data.perceptionRadius}\n" +
+//          s"Avoid Radius: ${data.avoidRadius}"
+//      )
+//    }
   def init(): HtmlElement =
-
-    val maxSpeedVar = Var(1000.0)
-    val perceptionRadiusVar = Var(200000.0)
-    val avoidRadiusVar = Var(50.0)
-
-    val formDataSignal: Signal[DefaultMovementManager] =
-      Signal.combineWithFn(
-        maxSpeedVar.signal,
-        perceptionRadiusVar.signal,
-        avoidRadiusVar.signal
-      )(DefaultMovementManager(_, _, _))
-
+    val inputTextVar = Var("")
+    val checkedVar = Var(false)
     div(
-      h3("Movement Manager Form"),
-      div(
-        label("Max Speed: "),
+      p(
+        label("Name: "),
         input(
-          typ := "number",
-          controlled(
-            value <-- maxSpeedVar.signal.map(_.toString),
-            onInput.mapToValue.map(
-              _.toDoubleOption.getOrElse(0.0)
-            ) --> maxSpeedVar
-          )
+          onInput.mapToValue --> inputTextVar
         )
       ),
-      div(
-        label("Perception Radius: "),
+      p(
+        "You typed: ",
+        text <-- inputTextVar
+      ),
+      p(
+        label("I like to check boxes: "),
         input(
-          typ := "number",
-          controlled(
-            value <-- perceptionRadiusVar.signal.map(_.toString),
-            onInput.mapToValue.map(
-              _.toDoubleOption.getOrElse(0.0)
-            ) --> perceptionRadiusVar
-          )
+          typ("checkbox"),
+          onInput.mapToChecked --> checkedVar
         )
       ),
-      div(
-        label("Avoid Radius: "),
-        input(
-          typ := "number",
-          controlled(
-            value <-- avoidRadiusVar.signal.map(_.toString),
-            onInput.mapToValue.map(
-              _.toDoubleOption.getOrElse(0.0)
-            ) --> avoidRadiusVar
-          )
-        )
-      ),
-      hr(),
-
-      // Live preview of the form data
-      child <-- formDataSignal.map { data =>
-        pre(
-          s"Current values:\nMax Speed: ${data.maxSpeed}\n" +
-            s"Perception Radius: ${data.perceptionRadius}\n" +
-            s"Avoid Radius: ${data.avoidRadius}"
-        )
-      }
+      p(
+        "You checked the box: ",
+        text <-- checkedVar
+      )
     )
+//    div(
+//      h3("Movement Manager Form"),
+//      parameter(
+//        "Max Speed",
+//        maxSpeedVar,
+//      ),
+//      parameter(
+//        "Perception Radius",
+//        perceptionRadiusVar,
+//      ),
+//      parameter(
+//        "Avoid Radius",
+//        avoidRadiusVar,
+//      ),
+//      hr(),
+//
+//      // Live preview of the form data
+//
+//    )
+
+  private def parameter(
+      labelText: String,
+      variable: Var[String],
+  ): HtmlElement = {
+    val variable = Var("")
+    div(
+      label(labelText),
+      input(
+//        value <-- variable.signal.map(_.toString),
+        onInput.mapToValue --> variable
+      ),
+      p(
+        s"Current $labelText: ",
+        text <-- variable
+      )
+    )
+  }
