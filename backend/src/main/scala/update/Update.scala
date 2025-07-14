@@ -1,42 +1,68 @@
 package update
 
-import model.SimulationState
-import model.entities.customers.Customer
-import update.Event.*
-import utils.Vector2D
-
 import scala.annotation.tailrec
 import scala.util.Random
 
+import model.GlobalConfig
+import model.SimulationState
+import model.data.DataManager
+import model.entities.Spawner
+import model.entities.customers.Customer
+import model.entities.customers.DefaultMovementManager
+import model.entities.games.GameResolver
+import model.managers.|
+import update.Event._
+import utils.Vector2D
+
 object Update:
+
+  def updateSimulationManager(
+      dataManager: DataManager,
+      state: SimulationState
+  ): DataManager = dataManager.copy(state = state)
 
   @tailrec
   def update(state: SimulationState, event: Event): SimulationState =
     event match
       case SimulationTick =>
-        println("Simulation tick event received, updating state...")
-        update(state, UpdateCustomersPosition)
+        state.spawner match
+          case None => update(state, UpdateCustomersPosition)
+          case Some(value) if value.customerQuantity == state.customers.size =>
+            update(state, UpdateCustomersPosition)
+          case Some(value) =>
+            update(value.spawn(state), UpdateCustomersPosition)
+
       case UpdateCustomersPosition =>
-        println("Updating customers' positions...")
-        update(state, UpdateGames)
+        given GlobalConfig = GlobalConfig()
+        update(state | DefaultMovementManager(), UpdateGames)
+
       case UpdateGames =>
-        println("Updating games...")
-        update(state, UpdateSimulationBankrolls)
+        val updatedGames =
+          GameResolver.update(state.customers.toList, state.games)
+        update(state.copy(games = updatedGames), UpdateSimulationBankrolls)
+
       case UpdateSimulationBankrolls =>
-        println("Updating simulation bankrolls...")
         update(state, UpdateCustomersState)
+
       case UpdateCustomersState =>
-        println("Updating customers' state...")
         state
+
       case AddCustomers(n) =>
         println("Adding customers to the state...")
         val newCustomers = List.fill(50)(
           Customer(
-            Vector2D(
+            s"customer-${Random.nextInt()}",
+            position = Vector2D(
               x = Random.between(10.0, 750.0),
               y = Random.between(10.0, 450.0)
-            )
+            ),
+            direction =
+              Vector2D(Random.between(-50, 50), Random.between(-50, 50)),
+            bankroll = Random.between(30, 5000)
           )
         )
-        val updateCustomers = state.customers ++ newCustomers
-        state.copy(customers = updateCustomers)
+        state.copy(
+          customers = state.customers ++ newCustomers,
+          spawner =
+            Some(Spawner(Random.nextString(12), Vector2D(20.0, 10.0), n, 10)),
+        )

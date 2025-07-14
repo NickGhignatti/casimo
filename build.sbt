@@ -1,11 +1,14 @@
 import sbt.Keys.libraryDependencies
 import org.scalajs.linker.interface.{ModuleSplitStyle, OutputPatterns}
-import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
+import sbt.internal.SysProp.semanticdb
+import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 import scalajscrossproject.ScalaJSCrossPlugin.autoImport.*
+
 
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
 ThisBuild / scalaVersion := "3.3.5"
+ThisBuild / semanticdbEnabled := true
 
 // Define a custom task to install Git hooks
 lazy val installGitHooks =
@@ -81,12 +84,16 @@ lazy val backend = crossProject(JSPlatform, JVMPlatform)
   .settings(
     scalaVersion := "3.3.5"
   )
+  .jsConfigure(_.disablePlugins(ScalafixPlugin))
   .jvmSettings(
     name := "backendJvm",
     coverageEnabled := true,
     // Backend source locations
     Compile / scalaSource := baseDirectory.value.getParentFile / "src" / "main" / "scala",
     Test / scalaSource := baseDirectory.value.getParentFile / "src" / "test" / "scala",
+    Compile / scalacOptions ++= Seq(
+      "-Wunused:imports"
+    ),
     libraryDependencies ++= Seq(
       "org.scalatest" %% "scalatest" % "3.2.19" % Test,
       "org.scalatestplus" %% "scalacheck-1-18" % "3.2.19.0" % Test
@@ -122,6 +129,9 @@ lazy val frontend = project
     // Frontend source locations
     Compile / scalaSource := baseDirectory.value / "src" / "main" / "scala",
     Test / scalaSource := baseDirectory.value / "src" / "test" / "scala",
+    Compile / scalacOptions ++= Seq(
+      "-Wunused:imports"
+    ),
     scalaJSUseMainModuleInitializer := true,
     moduleName := "casimo",
     Compile / fullLinkJS / scalaJSLinkerConfig ~= {

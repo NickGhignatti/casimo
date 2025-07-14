@@ -4,13 +4,13 @@ import org.scalatest.funsuite.AnyFunSuite
 
 class TestBet extends AnyFunSuite:
 
-  test("creating a positive FixedBet should store the amount"):
-    val bet = FixedBet(100.0)
+  test("creating a positive SlotBet should store the amount"):
+    val bet = SlotBet(100.0)
     assert(bet.amount === 100.0)
 
-  test("creating a negative FixedBet should throw IllegalArgumentException"):
+  test("creating a negative SlotBet should throw IllegalArgumentException"):
     val ex = intercept[IllegalArgumentException] {
-      FixedBet(-50.0)
+      SlotBet(-50.0)
     }
 
     assert(ex.getMessage === "requirement failed: Bet amount must be positive")
@@ -38,4 +38,29 @@ class TestBet extends AnyFunSuite:
 
     assert(
       ex.getMessage === "requirement failed: Roulette bet must have at least one target"
+    )
+
+  test("creating a correct BlackJackBet should set amount and minimum value"):
+    val bet = BlackJackBet(50.0, 18)
+    assert(bet.amount === 50.0)
+    assert(bet.minimumValue === 18)
+
+  test(
+    "creating a BlackJackBet with negative amount should throw IllegalArgumentException"
+  ):
+    val ex = intercept[IllegalArgumentException] {
+      BlackJackBet(-10.0, 10)
+    }
+
+    assert(ex.getMessage === "requirement failed: Bet amount must be positive")
+
+  test(
+    "creating a BlackJackBet with empty targets should throw IllegalArgumentException"
+  ):
+    val ex = intercept[IllegalArgumentException] {
+      BlackJackBet(50.0, -10)
+    }
+
+    assert(
+      ex.getMessage === "requirement failed: Cards value must be positive"
     )
