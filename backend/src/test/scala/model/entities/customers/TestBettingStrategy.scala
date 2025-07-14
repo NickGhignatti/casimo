@@ -1,7 +1,11 @@
 package model.entities.customers
 
-import model.entities.customers.CustState.{Idle, Playing}
-import model.entities.games.{BlackJackBet, GameBuilder, RouletteBet, SlotBet}
+import model.entities.customers.CustState.Idle
+import model.entities.customers.CustState.Playing
+import model.entities.games.BlackJackBet
+import model.entities.games.GameBuilder
+import model.entities.games.RouletteBet
+import model.entities.games.SlotBet
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
 

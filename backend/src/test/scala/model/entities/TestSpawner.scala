@@ -1,10 +1,10 @@
 package model.entities
 
+import scala.util.Random
+
 import model.SimulationState
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
-
-import scala.util.Random
 
 class TestSpawner extends AnyFunSuite:
   val spawner: Spawner = Spawner(Random.nextString(12), Vector2D.zero, 20, 2)

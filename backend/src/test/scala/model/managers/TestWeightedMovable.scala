@@ -1,11 +1,11 @@
 package model.managers
 
-import model.given_GlobalConfig
-import org.scalatest.funsuite.AnyFunSuite
-import model.managers.movements.Boids
-import Boids.*
-import model.managers.WeightedManager.*
 import model.entities.customers.Movable
+import model.given_GlobalConfig
+import model.managers.WeightedManager._
+import model.managers.movements.Boids
+import model.managers.movements.Boids._
+import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
 
 class TestWeightedMovable extends AnyFunSuite:
