@@ -16,8 +16,6 @@ case class ConfigForm(update: Var[Update]):
 //    .map(Update(_))
 //    .addObserver(update.toObserver)
 
-
-
 //  update.signal
 //    .map(_.customerManager)
 //    .map(_.asInstanceOf[DefaultMovementManager])
@@ -76,8 +74,8 @@ case class ConfigForm(update: Var[Update]):
 
   private def parameter(
       labelText: String,
-      variable: Var[String],
-  ): HtmlElement = {
+      variable: Var[String]
+  ): HtmlElement =
     val variable = Var("")
     div(
       label(labelText),
@@ -90,4 +88,3 @@ case class ConfigForm(update: Var[Update]):
         text <-- variable
       )
     )
-  }
