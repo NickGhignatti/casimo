@@ -15,8 +15,7 @@ class TestGameResolver extends AnyFunSuite:
       Vector2D.zero,
       0.0,
       Regular,
-      CustState.Playing(mockGame),
-      
+      CustState.Playing(mockGame)
     )
     val newGame = GameResolver.update(List(mockCustomer), List(mockGame))
 

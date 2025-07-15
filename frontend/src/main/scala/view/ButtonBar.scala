@@ -7,14 +7,14 @@ import org.scalajs.dom.html
 import update.Event
 import update.Update
 
-class ButtonBar(state: SimulationState, model: Var[SimulationState]):
+class ButtonBar(model: Var[SimulationState], update: Var[Update]):
   private val buttonBar = dom.document.getElementById("button-bar")
   private val buttons = List("Add", "Run", "Reset", "Save", "Load")
 
   private val eventBus = new EventBus[Event]
 
   eventBus.events
-    .scanLeft(model.now())((m, e) => Update.update(m, e))
+    .scanLeft(model.now())((m, e) => update.now().update(m, e))
     .foreach(model.set)(using unsafeWindowOwner)
 
   def init(): Unit =
