@@ -2,15 +2,16 @@ package model.entities.customers
 
 import model.entities.customers.CustState.Idle
 import model.entities.customers.CustState.Playing
-import model.entities.games.*
-
-import scala.annotation.nowarn
+import model.entities.games._
 
 trait HasBetStrategy[T <: HasBetStrategy[T] & Bankroll[T] & CustomerState[T]]:
   this: T =>
   val betStrategy: BettingStrategy[T]
 
   def placeBet(): Bet = betStrategy.placeBet(using this)
+
+  def updateAfter(result: BetResult): T =
+    changedBetStrategy(betStrategy.updateAfter(result))
 
   def changeBetStrategy(newStrat: BettingStrategy[T]): T =
     changedBetStrategy(newStrat)
@@ -47,7 +48,7 @@ case class FlatBetting[A <: Bankroll[A] & CustomerState[A]](
           case Roulette    => RouletteBet(betAmount, option)
           case Blackjack   => BlackJackBet(betAmount, option.head)
           case _           => ???
-      case Idle => throw new MatchError("Wrong customer state")
+      // case Idle => throw new MatchError("Wrong customer state")
 
   def updateAfter(result: BetResult): FlatBetting[A] = this
 
@@ -71,6 +72,7 @@ object FlatBetting:
     new FlatBetting[A](betAmount, List.empty)
 
 case class Martingale[A <: Bankroll[A] & CustomerState[A]](
+    baseBet: Double,
     betAmount: Double,
     lossStreak: Int = 0,
     option: List[Int]
@@ -81,10 +83,10 @@ case class Martingale[A <: Bankroll[A] & CustomerState[A]](
     ctx.customerState match
       case Playing(game) =>
         game.gameType match
-          case Roulette  => RouletteBet(betAmount, option)
-          case Blackjack => BlackJackBet(betAmount, option.head)
+          case Roulette  => RouletteBet(bet, option)
+          case Blackjack => BlackJackBet(bet, option.head)
           case _         => ???
-      case Idle => throw new MatchError("Wrong customer state")
+      // case Idle => throw new MatchError("Wrong customer state")
 
   def updateAfter(result: BetResult): Martingale[A] =
     if result.isFailure then
@@ -92,35 +94,37 @@ case class Martingale[A <: Bankroll[A] & CustomerState[A]](
     else copy(lossStreak = 0)
 
   def nextBet(): Double =
-    betAmount * math.pow(2, lossStreak)
+    baseBet * math.pow(2, lossStreak)
 
 object Martingale:
 
   def apply[A <: Bankroll[A] & CustomerState[A]](
-      betAmount: Double,
+      baseBet: Double,
       option: Int
   ): Martingale[A] =
-    Martingale(betAmount, 0, List(option))
+    Martingale(baseBet, baseBet, 0, List(option))
 
   def apply[A <: Bankroll[A] & CustomerState[A]](
-      betAmount: Double,
+      baseBet: Double,
       options: List[Int]
   ): Martingale[A] =
-    Martingale(betAmount, 0, options)
+    Martingale(baseBet, baseBet, 0, options)
 
   def apply[A <: Bankroll[A] & CustomerState[A]](
+      baseBet: Double,
       betAmount: Double,
       option: Int,
       lossStreak: Int
   ): Martingale[A] =
-    new Martingale[A](betAmount, lossStreak, List(option))
+    new Martingale[A](baseBet, betAmount, lossStreak, List(option))
 
   def apply[A <: Bankroll[A] & CustomerState[A]](
+      baseBet: Double,
       betAmount: Double,
       options: List[Int],
       lossStreak: Int
   ): Martingale[A] =
-    new Martingale[A](betAmount, lossStreak, options)
+    new Martingale[A](baseBet, betAmount, lossStreak, options)
 
 //case class KellyStrategy(p: Double, b: Double) extends BettingStrategy:
 //

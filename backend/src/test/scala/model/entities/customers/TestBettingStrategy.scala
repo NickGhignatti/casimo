@@ -3,7 +3,7 @@ package model.entities.customers
 import model.entities.customers.CustState.{Idle, Playing}
 import model.entities.games.{BlackJackBet, GameBuilder, RouletteBet, SlotBet}
 import org.scalatest.funsuite.AnyFunSuite
-import utils.Vector2D
+import utils.{Result, Vector2D}
 
 private case class MockCustomer(
                          customerState: CustState = Idle,
@@ -94,3 +94,37 @@ class TestBettingStrategy extends AnyFunSuite:
       mock.placeBet()
     }
     assert(ex.getMessage === s"requirement failed: Bet amount must be equal or less of the total bankroll, instead is ${mock.betStrategy.betAmount} when the bankroll is ${mock.bankroll}")
+
+  test("Martingale strategy should double the bet every loss"):
+    val targetList = List(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35)
+
+    val mock = MockCustomer(
+      customerState = Playing(GameBuilder.roulette(Vector2D.zero)),
+      bankroll = 1000.0,
+      betStrategy = Martingale[MockCustomer](10.0, targetList)
+    )
+    val firstBet = mock.placeBet()
+    val newBettingStrat = mock.updateAfter(Result.Failure(mock.betStrategy.betAmount))
+    val secondBet = newBettingStrat.placeBet()
+    val lastBettingStrat = newBettingStrat.updateAfter(Result.Failure(newBettingStrat.betStrategy.betAmount))
+    val thirdBet = lastBettingStrat.placeBet()
+    assert(firstBet.amount == 10.0)
+    assert(secondBet.amount == 20.0)
+    assert(thirdBet.amount == 40.0)
+
+  test("Martingale strategy should reset to baseBet when winning"):
+    val targetList = List(1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35)
+
+    val mock = MockCustomer(
+      customerState = Playing(GameBuilder.roulette(Vector2D.zero)),
+      bankroll = 1000.0,
+      betStrategy = Martingale[MockCustomer](10.0, targetList)
+    )
+    val firstBet = mock.placeBet()
+    val newBettingStrat = mock.updateAfter(Result.Failure(mock.betStrategy.betAmount))
+    val secondBet = newBettingStrat.placeBet()
+    val lastBettingStrat = newBettingStrat.updateAfter(Result.Success(newBettingStrat.betStrategy.betAmount))
+    val thirdBet = lastBettingStrat.placeBet()
+    assert(firstBet.amount == 10.0)
+    assert(secondBet.amount == 20.0)
+    assert(thirdBet.amount == 10.0)
