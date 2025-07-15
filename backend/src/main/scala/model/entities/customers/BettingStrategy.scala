@@ -2,7 +2,9 @@ package model.entities.customers
 
 import model.entities.customers.CustState.Idle
 import model.entities.customers.CustState.Playing
-import model.entities.games._
+import model.entities.games.*
+
+import scala.annotation.nowarn
 
 trait HasBetStrategy[T <: HasBetStrategy[T] & Bankroll[T] & CustomerState[T]]:
   this: T =>
@@ -45,6 +47,7 @@ case class FlatBetting[A <: Bankroll[A] & CustomerState[A]](
           case Roulette    => RouletteBet(betAmount, option)
           case Blackjack   => BlackJackBet(betAmount, option.head)
           case _           => ???
+      case Idle => throw new MatchError("Wrong customer state")
 
   def updateAfter(result: BetResult): FlatBetting[A] = this
 
@@ -81,6 +84,7 @@ case class Martingale[A <: Bankroll[A] & CustomerState[A]](
           case Roulette  => RouletteBet(betAmount, option)
           case Blackjack => BlackJackBet(betAmount, option.head)
           case _         => ???
+      case Idle => throw new MatchError("Wrong customer state")
 
   def updateAfter(result: BetResult): Martingale[A] =
     if result.isFailure then
