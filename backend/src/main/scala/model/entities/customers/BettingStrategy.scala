@@ -41,7 +41,7 @@ case class FlatBetting[A <: Bankroll[A] & CustomerState[A]](
       ctx.customerState != Idle,
       "Bet should be placed only if the customer is playing a game"
     )
-    ctx.customerState match
+    (ctx.customerState: @unchecked) match
       case Playing(game) =>
         game.gameType match
           case SlotMachine => SlotBet(betAmount)
@@ -80,7 +80,7 @@ case class Martingale[A <: Bankroll[A] & CustomerState[A]](
 
   def placeBet(using ctx: A): Bet =
     val bet = nextBet()
-    ctx.customerState match
+    (ctx.customerState: @unchecked) match
       case Playing(game) =>
         game.gameType match
           case Roulette  => RouletteBet(bet, option)

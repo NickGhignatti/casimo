@@ -1,22 +1,19 @@
 package model.entities.customers
 
 import model.entities.GamesAttracted
-import model.entities.games.dsl.use
-import model.entities.games.{BlackJackStrategy, Game, GameBuilder, GameState, GameType, RouletteStrategy, SlotMachine, SlotStrategy}
+import model.entities.games.{Game, GameBuilder, GameType, SlotMachine}
 import model.managers.movements.Boids.MoverManager
 import model.managers.movements.{Context, GamesAttractivenessManager}
+import model.managers.|
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
 import utils.Vector2D.distance
-import model.managers.|
-
-import scala.util.chaining.scalaUtilChainingOps
 
 class TestGamesAttracted extends AnyFunSuite:
   private case class Customer(
-    position: Vector2D,
-    direction: Vector2D = Vector2D.zero,
-    favouriteGames: Seq[GameType] = Seq.empty
+      position: Vector2D,
+      direction: Vector2D = Vector2D.zero,
+      favouriteGames: Seq[GameType] = Seq.empty
   ) extends GamesAttracted[Customer]:
 
     override def updatedPosition(newPosition: Vector2D): Customer =
@@ -34,6 +31,9 @@ class TestGamesAttracted extends AnyFunSuite:
   test("A customer should get closer to its favourite game"):
     val customer = Customer(Vector2D(1, 1), favouriteGames = Seq(SlotMachine))
     val context: Context[Customer] = Context(customer, games)
-    val updatedCustomer = context | GamesAttractivenessManager() | MoverManager()
-    assert(distance(updatedCustomer.position, games.head.position) <
-      distance(customer.position, games.head.position))
+    val updatedCustomer =
+      context | GamesAttractivenessManager() | MoverManager()
+    assert(
+      distance(updatedCustomer.position, games.head.position) <
+        distance(customer.position, games.head.position)
+    )

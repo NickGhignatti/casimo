@@ -1,8 +1,15 @@
 package model.managers
 
-import model.entities.customers.CustState.{Idle, Playing}
-import model.entities.customers.{Bankroll, BettingStrategy, BoredomFrustration, CustState, CustomerState, FlatBetting, HasBetStrategy}
-import model.entities.games.{BlackJackGame, Game, GameBuilder, GameState, SlotStrategyInstance}
+import model.entities.customers.Bankroll
+import model.entities.customers.BettingStrategy
+import model.entities.customers.BoredomFrustration
+import model.entities.customers.CustState
+import model.entities.customers.CustState.Idle
+import model.entities.customers.CustState.Playing
+import model.entities.customers.CustomerState
+import model.entities.customers.FlatBetting
+import model.entities.customers.HasBetStrategy
+import model.entities.games.GameBuilder
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
 
@@ -29,7 +36,9 @@ case class MockCustomer(
   protected def updatedBankroll(newBankroll: Double): MockCustomer =
     this.copy(bankroll = newBankroll)
 
-  protected def changedBetStrategy(newStrat: BettingStrategy[MockCustomer]): MockCustomer =
+  protected def changedBetStrategy(
+      newStrat: BettingStrategy[MockCustomer]
+  ): MockCustomer =
     this.copy(betStrategy = newStrat)
 
 val mockGame = GameBuilder.slot(Vector2D.zero)
