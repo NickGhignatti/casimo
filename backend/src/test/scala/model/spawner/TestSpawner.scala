@@ -11,7 +11,6 @@ import model.entities.spawner.{
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
 
-import scala.util.Random
 import scala.language.implicitConversions
 
 class TestSpawner extends AnyFunSuite:
