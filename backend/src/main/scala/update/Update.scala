@@ -2,16 +2,19 @@ package update
 
 import scala.annotation.tailrec
 import scala.util.Random
-
 import model.GlobalConfig
 import model.SimulationState
 import model.data.DataManager
 import model.entities.customers.Customer
 import model.entities.customers.DefaultMovementManager
 import model.entities.games.GameResolver
-import model.entities.spawner.Spawner
+import model.entities.spawner.{
+  GaussianStrategy,
+  Spawner,
+  SpawningStrategyBuilder
+}
 import model.managers.|
-import update.Event._
+import update.Event.*
 import utils.Vector2D
 
 object Update:
@@ -27,8 +30,8 @@ object Update:
       case SimulationTick =>
         state.spawner match
           case None => update(state, UpdateCustomersPosition)
-          case Some(value) if value.customerQuantity == state.customers.size =>
-            update(state, UpdateCustomersPosition)
+//          case Some(value) if value.customerQuantity == state.customers.size =>
+//            update(state, UpdateCustomersPosition)
           case Some(value) =>
             update(value.spawn(state), UpdateCustomersPosition)
 
@@ -49,6 +52,11 @@ object Update:
 
       case AddCustomers(n) =>
         state.copy(
-          spawner =
-            Some(Spawner(Random.nextString(12), Vector2D(20.0, 10.0), n, 10)),
+          spawner = Some(
+            Spawner(
+              Random.nextString(12),
+              Vector2D(200.0, 200.0),
+              GaussianStrategy(100, 6, 2)
+            )
+          )
         )
