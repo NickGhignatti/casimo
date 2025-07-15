@@ -1,6 +1,5 @@
 package model.entities.customers
 
-import model.GlobalConfig
 import model.SimulationState
 import model.entities.Entity
 import model.entities.GamesAttracted
@@ -56,9 +55,7 @@ case class DefaultMovementManager(
     avoidRadius: Double = 50
 ) extends BaseManager[SimulationState]:
 
-  override def update(slice: SimulationState)(using
-      config: GlobalConfig
-  ): SimulationState =
+  override def update(slice: SimulationState): SimulationState =
     slice
       | GamesAttractivenessAdapter(GamesAttractivenessManager())
       | BoidsAdapter(
@@ -74,7 +71,7 @@ case class GamesAttractivenessAdapter(manager: BaseManager[Context[Customer]])
     extends BaseManager[SimulationState]:
   override def update(
       slice: SimulationState
-  )(using config: GlobalConfig): SimulationState =
+  ): SimulationState =
     slice.copy(
       customers = slice.customers
         .map(Context(_, slice.games))
@@ -86,7 +83,7 @@ case class BoidsAdapter(manager: BaseManager[Boids.State[Customer]])
     extends BaseManager[SimulationState]:
   override def update(
       slice: SimulationState
-  )(using config: GlobalConfig): SimulationState =
+  ): SimulationState =
     slice.copy(
       customers = slice.customers
         .map(Boids.State(_, slice.customers))

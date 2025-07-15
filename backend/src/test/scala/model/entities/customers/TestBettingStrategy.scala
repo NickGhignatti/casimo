@@ -5,7 +5,7 @@ import model.entities.games.{BlackJackBet, GameBuilder, RouletteBet, SlotBet}
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
 
-case class MockCustomer(
+private case class MockCustomer(
                          customerState: CustState = Idle,
                          bankroll: Double,
                          betStrategy: BettingStrategy[MockCustomer],

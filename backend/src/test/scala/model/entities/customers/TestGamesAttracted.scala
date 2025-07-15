@@ -8,7 +8,6 @@ import model.managers.movements.{Context, GamesAttractivenessManager}
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
 import utils.Vector2D.distance
-import model.given_GlobalConfig
 import model.managers.|
 
 import scala.util.chaining.scalaUtilChainingOps

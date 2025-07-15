@@ -2,7 +2,7 @@ package model.entities.customers
 
 import org.scalatest.funsuite.AnyFunSuite
 
-case class MockBankroll(bankroll: Double)
+private case class MockBankroll(bankroll: Double)
   extends Bankroll[MockBankroll]:
 
   protected def updatedBankroll(newBankroll: Double): MockBankroll =

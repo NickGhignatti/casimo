@@ -2,7 +2,7 @@ package model.entities.customers
 
 import org.scalatest.funsuite.AnyFunSuite
 
-case class MockBF(boredom: Double,
+private case class MockBF(boredom: Double,
                   frustration: Double)
   extends BoredomFrustration[MockBF]:
 

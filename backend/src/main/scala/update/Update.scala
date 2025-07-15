@@ -3,7 +3,6 @@ package update
 import scala.annotation.tailrec
 import scala.util.Random
 
-import model.GlobalConfig
 import model.SimulationState
 import model.data.DataManager
 import model.entities.Spawner
@@ -33,7 +32,6 @@ object Update:
             update(value.spawn(state), UpdateCustomersPosition)
 
       case UpdateCustomersPosition =>
-        given GlobalConfig = GlobalConfig()
         update(state | DefaultMovementManager(), UpdateGames)
 
       case UpdateGames =>

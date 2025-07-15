@@ -1,6 +1,5 @@
 package model.entities.customers
 
-import model.GlobalConfig
 import model.managers.movements.Boids
 import model.managers.{BaseManager, |}
 import model.managers.movements.Boids.{AlignmentManager, CohesionManager, MoverManager, PerceptionLimiterManager, SeparationManager, State, VelocityLimiterManager}
@@ -19,13 +18,12 @@ class TestBoids extends AnyFunSuite:
 
   case class AdapterManager[M <: Movable[M]](manager: BaseManager[State[M]]) extends BaseManager[Seq[M]]:
 
-    override def update(slice: Seq[M])(using config: GlobalConfig): Seq[M] =
+    override def update(slice: Seq[M]): Seq[M] =
       slice
         .map(boid => State(boid, slice))
         .map(_ | manager)
         .map(_.boid)
 
-  private given GlobalConfig = GlobalConfig()
 
   test("Two boids with only separation will increase their distance"):
     val boids = Seq(Boid(Vector2D(0, 0)), Boid(Vector2D(1, 0)))
