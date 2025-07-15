@@ -56,14 +56,17 @@ case class DefaultMovementManager(
     avoidRadius: Double = 50,
     alignmentWeight: Double = 1.0,
     cohesionWeight: Double = 1.0,
-    separationWeight: Double = 1.0
+    separationWeight: Double = 1.0,
+    gamesAttractivenessWeight: Double = 1.0
 ) extends BaseManager[SimulationState]:
 
   override def update(slice: SimulationState)(using
       config: GlobalConfig
   ): SimulationState =
     slice
-      | GamesAttractivenessAdapter(GamesAttractivenessManager())
+      | GamesAttractivenessAdapter(
+        gamesAttractivenessWeight * GamesAttractivenessManager()
+      )
       | BoidsAdapter(
         PerceptionLimiterManager(perceptionRadius)
           | alignmentWeight * AlignmentManager()

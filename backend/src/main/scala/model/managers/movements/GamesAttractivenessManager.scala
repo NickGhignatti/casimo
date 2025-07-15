@@ -4,7 +4,7 @@ import model.GlobalConfig
 import model.entities.GamesAttracted
 import model.entities.customers.Movable
 import model.entities.games.Game
-import model.managers.BaseManager
+import model.managers.WeightedManager
 import utils.Vector2D
 import utils.Vector2D.direction
 
@@ -18,8 +18,9 @@ case class Context[C <: GamesAttracted[C]](customer: C, games: Seq[Game])
 
   export customer.{position, direction}
 
-case class GamesAttractivenessManager[C <: GamesAttracted[C]]()
-    extends BaseManager[Context[C]]:
+case class GamesAttractivenessManager[C <: GamesAttracted[C]](
+    weight: Double = 1.0
+) extends WeightedManager[Context[C]]:
   override def update(
       slice: Context[C]
   )(using config: GlobalConfig): Context[C] =
@@ -31,7 +32,10 @@ case class GamesAttractivenessManager[C <: GamesAttracted[C]]()
         bestGame match
           case Some(game) =>
             customer.updatedDirection(
-              direction(customer.position, game.position)
+              direction(customer.position, game.position) * weight
             )
           case _ => customer
     )
+
+  override def updatedWeight(weight: Double): WeightedManager[Context[C]] =
+    copy(weight = weight)

@@ -16,6 +16,7 @@ case class ConfigForm(update: Var[Update]):
   private val alignmentWeightVar = Var(1.0)
   private val cohesionWeightVar = Var(1.0)
   private val separationWeightVar = Var(1.0)
+  private val gamesAttractivenessWeightVar = Var(1.0)
 
   Signal
     .combineWithFn(
@@ -24,9 +25,10 @@ case class ConfigForm(update: Var[Update]):
       avoidRadiusVar,
       alignmentWeightVar,
       cohesionWeightVar,
-      separationWeightVar
+      separationWeightVar,
+      gamesAttractivenessWeightVar
     )(
-      DefaultMovementManager(_, _, _, _, _, _)
+      DefaultMovementManager(_, _, _, _, _, _, _)
     )
     .map(Update(_))
     .foreach(update.set)
@@ -57,6 +59,10 @@ case class ConfigForm(update: Var[Update]):
       parameter(
         "Separation Weight",
         separationWeightVar
+      ),
+      parameter(
+        "Games Attractiveness Weight",
+        gamesAttractivenessWeightVar
       ),
       hr()
     )
