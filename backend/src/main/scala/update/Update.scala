@@ -7,15 +7,15 @@ import model.GlobalConfig
 import model.SimulationState
 import model.data.DataManager
 import model.entities.customers.Customer
-import model.entities.customers.DefaultMovementManager
 import model.entities.games.GameResolver
+import model.managers.BaseManager
 import model.entities.spawner.GaussianStrategy
 import model.entities.spawner.Spawner
 import model.managers.|
 import update.Event._
 import utils.Vector2D
 
-object Update:
+case class Update(customerManager: BaseManager[SimulationState]):
 
   def updateSimulationManager(
       dataManager: DataManager,
@@ -23,7 +23,7 @@ object Update:
   ): DataManager = dataManager.copy(state = state)
 
   @tailrec
-  def update(state: SimulationState, event: Event): SimulationState =
+  final def update(state: SimulationState, event: Event): SimulationState =
     event match
       case SimulationTick =>
         state.spawner match
@@ -33,7 +33,7 @@ object Update:
 
       case UpdateCustomersPosition =>
         given GlobalConfig = GlobalConfig()
-        update(state | DefaultMovementManager(), UpdateGames)
+        update(state | customerManager, UpdateGames)
 
       case UpdateGames =>
         val updatedGames =
