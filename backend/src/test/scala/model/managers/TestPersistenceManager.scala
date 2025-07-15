@@ -2,31 +2,15 @@ package model.managers
 
 import model.GlobalConfig
 import model.entities.customers.Bankroll
+import model.entities.customers.BettingStrategy
 import model.entities.customers.BoredomFrustration
 import model.entities.customers.CustState
 import model.entities.customers.CustState.Idle
 import model.entities.customers.CustState.Playing
 import model.entities.customers.CustomerState
-import model.entities.games.Game
-import model.entities.games.GameState
-import model.entities.games.SlotStrategyInstance
-import model.entities.customers.CustState.{Idle, Playing}
-import model.entities.customers.{
-  Bankroll,
-  BettingStrategy,
-  BoredomFrustration,
-  CustState,
-  CustomerState,
-  FlatBetting,
-  HasBetStrategy
-}
-import model.entities.games.{
-  BlackJackGame,
-  Game,
-  GameBuilder,
-  GameState,
-  SlotStrategyInstance
-}
+import model.entities.customers.FlatBetting
+import model.entities.customers.HasBetStrategy
+import model.entities.games.GameBuilder
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
 

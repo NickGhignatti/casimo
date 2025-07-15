@@ -1,8 +1,8 @@
 package update
 
 import model.SimulationState
-import model.entities.customers.DefaultMovementManager
 import model.data.DataManager
+import model.entities.customers.DefaultMovementManager
 import model.entities.games.GameBuilder
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D

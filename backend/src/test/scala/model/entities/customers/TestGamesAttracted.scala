@@ -1,24 +1,11 @@
 package model.entities.customers
 
 import model.entities.GamesAttracted
-import model.entities.games.BlackJackStrategy
 import model.entities.games.Game
-import model.entities.games.GameState
+import model.entities.games.GameBuilder
 import model.entities.games.GameType
-import model.entities.games.RouletteStrategy
-import model.entities.games.SlotStrategy
-import model.entities.games.dsl.use
+import model.entities.games.SlotMachine
 import model.given_GlobalConfig
-import model.entities.games.{
-  BlackJackStrategy,
-  Game,
-  GameBuilder,
-  GameState,
-  GameType,
-  RouletteStrategy,
-  SlotMachine,
-  SlotStrategy
-}
 import model.managers.movements.Boids.MoverManager
 import model.managers.movements.Context
 import model.managers.movements.GamesAttractivenessManager
