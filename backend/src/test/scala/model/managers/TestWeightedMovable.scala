@@ -1,7 +1,6 @@
 package model.managers
 
 import model.entities.customers.Movable
-import model.given_GlobalConfig
 import model.managers.WeightedManager._
 import model.managers.movements.Boids
 import model.managers.movements.Boids._
