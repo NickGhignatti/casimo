@@ -48,6 +48,34 @@ class SpawningStrategyBuilder:
     strategy = StepStrategy(lowRate, highRate, start, end)
     this
 
+  def custom(f: Double => Int): this.type =
+    strategy = new SpawningStrategy:
+      override def customersAt(time: Double): Int = f(time)
+    this
+
+  // DSL operations
+  def offset(amount: Int): this.type =
+    require(amount >= 0)
+    val current = strategy
+    strategy = (time: Double) => current.customersAt(time) + amount
+    this
+
+  def scale(factor: Double): this.type =
+    require(factor >= 0, "scale factor should be >= 0")
+    val current = strategy
+    strategy = (time: Double) =>
+      math.round(current.customersAt(time) * factor).toInt
+    this
+
+  def clamp(min: Int, max: Int): this.type =
+    require(min >= 0, "minimum value should be >= 0")
+    require(min <= max, "maximum value should be greater than minimum")
+    val current = strategy
+    strategy = (time: Double) =>
+      val value = current.customersAt(time)
+      value.max(min).min(max)
+    this
+
   def build(): SpawningStrategy = strategy
 
 object SpawningStrategyBuilder:
