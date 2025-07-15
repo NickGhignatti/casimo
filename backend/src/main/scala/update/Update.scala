@@ -6,9 +6,10 @@ import scala.util.Random
 import model.GlobalConfig
 import model.SimulationState
 import model.data.DataManager
-import model.entities.Spawner
 import model.entities.customers.Customer
 import model.entities.games.GameResolver
+import model.entities.spawner.GaussianStrategy
+import model.entities.spawner.Spawner
 import model.managers.BaseManager
 import model.managers.|
 import update.Event._
@@ -27,8 +28,6 @@ case class Update(customerManager: BaseManager[SimulationState]):
       case SimulationTick =>
         state.spawner match
           case None => update(state, UpdateCustomersPosition)
-          case Some(value) if value.customerQuantity == state.customers.size =>
-            update(state, UpdateCustomersPosition)
           case Some(value) =>
             update(value.spawn(state), UpdateCustomersPosition)
 
@@ -49,6 +48,11 @@ case class Update(customerManager: BaseManager[SimulationState]):
 
       case AddCustomers(n) =>
         state.copy(
-          spawner =
-            Some(Spawner(Random.nextString(12), Vector2D(20.0, 10.0), n, 10)),
+          spawner = Some(
+            Spawner(
+              Random.nextString(12),
+              Vector2D(200.0, 200.0),
+              GaussianStrategy(100, 6, 2)
+            )
+          )
         )
