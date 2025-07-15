@@ -33,48 +33,53 @@ case class StepStrategy(
     } else if (time >= startTime && time <= endTime) highRate
     else lowRate
 
-class SpawningStrategyBuilder:
-  private var strategy: SpawningStrategy = ConstantStrategy(0)
+class SpawningStrategyBuilder private (private val strategy: SpawningStrategy):
+  def this() = this(ConstantStrategy(0))
 
-  def constant(rate: Int): this.type =
-    strategy = ConstantStrategy(rate)
-    this
+  def constant(rate: Int): SpawningStrategyBuilder =
+    new SpawningStrategyBuilder(ConstantStrategy(rate))
 
-  def gaussian(peak: Double, mean: Double, stdDev: Double): this.type =
-    strategy = GaussianStrategy(peak, mean, stdDev)
-    this
+  def gaussian(
+      peak: Double,
+      mean: Double,
+      stdDev: Double
+  ): SpawningStrategyBuilder =
+    new SpawningStrategyBuilder(GaussianStrategy(peak, mean, stdDev))
 
-  def step(lowRate: Int, highRate: Int, start: Double, end: Double): this.type =
-    strategy = StepStrategy(lowRate, highRate, start, end)
-    this
+  def step(
+      lowRate: Int,
+      highRate: Int,
+      start: Double,
+      end: Double
+  ): SpawningStrategyBuilder =
+    new SpawningStrategyBuilder(StepStrategy(lowRate, highRate, start, end))
 
-  def custom(f: Double => Int): this.type =
-    strategy = new SpawningStrategy:
-      override def customersAt(time: Double): Int = f(time)
-    this
+  def custom(f: Double => Int): SpawningStrategyBuilder =
+    new SpawningStrategyBuilder((time: Double) => f(time))
 
   // DSL operations
-  def offset(amount: Int): this.type =
+  def offset(amount: Int): SpawningStrategyBuilder =
     require(amount >= 0)
-    val current = strategy
-    strategy = (time: Double) => current.customersAt(time) + amount
-    this
+    val newStrategy = new SpawningStrategy:
+      override def customersAt(time: Double): Int =
+        strategy.customersAt(time) + amount
+    new SpawningStrategyBuilder(newStrategy)
 
-  def scale(factor: Double): this.type =
+  def scale(factor: Double): SpawningStrategyBuilder =
     require(factor >= 0, "scale factor should be >= 0")
-    val current = strategy
-    strategy = (time: Double) =>
-      math.round(current.customersAt(time) * factor).toInt
-    this
+    val newStrategy = new SpawningStrategy:
+      override def customersAt(time: Double): Int =
+        math.round(strategy.customersAt(time) * factor).toInt
+    new SpawningStrategyBuilder(newStrategy)
 
-  def clamp(min: Int, max: Int): this.type =
+  def clamp(min: Int, max: Int): SpawningStrategyBuilder =
     require(min >= 0, "minimum value should be >= 0")
     require(min <= max, "maximum value should be greater than minimum")
-    val current = strategy
-    strategy = (time: Double) =>
-      val value = current.customersAt(time)
-      value.max(min).min(max)
-    this
+    val newStrategy = new SpawningStrategy:
+      override def customersAt(time: Double): Int =
+        val value = strategy.customersAt(time)
+        value.max(min).min(max)
+    new SpawningStrategyBuilder(newStrategy)
 
   def build(): SpawningStrategy = strategy
 
