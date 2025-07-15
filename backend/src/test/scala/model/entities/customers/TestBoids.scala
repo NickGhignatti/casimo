@@ -1,7 +1,5 @@
 package model.entities.customers
 
-import model.GlobalConfig
-import model.managers.BaseManager
 import model.managers.movements.Boids
 import model.managers.movements.Boids.AlignmentManager
 import model.managers.movements.Boids.CohesionManager
@@ -10,7 +8,7 @@ import model.managers.movements.Boids.PerceptionLimiterManager
 import model.managers.movements.Boids.SeparationManager
 import model.managers.movements.Boids.State
 import model.managers.movements.Boids.VelocityLimiterManager
-import model.managers.|
+import model.managers.{BaseManager, |}
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
 import utils.Vector2D.distance
@@ -30,13 +28,12 @@ class TestBoids extends AnyFunSuite:
   case class AdapterManager[M <: Movable[M]](manager: BaseManager[State[M]])
       extends BaseManager[Seq[M]]:
 
-    override def update(slice: Seq[M])(using config: GlobalConfig): Seq[M] =
+    override def update(slice: Seq[M]): Seq[M] =
       slice
         .map(boid => State(boid, slice))
         .map(_ | manager)
         .map(_.boid)
 
-  private given GlobalConfig = GlobalConfig()
 
   test("Two boids with only separation will increase their distance"):
     val boids = Seq(Boid(Vector2D(0, 0)), Boid(Vector2D(1, 0)))
@@ -68,9 +65,7 @@ class TestBoids extends AnyFunSuite:
         (boids(0).direction dot boids(1).direction)
     )
 
-  test(
-    "The boids velocity's magnitude cannot be bigger than a given parameter"
-  ):
+  test("The boids velocity's magnitude cannot be bigger than a given parameter"):
     val boid = Boid(Vector2D(0, 0), Vector2D(1000, 0))
     assert((boid | VelocityLimiterManager(10)).direction.magnitude <= 10)
 

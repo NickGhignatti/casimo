@@ -1,6 +1,5 @@
 package model.managers
 
-import model.GlobalConfig
 import model.entities.customers.Bankroll
 import model.entities.customers.CustomerState
 import model.entities.customers.HasBetStrategy
@@ -9,9 +8,8 @@ import model.entities.customers.HasBetStrategy
     the bankroll available
     (optional) boredom and frustration
  */
-//TODO: run scalafix -deprecation
 class CustomerStrategyManager[
     A <: HasBetStrategy[A] & CustomerState[A] & Bankroll[A]
 ] extends BaseManager[Seq[A]]:
 
-  def update(slice: Seq[A])(using config: GlobalConfig): Seq[A] = ???
+  def update(slice: Seq[A]): Seq[A] = ???

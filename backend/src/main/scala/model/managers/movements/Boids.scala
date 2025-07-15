@@ -1,6 +1,5 @@
 package model.managers.movements
 
-import model.GlobalConfig
 import model.entities.customers.Movable
 import model.managers.BaseManager
 import model.managers.WeightedManager
@@ -23,7 +22,7 @@ object Boids:
 
   case class MoverManager[M <: Movable[M]]() extends BaseManager[M]:
 
-    override def update(slice: M)(using config: GlobalConfig): M =
+    override def update(slice: M): M =
       slice.updatedPosition(slice.position + slice.direction)
 
   case class SeparationManager[M <: Movable[M]](
@@ -31,7 +30,7 @@ object Boids:
       weight: Double = 1
   ) extends WeightedManager[State[M]]:
 
-    override def update(slice: State[M])(using config: GlobalConfig): State[M] =
+    override def update(slice: State[M]): State[M] =
       slice.directionAdded(
         separation(slice.boid, slice.others.map(_.position)) * weight
       )
@@ -49,7 +48,7 @@ object Boids:
 
   case class CohesionManager[M <: Movable[M]](weight: Double = 1)
       extends WeightedManager[State[M]]:
-    override def update(slice: State[M])(using config: GlobalConfig): State[M] =
+    override def update(slice: State[M]): State[M] =
       slice.directionAdded(
         cohesion(
           slice.boid,
@@ -68,7 +67,7 @@ object Boids:
 
   case class AlignmentManager[M <: Movable[M]](weight: Double = 1)
       extends WeightedManager[State[M]]:
-    override def update(slice: State[M])(using config: GlobalConfig): State[M] =
+    override def update(slice: State[M]): State[M] =
       slice.directionAdded(
         alignment(
           slice.boid,
@@ -91,12 +90,12 @@ object Boids:
       private def capped(max: Double): Vector2D =
         if v.magnitude < max then v else v.normalize * max
 
-    override def update(slice: M)(using config: GlobalConfig): M =
+    override def update(slice: M): M =
       slice.updatedDirection(slice.direction.capped(maxSpeed))
 
   case class PerceptionLimiterManager[M <: Movable[M]](perceptionRadius: Double)
       extends BaseManager[State[M]]:
-    override def update(slice: State[M])(using config: GlobalConfig): State[M] =
+    override def update(slice: State[M]): State[M] =
       slice.copy(others =
         slice.others.filter(other =>
           distance(slice.boid.position, other.position) <= perceptionRadius

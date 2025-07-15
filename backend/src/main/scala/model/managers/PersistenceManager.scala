@@ -1,5 +1,5 @@
 package model.managers
-import model.GlobalConfig
+
 import model.entities.customers.Bankroll
 import model.entities.customers.BoredomFrustration
 import model.entities.customers.CustState.Idle
@@ -12,7 +12,7 @@ case class PersistenceManager[
       HasBetStrategy[A]
 ](bThreshold: Double = 80, fThreshold: Double = 60)
     extends BaseManager[Seq[A]]:
-  def update(customers: Seq[A])(using config: GlobalConfig): Seq[A] =
+  def update(customers: Seq[A]): Seq[A] =
     customers.map { c =>
       c.customerState match
         case Playing(game) =>

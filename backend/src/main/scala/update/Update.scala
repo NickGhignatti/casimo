@@ -3,7 +3,6 @@ package update
 import scala.annotation.tailrec
 import scala.util.Random
 
-import model.GlobalConfig
 import model.SimulationState
 import model.data.DataManager
 import model.entities.customers.Customer
@@ -32,7 +31,6 @@ case class Update(customerManager: BaseManager[SimulationState]):
             update(value.spawn(state), UpdateCustomersPosition)
 
       case UpdateCustomersPosition =>
-        given GlobalConfig = GlobalConfig()
         update(state | customerManager, UpdateGames)
 
       case UpdateGames =>

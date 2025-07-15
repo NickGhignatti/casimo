@@ -1,6 +1,5 @@
 package model.managers
 
-import model.GlobalConfig
 import model.entities.customers.Bankroll
 import model.entities.customers.BettingStrategy
 import model.entities.customers.BoredomFrustration
@@ -45,9 +44,7 @@ case class MockCustomer(
 val mockGame = GameBuilder.slot(Vector2D.zero)
 class TestPersistenceManager extends AnyFunSuite:
   test("Customer should leave the table when too bored"):
-    given config: GlobalConfig = GlobalConfig()
-    val testPersistenceManager =
-      PersistenceManager[MockCustomer](bThreshold = 80, fThreshold = 60)
+    val testPersistenceManager = PersistenceManager[MockCustomer](bThreshold = 80, fThreshold = 60)
     val mockCustomer = MockCustomer(
       customerState = Playing(mockGame),
       boredom = 81.0,
@@ -58,10 +55,8 @@ class TestPersistenceManager extends AnyFunSuite:
     assert(shouldBeIdle.customerState === Idle)
 
   test("Customer should leave the table when too frustrated"):
-    given config: GlobalConfig = GlobalConfig()
 
-    val testPersistenceManager =
-      PersistenceManager[MockCustomer](bThreshold = 80, fThreshold = 60)
+    val testPersistenceManager = PersistenceManager[MockCustomer](bThreshold = 80, fThreshold = 60)
     val mockCustomer = MockCustomer(
       customerState = Playing(mockGame),
       boredom = 30.0,
@@ -71,14 +66,10 @@ class TestPersistenceManager extends AnyFunSuite:
     val shouldBeIdle = testPersistenceManager.update(Seq(mockCustomer)).head
     assert(shouldBeIdle.customerState === Idle)
 
-  test(
-    "Customer shouldn't stop playing if not bored or frustrated and have enough money"
-  ):
+  test("Customer shouldn't stop playing if not bored or frustrated and have enough money"):
 
-    given config: GlobalConfig = GlobalConfig()
 
-    val testPersistenceManager =
-      PersistenceManager[MockCustomer](bThreshold = 80, fThreshold = 60)
+    val testPersistenceManager = PersistenceManager[MockCustomer](bThreshold = 80, fThreshold = 60)
     val mockCustomer = MockCustomer(
       customerState = Playing(mockGame),
       boredom = 50.0,
@@ -88,14 +79,10 @@ class TestPersistenceManager extends AnyFunSuite:
     val shouldStillPlay = testPersistenceManager.update(Seq(mockCustomer)).head
     assert(shouldStillPlay.customerState === Playing(mockGame))
 
-  test(
-    "Customer should leave the table if is bankroll is less than the bet he want to make"
-  ):
+  test("Customer should leave the table if is bankroll is less than the bet he want to make"):
 
-    given config: GlobalConfig = GlobalConfig()
 
-    val testPersistenceManager =
-      PersistenceManager[MockCustomer](bThreshold = 80, fThreshold = 60)
+    val testPersistenceManager = PersistenceManager[MockCustomer](bThreshold = 80, fThreshold = 60)
     val mockCustomer = MockCustomer(
       customerState = Playing(mockGame),
       boredom = 50.0,
@@ -110,10 +97,8 @@ class TestPersistenceManager extends AnyFunSuite:
 
   test("Customer should Remain Idle if already Idle"):
 
-    given config: GlobalConfig = GlobalConfig()
 
-    val testPersistenceManager =
-      PersistenceManager[MockCustomer](bThreshold = 80, fThreshold = 60)
+    val testPersistenceManager = PersistenceManager[MockCustomer](bThreshold = 80, fThreshold = 60)
     val mockCustomer = MockCustomer(
       customerState = Idle,
       boredom = 50,

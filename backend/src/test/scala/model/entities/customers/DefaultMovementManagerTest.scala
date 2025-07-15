@@ -1,7 +1,6 @@
 package model.entities.customers
 
 import model.SimulationState
-import model.given_GlobalConfig
 import model.managers.|
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D

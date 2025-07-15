@@ -1,14 +1,9 @@
 package model.entities.customers
 
 import model.entities.GamesAttracted
-import model.entities.games.Game
-import model.entities.games.GameBuilder
-import model.entities.games.GameType
-import model.entities.games.SlotMachine
-import model.given_GlobalConfig
+import model.entities.games.{Game, GameBuilder, GameType, SlotMachine}
 import model.managers.movements.Boids.MoverManager
-import model.managers.movements.Context
-import model.managers.movements.GamesAttractivenessManager
+import model.managers.movements.{Context, GamesAttractivenessManager}
 import model.managers.|
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D

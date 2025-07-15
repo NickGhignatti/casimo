@@ -1,6 +1,5 @@
 package model.managers.movements
 
-import model.GlobalConfig
 import model.entities.GamesAttracted
 import model.entities.customers.Movable
 import model.entities.games.Game
@@ -23,7 +22,7 @@ case class GamesAttractivenessManager[C <: GamesAttracted[C]](
 ) extends WeightedManager[Context[C]]:
   override def update(
       slice: Context[C]
-  )(using config: GlobalConfig): Context[C] =
+  ): Context[C] =
     slice.copy(
       customer =
         val customer = slice.customer
