@@ -26,6 +26,82 @@ The application is intended to be used by the manager of a [casino](https://en.w
 
 ### Functional requirements
 #### User requirements
+##### Customers
+The customers move around the casino according to a [boid](https://en.wikipedia.org/wiki/Boids)-like model. This modeling is taken by the first assigment of PCD course, which is available at [this repo](https://github.com/pcd-2024-2025/assignment-01). Customers are modeled by a `position` and a `velocity` and three rules are applied to them:
+- **Separation**: Customers try to maintain a minimum distance from each other
+```
+function calculate_separation(boid, nearby_boids){
+  force = (0, 0)
+  for each other_boid in nearby_boids {
+    if distance(boid.position, other_boid.position) < AVOID_RADIUS
+      force += normalize(boid.position - other_boid.position)
+  }
+  return force
+}
+```
+- **Alignment**: Customers try to align their velocity with the average velocity of their neighbors
+```
+function calculate_alignment(boid, nearby_boids){
+  average_velocity = (0, 0)
+  if size(nearby_boids) > 0:
+    for each other_boid in nearby_boids 
+      average_velocity += other_boid.velocity
+    average_velocity /= size(nearby_boids)
+    return normalize(average_velocity - boid.velocity)
+  } else {
+    return (0, 0)
+  }
+}
+```
+- **Cohesion**: Customers try to move towards the average position of their neighbors
+```
+function calculate_cohesion(boid, nearby_boids){
+  center_of_mass = (0, 0)
+  if size(nearby_boids) > 0:
+    for each other_boid in nearby_boids
+      center_of_mass += other_boid.position
+    center_of_mass /= size(nearby_boids)
+    return normalize(center_of_mass - boid.position) 
+  } else {
+	return (0, 0)
+  }
+}
+```
+- **Game attracted**: Customers are attracted by their favourite game, in particular the customer looks around for the nearest game of its favourite type and moves towards it. If no game of its liking is found, this behaviour won't affect its movements.
+
+Each customer is affected only by the boids within a certain distance, defined by the `PERCEPTION_RADIUS`. If a boid is outside this radius, it is not considered in the calculations.
+Each customer updates its position and velocity according to the following algorithm:
+```
+nearby_boids = collect_nearby_boids(b, boids)
+
+separation = calculate_separation(b, nearby_boids)
+alignment = calculate_alignment(b, nearby_boids)
+cohesion = calculate_cohesion(b, nearby_boids)
+game_attraction = calculate_game_attraction(b, games)
+
+/* Combine forces and update velocity */
+b.velocity += SEPARATION_WEIGHT * separation
+b.velocity += ALIGNMENT_WEIGHT * alignment
+b.velocity += COHESION_WEIGHT * cohesion
+b.velocity += GAME_ATTRACTION_WEIGHT * game_attraction
+
+/* Limit speed to MAX_SPEED */
+if magnitude(b.velocity) > MAX_SPEED
+b.velocity = normalize(b.velocity) * MAX_SPEED      
+
+/* Update position */
+b.position += b.velocity
+```
+Other parameters that influence the boids' behavior are:
+- `MAX_SPEED`: maximum speed limit for boids
+- `PERCEPTION_RADIUS`: distance within which a boid perceives others
+- `AVOID_RADIUS`: minimum distance to avoid collisions
+- `SEPARATION_WEIGHT`: weight for separation force
+- `ALIGNMENT_WEIGHT`: weight for alignment force
+- `COHESION_WEIGHT`: weight for cohesion force
+- `GAME_ATTRACTION_WEIGHT`: weight for game attraction force.
+
+All of these parameters can be configured by the user in order to simulate different scenarios.
 
 #### System requirements
 
