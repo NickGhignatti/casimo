@@ -1,9 +1,16 @@
 package model.entities.customers
 
 import model.GlobalConfig
+import model.managers.BaseManager
 import model.managers.movements.Boids
-import model.managers.{BaseManager, |}
-import model.managers.movements.Boids.{AlignmentManager, CohesionManager, MoverManager, PerceptionLimiterManager, SeparationManager, State, VelocityLimiterManager}
+import model.managers.movements.Boids.AlignmentManager
+import model.managers.movements.Boids.CohesionManager
+import model.managers.movements.Boids.MoverManager
+import model.managers.movements.Boids.PerceptionLimiterManager
+import model.managers.movements.Boids.SeparationManager
+import model.managers.movements.Boids.State
+import model.managers.movements.Boids.VelocityLimiterManager
+import model.managers.|
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
 import utils.Vector2D.distance

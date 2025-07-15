@@ -1,9 +1,10 @@
 package model.entities.customers
 
+import model.SimulationState
+import model.given_GlobalConfig
+import model.managers.|
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
-import model.managers.|
-import model.{SimulationState, given_GlobalConfig}
 
 class DefaultMovementManagerTest extends AnyFunSuite:
   test("DefaultMovementManager should move the customers"):

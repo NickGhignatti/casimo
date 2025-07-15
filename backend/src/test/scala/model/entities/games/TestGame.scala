@@ -1,9 +1,10 @@
 package model.entities.games
 
-import model.entities.games.GameType.*
+import model.entities.games.GameType._
 import model.entities.games.dsl.use
 import org.scalatest.funsuite.AnyFunSuite
-import utils.Result.{Failure, Success}
+import utils.Result.Failure
+import utils.Result.Success
 import utils.Vector2D
 
 class TestGame extends AnyFunSuite:

@@ -1,10 +1,13 @@
-import com.raquo.laminar.api.L.*
+import com.raquo.laminar.api.L._
 import model.SimulationState
 import model.entities.customers.DefaultMovementManager
 import org.scalajs.dom
 import org.scalajs.dom.document
 import update.Update
-import view.{ButtonBar, CanvasManager, ConfigForm, Sidebar}
+import view.ButtonBar
+import view.CanvasManager
+import view.ConfigForm
+import view.Sidebar
 
 @main
 def main(): Unit =

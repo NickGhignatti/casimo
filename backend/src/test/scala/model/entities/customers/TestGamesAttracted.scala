@@ -1,17 +1,21 @@
 package model.entities.customers
 
 import model.entities.GamesAttracted
+import model.entities.games.BlackJackStrategy
+import model.entities.games.Game
+import model.entities.games.GameState
+import model.entities.games.GameType
+import model.entities.games.RouletteStrategy
+import model.entities.games.SlotStrategy
 import model.entities.games.dsl.use
-import model.entities.games.{BlackJackStrategy, Game, GameState, GameType, RouletteStrategy, SlotStrategy}
+import model.given_GlobalConfig
 import model.managers.movements.Boids.MoverManager
-import model.managers.movements.{Context, GamesAttractivenessManager}
+import model.managers.movements.Context
+import model.managers.movements.GamesAttractivenessManager
+import model.managers.|
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
 import utils.Vector2D.distance
-import model.given_GlobalConfig
-import model.managers.|
-
-import scala.util.chaining.scalaUtilChainingOps
 
 class TestGamesAttracted extends AnyFunSuite:
   private case class Customer(

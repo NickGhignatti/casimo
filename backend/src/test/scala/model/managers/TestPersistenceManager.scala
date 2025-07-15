@@ -1,14 +1,15 @@
 package model.managers
 
 import model.GlobalConfig
-import model.entities.customers.CustState.{Idle, Playing}
-import model.entities.customers.{
-  Bankroll,
-  BoredomFrustration,
-  CustState,
-  CustomerState
-}
-import model.entities.games.{Game, GameState, SlotStrategyInstance}
+import model.entities.customers.Bankroll
+import model.entities.customers.BoredomFrustration
+import model.entities.customers.CustState
+import model.entities.customers.CustState.Idle
+import model.entities.customers.CustState.Playing
+import model.entities.customers.CustomerState
+import model.entities.games.Game
+import model.entities.games.GameState
+import model.entities.games.SlotStrategyInstance
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
 

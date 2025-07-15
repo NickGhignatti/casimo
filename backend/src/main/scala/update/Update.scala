@@ -7,7 +7,6 @@ import model.GlobalConfig
 import model.SimulationState
 import model.entities.Spawner
 import model.entities.customers.Customer
-import model.entities.customers.DefaultMovementManager
 import model.managers.BaseManager
 import model.managers.|
 import update.Event._
@@ -27,7 +26,7 @@ case class Update(customerManager: BaseManager[SimulationState]):
             update(value.spawn(state), UpdateCustomersPosition)
       case UpdateCustomersPosition =>
         given GlobalConfig = GlobalConfig()
-        update(state | DefaultMovementManager(), UpdateGames)
+        update(state | customerManager, UpdateGames)
       case UpdateGames =>
         update(state, UpdateSimulationBankrolls)
       case UpdateSimulationBankrolls =>
