@@ -1,6 +1,7 @@
 package model.entities
 
 import model.SimulationState
+import model.entities.spawner.Spawner
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
 

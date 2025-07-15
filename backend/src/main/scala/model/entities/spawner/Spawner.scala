@@ -1,10 +1,11 @@
-package model.entities
-
-import scala.util.Random
+package model.entities.spawner
 
 import model.SimulationState
+import model.entities.Entity
 import model.entities.customers.Customer
 import utils.Vector2D
+
+import scala.util.Random
 
 case class Spawner(
     id: String,
