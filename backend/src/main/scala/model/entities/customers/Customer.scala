@@ -53,7 +53,10 @@ case class Customer(
 case class DefaultMovementManager(
     maxSpeed: Double = 1000,
     perceptionRadius: Double = 200000,
-    avoidRadius: Double = 50
+    avoidRadius: Double = 50,
+    alignmentWeight: Double = 1.0,
+    cohesionWeight: Double = 1.0,
+    separationWeight: Double = 1.0
 ) extends BaseManager[SimulationState]:
 
   override def update(slice: SimulationState)(using
@@ -63,9 +66,9 @@ case class DefaultMovementManager(
       | GamesAttractivenessAdapter(GamesAttractivenessManager())
       | BoidsAdapter(
         PerceptionLimiterManager(perceptionRadius)
-          | AlignmentManager()
-          | CohesionManager()
-          | SeparationManager(avoidRadius)
+          | alignmentWeight * AlignmentManager()
+          | cohesionWeight * CohesionManager()
+          | separationWeight * SeparationManager(avoidRadius)
           | VelocityLimiterManager(maxSpeed)
           | MoverManager()
       )
