@@ -1,9 +1,16 @@
 package model.managers
 
 import model.GlobalConfig
-import model.entities.customers.CustState.{Idle, Playing}
-import model.entities.customers.{Bankroll, BettingStrategy, BoredomFrustration, CustState, CustomerState, FlatBetting, HasBetStrategy}
-import model.entities.games.{BlackJackGame, Game, GameBuilder, GameState, SlotStrategyInstance}
+import model.entities.customers.Bankroll
+import model.entities.customers.BettingStrategy
+import model.entities.customers.BoredomFrustration
+import model.entities.customers.CustState
+import model.entities.customers.CustState.Idle
+import model.entities.customers.CustState.Playing
+import model.entities.customers.CustomerState
+import model.entities.customers.FlatBetting
+import model.entities.customers.HasBetStrategy
+import model.entities.games.GameBuilder
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
 
@@ -30,14 +37,17 @@ case class MockCustomer(
   protected def updatedBankroll(newBankroll: Double): MockCustomer =
     this.copy(bankroll = newBankroll)
 
-  protected def changedBetStrategy(newStrat: BettingStrategy[MockCustomer]): MockCustomer =
+  protected def changedBetStrategy(
+      newStrat: BettingStrategy[MockCustomer]
+  ): MockCustomer =
     this.copy(betStrategy = newStrat)
 
 val mockGame = GameBuilder.slot(Vector2D.zero)
 class TestPersistenceManager extends AnyFunSuite:
   test("Customer should leave the table when too bored"):
     given config: GlobalConfig = GlobalConfig()
-    val testPersistenceManager = PersistenceManager[MockCustomer](bThreshold = 80, fThreshold = 60)
+    val testPersistenceManager =
+      PersistenceManager[MockCustomer](bThreshold = 80, fThreshold = 60)
     val mockCustomer = MockCustomer(
       customerState = Playing(mockGame),
       boredom = 81.0,
@@ -50,7 +60,8 @@ class TestPersistenceManager extends AnyFunSuite:
   test("Customer should leave the table when too frustrated"):
     given config: GlobalConfig = GlobalConfig()
 
-    val testPersistenceManager = PersistenceManager[MockCustomer](bThreshold = 80, fThreshold = 60)
+    val testPersistenceManager =
+      PersistenceManager[MockCustomer](bThreshold = 80, fThreshold = 60)
     val mockCustomer = MockCustomer(
       customerState = Playing(mockGame),
       boredom = 30.0,
@@ -60,11 +71,14 @@ class TestPersistenceManager extends AnyFunSuite:
     val shouldBeIdle = testPersistenceManager.update(Seq(mockCustomer)).head
     assert(shouldBeIdle.customerState === Idle)
 
-  test("Customer shouldn't stop playing if not bored or frustrated and have enough money"):
+  test(
+    "Customer shouldn't stop playing if not bored or frustrated and have enough money"
+  ):
 
     given config: GlobalConfig = GlobalConfig()
 
-    val testPersistenceManager = PersistenceManager[MockCustomer](bThreshold = 80, fThreshold = 60)
+    val testPersistenceManager =
+      PersistenceManager[MockCustomer](bThreshold = 80, fThreshold = 60)
     val mockCustomer = MockCustomer(
       customerState = Playing(mockGame),
       boredom = 50.0,
@@ -74,11 +88,14 @@ class TestPersistenceManager extends AnyFunSuite:
     val shouldStillPlay = testPersistenceManager.update(Seq(mockCustomer)).head
     assert(shouldStillPlay.customerState === Playing(mockGame))
 
-  test("Customer should leave the table if is bankroll is less than the bet he want to make"):
+  test(
+    "Customer should leave the table if is bankroll is less than the bet he want to make"
+  ):
 
     given config: GlobalConfig = GlobalConfig()
 
-    val testPersistenceManager = PersistenceManager[MockCustomer](bThreshold = 80, fThreshold = 60)
+    val testPersistenceManager =
+      PersistenceManager[MockCustomer](bThreshold = 80, fThreshold = 60)
     val mockCustomer = MockCustomer(
       customerState = Playing(mockGame),
       boredom = 50.0,
@@ -95,7 +112,8 @@ class TestPersistenceManager extends AnyFunSuite:
 
     given config: GlobalConfig = GlobalConfig()
 
-    val testPersistenceManager = PersistenceManager[MockCustomer](bThreshold = 80, fThreshold = 60)
+    val testPersistenceManager =
+      PersistenceManager[MockCustomer](bThreshold = 80, fThreshold = 60)
     val mockCustomer = MockCustomer(
       customerState = Idle,
       boredom = 50,
