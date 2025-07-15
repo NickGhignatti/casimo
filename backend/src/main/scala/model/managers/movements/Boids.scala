@@ -2,6 +2,7 @@ package model.managers.movements
 
 import model.entities.customers.Movable
 import model.managers.BaseManager
+import model.managers.WeightedManager
 import utils.Vector2D
 import utils.Vector2D.distance
 
@@ -14,6 +15,9 @@ object Boids:
     override def updatedDirection(newDirection: Vector2D): State[M] =
       this.copy(boid = boid.updatedDirection(newDirection))
 
+    def directionAdded(addingDirection: Vector2D): State[M] =
+      this.copy(boid = boid.updatedDirection(boid.direction + addingDirection))
+
     export boid.{position, direction}
 
   case class MoverManager[M <: Movable[M]]() extends BaseManager[M]:
@@ -22,13 +26,13 @@ object Boids:
       slice.updatedPosition(slice.position + slice.direction)
 
   case class SeparationManager[M <: Movable[M]](
-      avoidRadius: Double
-  ) extends BaseManager[State[M]]:
+      avoidRadius: Double,
+      weight: Double = 1
+  ) extends WeightedManager[State[M]]:
 
     override def update(slice: State[M]): State[M] =
-      slice.updatedDirection(
-        slice.direction +
-          separation(slice.boid, slice.others.map(_.position))
+      slice.directionAdded(
+        separation(slice.boid, slice.others.map(_.position)) * weight
       )
 
     private def separation(boid: M, positions: Seq[Vector2D]): Vector2D =
@@ -39,13 +43,17 @@ object Boids:
           .map(pos => (boid.position - pos).normalize)
           .reduce(_ + _)
 
-  case class CohesionManager[M <: Movable[M]]() extends BaseManager[State[M]]:
+    override def updatedWeight(weight: Double): WeightedManager[State[M]] =
+      this.copy(weight = weight)
+
+  case class CohesionManager[M <: Movable[M]](weight: Double = 1)
+      extends WeightedManager[State[M]]:
     override def update(slice: State[M]): State[M] =
-      slice.updatedDirection(
-        slice.boid.direction + cohesion(
+      slice.directionAdded(
+        cohesion(
           slice.boid,
           slice.others.map(_.position)
-        )
+        ) * weight
       )
 
     private def cohesion(boid: M, positions: Seq[Vector2D]): Vector2D =
@@ -54,19 +62,27 @@ object Boids:
         val center = positions.reduce(_ + _) / positions.size
         (center - boid.position).normalize
 
-  case class AlignmentManager[M <: Movable[M]]() extends BaseManager[State[M]]:
+    override def updatedWeight(weight: Double): WeightedManager[State[M]] =
+      this.copy(weight = weight)
+
+  case class AlignmentManager[M <: Movable[M]](weight: Double = 1)
+      extends WeightedManager[State[M]]:
     override def update(slice: State[M]): State[M] =
-      slice.updatedDirection(
-        slice.direction + alignment(
+      slice.directionAdded(
+        alignment(
           slice.boid,
           slice.others.map(_.direction)
-        )
+        ) * weight
       )
+
     private def alignment(boid: M, velocities: Seq[Vector2D]): Vector2D =
       if velocities.isEmpty then Vector2D.zero
       else
         val average = velocities.reduce(_ + _) / velocities.size
         (average - boid.direction).normalize
+
+    override def updatedWeight(weight: Double): WeightedManager[State[M]] =
+      this.copy(weight = weight)
 
   case class VelocityLimiterManager[M <: Movable[M]](maxSpeed: Double)
       extends BaseManager[M]:

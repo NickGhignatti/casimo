@@ -13,10 +13,22 @@ case class ConfigForm(update: Var[Update]):
   private val maxSpeedVar = Var(1000.0)
   private val perceptionRadiusVar = Var(200000.0)
   private val avoidRadiusVar = Var(50.0)
+  private val alignmentWeightVar = Var(1.0)
+  private val cohesionWeightVar = Var(1.0)
+  private val separationWeightVar = Var(1.0)
+  private val gamesAttractivenessWeightVar = Var(1.0)
 
   Signal
-    .combineWithFn(maxSpeedVar, perceptionRadiusVar, avoidRadiusVar)(
-      DefaultMovementManager(_, _, _)
+    .combineWithFn(
+      maxSpeedVar,
+      perceptionRadiusVar,
+      avoidRadiusVar,
+      alignmentWeightVar,
+      cohesionWeightVar,
+      separationWeightVar,
+      gamesAttractivenessWeightVar
+    )(
+      DefaultMovementManager(_, _, _, _, _, _, _)
     )
     .map(Update(_))
     .foreach(update.set)
@@ -35,6 +47,22 @@ case class ConfigForm(update: Var[Update]):
       parameter(
         "Avoid Radius",
         avoidRadiusVar
+      ),
+      parameter(
+        "Alignment Weight",
+        alignmentWeightVar
+      ),
+      parameter(
+        "Cohesion Weight",
+        cohesionWeightVar
+      ),
+      parameter(
+        "Separation Weight",
+        separationWeightVar
+      ),
+      parameter(
+        "Games Attractiveness Weight",
+        gamesAttractivenessWeightVar
       ),
       hr()
     )
