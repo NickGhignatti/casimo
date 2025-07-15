@@ -2,7 +2,9 @@ package view
 
 import com.raquo.laminar.api.L.*
 import com.raquo.laminar.api.L.unsafeWindowOwner
+import com.raquo.laminar.nodes.ReactiveHtmlElement
 import model.entities.customers.DefaultMovementManager
+import org.scalajs.dom.HTMLDivElement
 import update.Update
 
 case class ConfigForm(update: Var[Update]):
@@ -26,32 +28,49 @@ case class ConfigForm(update: Var[Update]):
 //          s"Avoid Radius: ${data.avoidRadius}"
 //      )
 //    }
-  def init(): HtmlElement =
-    val inputTextVar = Var("")
-    val checkedVar = Var(false)
-    div(
-      p(
-        label("Name: "),
-        input(
-          onInput.mapToValue --> inputTextVar
-        )
+  def init(): ReactiveHtmlElement[HTMLDivElement] =
+    // === Laminar reactive example ===
+    val textVar = Var("")
+
+    val app = div(
+      h2("Reactive Input Example"),
+      input(
+        typ := "text",
+        placeholder := "Type something...",
+        onInput.mapToValue --> textVar
       ),
       p(
-        "You typed: ",
-        text <-- inputTextVar
-      ),
-      p(
-        label("I like to check boxes: "),
-        input(
-          typ("checkbox"),
-          onInput.mapToChecked --> checkedVar
-        )
-      ),
-      p(
-        "You checked the box: ",
-        text <-- checkedVar
+        child.text <-- textVar.signal
       )
     )
+    app
+
+//    val inputTextVar = Var("")
+//    val checkedVar = Var(false)
+//    div(
+//      p(
+//        label("Name: "),
+//        input(
+//          onInput.mapToValue --> inputTextVar
+//        )
+//      ),
+//      p(
+//        "You typed: ",
+//        text <-- inputTextVar
+//      ),
+//      p(
+//        label("I like to check boxes: "),
+//        input(
+//          typ("checkbox"),
+//          onInput.mapToChecked --> checkedVar
+//        )
+//      ),
+//      p(
+//        "You checked the box: ",
+//        text <-- checkedVar
+//      )
+//    )
+
 //    div(
 //      h3("Movement Manager Form"),
 //      parameter(
