@@ -102,6 +102,7 @@ Other parameters that influence the boids' behavior are:
 - `GAME_ATTRACTION_WEIGHT`: weight for game attraction force.
 
 All of these parameters can be configured by the user in order to simulate different scenarios.
+When a customer is close to a game of its liking, that is the distance between the customer's and game's position is less than `SITTING_RADIUS`, the player sits and plays the game. While a customer is playing it does not move.
 
 #### System requirements
 
