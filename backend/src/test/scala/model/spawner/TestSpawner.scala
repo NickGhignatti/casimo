@@ -1,17 +1,15 @@
 package model.spawner
 
+import scala.language.implicitConversions
+
 import model.SimulationState
 import model.entities.customers.Customer
-import model.entities.spawner.{
-  ConstantStrategy,
-  GaussianStrategy,
-  Spawner,
-  StepStrategy
-}
+import model.entities.spawner.ConstantStrategy
+import model.entities.spawner.GaussianStrategy
+import model.entities.spawner.Spawner
+import model.entities.spawner.StepStrategy
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
-
-import scala.language.implicitConversions
 
 class TestSpawner extends AnyFunSuite:
   val position: Vector2D = Vector2D(100, 200)

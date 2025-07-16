@@ -1,10 +1,8 @@
 package model.spawner
 
-import model.entities.spawner.{
-  GaussianStrategy,
-  SpawningStrategyBuilder,
-  StepStrategy
-}
+import model.entities.spawner.GaussianStrategy
+import model.entities.spawner.SpawningStrategyBuilder
+import model.entities.spawner.StepStrategy
 import org.scalatest.funsuite.AnyFunSuite
 
 class TestSpawningStrategy extends AnyFunSuite:
