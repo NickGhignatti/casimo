@@ -86,7 +86,7 @@ case class GamesAttractivenessAdapter(manager: BaseManager[Context[Customer]])
     slice.copy(
       customers = slice.customers
         .map(Context(_, slice.games))
-        .map(_ | manager)
+        .map(c => if !c.player.isPlaying then c | manager else c)
         .map(_.player)
     )
 
@@ -98,6 +98,6 @@ case class BoidsAdapter(manager: BaseManager[Boids.State[Customer]])
     slice.copy(
       customers = slice.customers
         .map(Boids.State(_, slice.customers))
-        .map(_ | manager)
+        .map(c => if !c.boid.isPlaying then c | manager else c)
         .map(_.boid)
     )
