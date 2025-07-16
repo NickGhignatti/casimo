@@ -1,6 +1,7 @@
 package model.spawner
 
-import model.entities.spawner.{GaussianStrategy, SpawningStrategyBuilder}
+import model.entities.spawner.GaussianStrategy
+import model.entities.spawner.SpawningStrategyBuilder
 import org.scalatest.funsuite.AnyFunSuite
 
 class TestDSLSpawningStrategy extends AnyFunSuite:

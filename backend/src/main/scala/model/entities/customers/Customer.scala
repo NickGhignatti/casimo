@@ -2,7 +2,7 @@ package model.entities.customers
 
 import model.SimulationState
 import model.entities.Entity
-import model.entities.GamesAttracted
+import model.entities.Player
 import model.entities.customers.CustState.Idle
 import model.entities.customers.RiskProfile.Regular
 import model.entities.games.GameType
@@ -23,10 +23,11 @@ case class Customer(
     riskProfile: RiskProfile = Regular,
     customerState: CustState = Idle,
     betStrategy: BettingStrategy[Customer] = FlatBetting(5.0, 1),
-    favouriteGames: Seq[GameType] = Seq(SlotMachine)
+    favouriteGames: Seq[GameType] = Seq(SlotMachine),
+    isPlaying: Boolean = false
 ) extends Entity,
       Movable[Customer],
-      GamesAttracted[Customer],
+      Player[Customer],
       Bankroll[Customer],
       StatusProfile,
       CustomerState[Customer],
@@ -48,6 +49,10 @@ case class Customer(
       newStrat: BettingStrategy[Customer]
   ): Customer =
     this.copy(betStrategy = newStrat)
+
+  override def play: Customer = copy(isPlaying = true)
+
+  override def stopPlaying: Customer = copy(isPlaying = false)
 
 case class DefaultMovementManager(
     maxSpeed: Double = 1000,
@@ -82,7 +87,7 @@ case class GamesAttractivenessAdapter(manager: BaseManager[Context[Customer]])
       customers = slice.customers
         .map(Context(_, slice.games))
         .map(_ | manager)
-        .map(_.customer)
+        .map(_.player)
     )
 
 case class BoidsAdapter(manager: BaseManager[Boids.State[Customer]])
