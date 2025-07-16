@@ -41,14 +41,14 @@ case class GamesAttractivenessManager[C <: Player[C]](
   override def updatedWeight(weight: Double): WeightedManager[Context[C]] =
     copy(weight = weight)
 
-case class GameSitterManager[C <: Player[C]](radius: Double)
+case class PlayerSitterManager[C <: Player[C]](sittingRadius: Double)
     extends BaseManager[Context[C]]:
 
   override def update(slice: Context[C]): Context[C] =
     val bestGame = slice.bestGameAvailable
     bestGame match
       case Some(game)
-          if distance(slice.player.position, game.position) < radius =>
+          if distance(slice.player.position, game.position) < sittingRadius =>
         slice.copy(
           player = slice.player
             .updatedPosition(game.position)

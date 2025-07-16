@@ -12,6 +12,7 @@ import model.managers.movements.Boids
 import model.managers.movements.Boids._
 import model.managers.movements.Context
 import model.managers.movements.GamesAttractivenessManager
+import model.managers.movements.PlayerSitterManager
 import model.managers.|
 import utils.Vector2D
 
@@ -61,13 +62,15 @@ case class DefaultMovementManager(
     alignmentWeight: Double = 1.0,
     cohesionWeight: Double = 1.0,
     separationWeight: Double = 1.0,
-    gamesAttractivenessWeight: Double = 1.0
+    gamesAttractivenessWeight: Double = 1.0,
+    sittingRadius: Double = 100
 ) extends BaseManager[SimulationState]:
 
   override def update(slice: SimulationState): SimulationState =
     slice
       | GamesAttractivenessAdapter(
         gamesAttractivenessWeight * GamesAttractivenessManager()
+          | PlayerSitterManager(sittingRadius)
       )
       | BoidsAdapter(
         PerceptionLimiterManager(perceptionRadius)
