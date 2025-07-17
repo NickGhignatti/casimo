@@ -1,7 +1,8 @@
 package view
 
 import com.raquo.laminar.api.L.Var
-import model.entities.{Entity, Wall}
+import model.entities.Entity
+import model.entities.Wall
 import org.scalajs.dom
 import utils.Vector2D
 
