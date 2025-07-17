@@ -50,6 +50,14 @@ object DragDrop:
               canvasManager.addSlotComponent(
                 SlotComponent(GameBuilder.slot(Vector2D(x, y)))
               )
+            case "BlackJack" =>
+              canvasManager.addBlackJackComponent(
+                BlackJackComponent(GameBuilder.blackjack(Vector2D(x, y)))
+              )
+            case "Roulette" =>
+              canvasManager.addRouletteComponent(
+                RouletteComponent(GameBuilder.roulette(Vector2D(x, y)))
+              )
         }
       }
     )
