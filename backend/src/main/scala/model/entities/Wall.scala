@@ -28,7 +28,7 @@ trait CollidableEntity extends Entity with Sized with Positioned:
     horizontalOverlap && verticalOverlap
 
 trait SizeChangingEntity extends Sized:
-  def withLength(newWidth: Double): this.type
+  def withWidth(newWidth: Double): this.type
   def withHeight(newHeight: Double): this.type
   def withSize(newWidth: Double, newHeight: Double): this.type
 
@@ -42,8 +42,8 @@ case class Wall(
       CollidableEntity,
       SizeChangingEntity:
 
-  def withLength(newLength: Double): this.type =
-    this.copy(width = newLength).asInstanceOf[this.type]
+  def withWidth(newWidth: Double): this.type =
+    this.copy(width = newWidth).asInstanceOf[this.type]
 
   def withHeight(newHeight: Double): this.type =
     this.copy(height = newHeight).asInstanceOf[this.type]
