@@ -57,7 +57,8 @@ class DefaultMovementManagerTest extends AnyFunSuite:
         )
       ),
       games = List.empty,
-      spawner = None
+      spawner = None,
+      walls = List.empty
     )
     val updatedCustomers =
       (simulationState | DefaultMovementManager()).customers
