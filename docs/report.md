@@ -242,11 +242,8 @@ Boredom[Customer]: // Just adding a new behaviour to the Customer by composition
 ```
 By leveraging these traits composition system, our `Customer` model stays **type safe**, **cohesive**, and easy to evolve, supporting future expansion of behaviors and customer types without compromising the maintainability.
 
-### Design patterns
 
-### Code organization
 
-### Diagrams
 
 ## Implementation
 ### Student contributions
@@ -325,6 +322,70 @@ Allowing an easy creation like the following:
 val bankroll = 10.0
 use(SlotStrategy) bet 5.0 when (bankRoll > 0.0)
 ```
+
+### Patrignani Luca
+#### Customer movements
+The customer movements are modeled according to the previously presented architecture: a trait `Movable` is defined as such
+```scala 3
+trait Movable[T <: Movable[T]]:
+  val direction: Vector2D
+  val position: Vector2D
+
+  def updatedPosition(newPosition: Vector2D): T
+
+  def updatedDirection(newDirection: Vector2D): T
+```
+and all movement managers depend only on this trait, not on the concrete implementation of the `Customer`.
+Two movement managers have been implemented:
+- **Boid-like movement**: this implements the boid-like movement described in the user requirements section. It is obtained by combining three other managers, each one implementing one of the three boid-like rules: **Separation**, **Alignment** and **Cohesion**.
+Since the boids logic for a single customer need not only its position and velocity, but also information about the other customers, the `Boids.State` case class is defined, which contains all the information needed to compute the movement of the boid. Then an adapter manager is defined to adapt the `SimulationState` to the necessary `Boids.State` and vice versa. This allows to keep the movement logic independent from the simulation state. The following class diagram describes the dependencies taking as example the `AlignmentManager`, the `SeparationManager` and the `CohesionManager` are implemented in the same way:
+```mermaid
+classDiagram
+class Movable {
+  +direction: Vector2D
+  +position: Vector2D
+}
+Customer --|> Movable
+Boid.State --o Movable : other boids
+Boid.State --o Movable : the single boid
+AlignmentManager --> Boid.State
+BoidAdapter --> SimulationState : adapts
+BoidAdapter --> Boid.State : adapts
+SimulationState --o Customer
+```
+- **Game attraction movement**: this manager implements the game attraction movement, which is the movement of the customer towards its favourite game. The customer's favourite game is needed, so a new trait `Player` is defined extending `Movable`. Similarly to the boids movement managers, the `GamesAttractivenessManager` depends on a `Context` case class, which contains all the information needed to compute the movement of the customer towards its favourite game. The following class diagram describes the dependencies:
+```mermaid
+classDiagram
+class Player
+Customer --|> Player
+Context --o Game
+Context --o Player
+GamesAttractivenessManager --> Context
+GamesAttractivenessAdapter --> SimulationState : adapts
+GamesAttractivenessAdapter --> Context : adapts
+SimulationState --o Customer
+SimulationState --o Game
+Game --> GameType
+Player --> GameType : favourite game
+```
+#### Manager composition
+All movement managers are implemented independently from one another, to combine them a simple bash-like DSL is created: to combine two managers the `|` operator is used, similarly to what the `andThen` method does in Scala between two functions. This operator is also used to apply a manager to update the current state. In order to weight the contribution of each manager the trait `WeightedManager` is defined which supports the `*` operator. The `*` operator multiplies the contribution of the manager by a given weight. The following example shows how to obtain a manager which combines various components to obtain a boids-like movement:
+```scala 3
+val boidManager : BaseManager[SimulationState] = BoidsAdapter(
+        PerceptionLimiterManager(perceptionRadius)
+          | alignmentWeight * AlignmentManager()
+          | cohesionWeight * CohesionManager()
+          | separationWeight * SeparationManager(avoidRadius)
+          | VelocityLimiterManager(maxSpeed)
+          | MoverManager()
+      )
+```
+So given an initial `SimulationState`, the `boidManager` can be applied to it to obtain an updated state, which contains the updated positions and velocities of the customers:
+```scala 3
+val state : SimulationState = ???
+val updatedState = state | boidManager
+```
+
 ### Important implementation aspects
 
 ## Testing
