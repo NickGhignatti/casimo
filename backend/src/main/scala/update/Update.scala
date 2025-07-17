@@ -5,6 +5,7 @@ import scala.util.Random
 
 import model.SimulationState
 import model.data.DataManager
+import model.entities.Wall
 import model.entities.customers.Customer
 import model.entities.games.GameResolver
 import model.entities.spawner.GaussianStrategy
@@ -54,3 +55,6 @@ case class Update(customerManager: BaseManager[SimulationState]):
             )
           )
         )
+
+      case UpdateWalls(walls: List[Wall]) =>
+        state.copy(walls = walls)
