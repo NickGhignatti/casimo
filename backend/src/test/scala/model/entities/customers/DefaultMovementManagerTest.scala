@@ -24,7 +24,8 @@ class DefaultMovementManagerTest extends AnyFunSuite:
         )
       ),
       games = List.empty,
-      spawner = None
+      spawner = None,
+      walls = List.empty
     )
     assert(
       (simulationState | DefaultMovementManager()).customers

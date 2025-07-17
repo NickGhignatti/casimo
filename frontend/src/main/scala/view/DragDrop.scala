@@ -35,16 +35,16 @@ object DragDrop:
       { (e: DragEvent) =>
         e.preventDefault()
         val componentType = e.dataTransfer.getData("text/plain")
-        println(componentType)
         val rect = canvas.getBoundingClientRect()
         val x = e.clientX - rect.left
         val y = e.clientY - rect.top
 
-        componentType match
-          case "Wall" =>
-            canvasManager.addWallComponent(
-              WallComponent(Wall(Vector2D(x, y), 40, 30))
-            )
-
+        if (!canvasManager.wallComponents.exists(_.contains(Vector2D(x, y)))) {
+          componentType match
+            case "Wall" =>
+              canvasManager.addWallComponent(
+                WallComponent(Wall(Vector2D(x, y), 40, 30))
+              )
+        }
       }
     )

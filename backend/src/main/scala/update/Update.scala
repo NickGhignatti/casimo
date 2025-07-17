@@ -2,18 +2,20 @@ package update
 
 import scala.annotation.tailrec
 import scala.util.Random
-
 import model.GlobalConfig
 import model.SimulationState
 import model.data.DataManager
+import model.entities.Wall
 import model.entities.customers.Customer
 import model.entities.games.GameResolver
 import model.entities.spawner.GaussianStrategy
 import model.entities.spawner.Spawner
 import model.managers.BaseManager
 import model.managers.|
-import update.Event._
+import update.Event.*
 import utils.Vector2D
+
+import scala.+:
 
 case class Update(customerManager: BaseManager[SimulationState]):
 
@@ -56,3 +58,6 @@ case class Update(customerManager: BaseManager[SimulationState]):
             )
           )
         )
+
+      case UpdateWalls(walls: List[Wall]) =>
+        state.copy(walls = walls)
