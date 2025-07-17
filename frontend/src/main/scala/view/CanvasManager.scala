@@ -1,10 +1,10 @@
 package view
 
 import scala.collection.mutable.ListBuffer
-
 import com.raquo.laminar.api.L.Var
 import com.raquo.laminar.api.L.unsafeWindowOwner
 import model.SimulationState
+import model.entities.Entity
 import org.scalajs.dom
 import org.scalajs.dom.html
 
@@ -13,7 +13,7 @@ class CanvasManager(model: Var[SimulationState]):
     dom.document.getElementById("main-canvas").asInstanceOf[html.Canvas]
   private val ctx =
     canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
-  private val components = ListBuffer.empty[Component]
+  private val components = ListBuffer.empty[WallComponent]
 
   model.signal.foreach { state =>
     clearCanvas()
@@ -32,13 +32,14 @@ class CanvasManager(model: Var[SimulationState]):
     )
     clearCanvas()
 
-  private def redrawAllComponents(): Unit = components.foreach { c =>
-    drawComponent(
-      c.x * (canvas.width / c.originalX),
-      c.y * (canvas.height / c.originalY),
-      c.componentType
-    )
-  }
+  private def redrawAllComponents(): Unit = println("Redrawing")
+//    components.foreach { c =>
+//    drawComponent(
+//      c.x * (canvas.width / c.originalX),
+//      c.y * (canvas.height / c.originalY),
+//      c.componentType
+//    )
+//  }
 
   private def resizeCanvas(): Unit =
     val container = canvas.parentElement
@@ -49,21 +50,22 @@ class CanvasManager(model: Var[SimulationState]):
     ctx.fillStyle = "#f0f0f0"
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-  def addComponent(x: Double, y: Double, componentType: String): Unit =
-    components += Component(x, y, componentType, canvas.width, canvas.height)
-    drawComponent(x, y, componentType)
+  def addWallComponent(wall: WallComponent): Unit =
+    components += wall
+    drawComponent(wall)
 
-  private def drawComponent(x: Double, y: Double, componentType: String): Unit =
-    ctx.beginPath()
-    ctx.arc(x, y, 25, 0, Math.PI * 2)
-    ctx.fillStyle = "#3498db"
-    ctx.fill()
-    ctx.stroke()
-
-    ctx.fillStyle = "white"
-    ctx.textAlign = "center"
-    ctx.textBaseline = "middle"
-    ctx.fillText(componentType.take(2), x, y)
+  private def drawComponent[E <: Entity](component: EntityComponent[E]): Unit =
+    component.render(ctx)
+//    ctx.beginPath()
+//    ctx.arc(x, y, 25, 0, Math.PI * 2)
+//    ctx.fillStyle = "#3498db"
+//    ctx.fill()
+//    ctx.stroke()
+//
+//    ctx.fillStyle = "white"
+//    ctx.textAlign = "center"
+//    ctx.textBaseline = "middle"
+//    ctx.fillText(componentType.take(2), x, y)
 
   private def drawCustomers(state: SimulationState): Unit =
     state.customers.foreach { customer =>

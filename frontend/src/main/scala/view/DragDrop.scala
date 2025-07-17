@@ -1,10 +1,12 @@
 package view
 
+import model.entities.Wall
 import org.scalajs.dom
 import org.scalajs.dom.DataTransferDropEffectKind
 import org.scalajs.dom.DataTransferEffectAllowedKind
 import org.scalajs.dom.DragEvent
 import org.scalajs.dom.HTMLElement
+import utils.Vector2D
 
 object DragDrop:
 
@@ -33,10 +35,16 @@ object DragDrop:
       { (e: DragEvent) =>
         e.preventDefault()
         val componentType = e.dataTransfer.getData("text/plain")
+        println(componentType)
         val rect = canvas.getBoundingClientRect()
         val x = e.clientX - rect.left
         val y = e.clientY - rect.top
 
-        canvasManager.addComponent(x, y, componentType)
+        componentType match
+          case "Wall" =>
+            canvasManager.addWallComponent(
+              WallComponent(Wall(Vector2D(x, y), 40, 30))
+            )
+
       }
     )
