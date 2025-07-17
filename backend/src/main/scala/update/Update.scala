@@ -5,7 +5,9 @@ import scala.util.Random
 
 import model.SimulationState
 import model.data.DataManager
+import model.entities.Wall
 import model.entities.customers.Customer
+import model.entities.games.Game
 import model.entities.games.GameResolver
 import model.entities.spawner.GaussianStrategy
 import model.entities.spawner.Spawner
@@ -25,6 +27,7 @@ case class Update(customerManager: BaseManager[SimulationState]):
   final def update(state: SimulationState, event: Event): SimulationState =
     event match
       case SimulationTick =>
+        println(state.games)
         state.spawner match
           case None => update(state, UpdateCustomersPosition)
           case Some(value) =>
@@ -54,3 +57,9 @@ case class Update(customerManager: BaseManager[SimulationState]):
             )
           )
         )
+
+      case UpdateWalls(walls: List[Wall]) =>
+        state.copy(walls = walls)
+
+      case updateGamesList(games: List[Game]) =>
+        state.copy(games = games)

@@ -11,7 +11,7 @@ class ButtonBar(model: Var[SimulationState], update: Var[Update]):
   private val buttonBar = dom.document.getElementById("button-bar")
   private val buttons = List("Add", "Run", "Reset", "Save", "Load")
 
-  private val eventBus = new EventBus[Event]
+  val eventBus = new EventBus[Event]
 
   eventBus.events
     .scanLeft(model.now())((m, e) => update.now().update(m, e))

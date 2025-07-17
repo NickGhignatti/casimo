@@ -1,10 +1,13 @@
 package view
 
+import model.entities.Wall
+import model.entities.games.GameBuilder
 import org.scalajs.dom
 import org.scalajs.dom.DataTransferDropEffectKind
 import org.scalajs.dom.DataTransferEffectAllowedKind
 import org.scalajs.dom.DragEvent
 import org.scalajs.dom.HTMLElement
+import utils.Vector2D
 
 object DragDrop:
 
@@ -37,6 +40,24 @@ object DragDrop:
         val x = e.clientX - rect.left
         val y = e.clientY - rect.top
 
-        canvasManager.addComponent(x, y, componentType)
+        if (canvasManager.entityIsAlreadyPresent(Vector2D(x, y))) {
+          componentType match
+            case "Wall" =>
+              canvasManager.addWallComponent(
+                WallComponent(Wall(Vector2D(x, y), 40, 30))
+              )
+            case "Slot" =>
+              canvasManager.addSlotComponent(
+                SlotComponent(GameBuilder.slot(Vector2D(x, y)))
+              )
+            case "BlackJack" =>
+              canvasManager.addBlackJackComponent(
+                BlackJackComponent(GameBuilder.blackjack(Vector2D(x, y)))
+              )
+            case "Roulette" =>
+              canvasManager.addRouletteComponent(
+                RouletteComponent(GameBuilder.roulette(Vector2D(x, y)))
+              )
+        }
       }
     )
