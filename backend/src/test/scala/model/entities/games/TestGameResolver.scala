@@ -13,10 +13,30 @@ class TestGameResolver extends AnyFunSuite:
       "id1",
       Vector2D.zero,
       Vector2D.zero,
-      0.0,
+      100.0,
       Regular,
       CustState.Playing(mockGame)
     )
     val newGame = GameResolver.update(List(mockCustomer), List(mockGame))
 
     assert(mockGame.gameHistory.gains != newGame.last.gameHistory.gains)
+
+  test(
+    "game resolver should return a list of updated games with 2 element also if customer is playing only a game"
+  ):
+    val mockGame = GameBuilder.slot(Vector2D.zero)
+    val mockGame2 = GameBuilder.slot(Vector2D.zero)
+    val mockCustomer = Customer(
+      "id1",
+      Vector2D.zero,
+      Vector2D.zero,
+      100.0,
+      Regular,
+      CustState.Playing(mockGame)
+    )
+    val newGame =
+      GameResolver.update(List(mockCustomer), List(mockGame, mockGame2))
+
+    assert(
+      mockGame.gameHistory.gains :+ mockGame2.gameHistory.gains != newGame.last.gameHistory.gains
+    )
