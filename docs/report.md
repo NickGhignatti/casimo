@@ -21,9 +21,36 @@ The documentation is also automatically generated and deployed to the GitHub Pag
 The application is intended to be used by the manager of a [casino](https://en.wikipedia.org/wiki/Casino) who wants to simulate the behaviour of customers inside a given configuration of the casino in order to predict the revenue of the facility. The manager can configure the spacial organization of the casino (such walls and games) and the behaviour of both games and customers. 
 
 ### Domain model
-- **Customer**: a person who enters the casino and plays games.
-- **Game**: a game that can be played by customers, such as roulette, blackjack, etc.
+- **Customer**: who enters the casino and plays games.
+- **Game**: a game that can be played by customers, such as roulette, blackjack and slot machine.
+- **Door**: a door that allows customers to enter the casino. It is where the customers enter the casino.
+```mermaid
+classDiagram
+class Customer {
+  +bankroll: Double
+  +position: Vector2D
+  +direction: Vector2D
+}
+class Game {
+ +position: Vector2D
+ +width: Double
+ +length: Double
+}
+GameType <|-- Blackjack
+GameType <|-- Roulette
+GameType <|-- SlotMachine
 
+class Door {
+  +position: Vector2D
+}
+
+Door --> Customer : allows entry
+Customer --> Game : plays
+Customer  --> Customer : moves influenced by other
+Customer --> GameType : likes
+Game --> GameType : is a
+Customer --> Game : moves towards its favourite
+```
 ### Functional requirements
 #### User requirements
 ##### Customers
