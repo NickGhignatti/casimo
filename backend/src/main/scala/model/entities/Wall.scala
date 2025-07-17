@@ -1,5 +1,7 @@
 package model.entities
 
+import scala.util.Random
+
 import utils.Vector2D
 
 trait Positioned:
@@ -50,3 +52,7 @@ case class Wall(
 
   def withSize(newWidth: Double, newHeight: Double): this.type =
     this.copy(width = newWidth, height = newHeight).asInstanceOf[this.type]
+
+object Wall:
+  def apply(position: Vector2D, width: Double, height: Double): Wall =
+    Wall("wall-" + Random.nextInt(), position, width, height)

@@ -35,7 +35,7 @@ class TestWall extends AnyFunSuite:
     assert(!sampleWall.collidesWith(TestEntity(Vector2D(0, 0))))
 
   test("withLength should create a new wall with updated width"):
-    val widerWall = sampleWall.withLength(150)
+    val widerWall = sampleWall.withSize(150)
     assert(widerWall.width == 150)
     assert(widerWall.height == 50)
     assert(widerWall.position == sampleWall.position)
@@ -68,7 +68,7 @@ class TestWall extends AnyFunSuite:
   test("Size changes should maintain immutability"):
     val original = sampleWall
     val modified = original
-      .withLength(150)
+      .withSize(150)
       .withHeight(75)
       .withSize(200, 100)
 
