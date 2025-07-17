@@ -12,6 +12,7 @@ import org.scalajs.dom.MouseEvent
 import org.scalajs.dom.html
 import update.Event
 import update.Event.UpdateWalls
+import update.Event.updateGamesList
 import update.Update
 import utils.Vector2D
 
@@ -24,8 +25,14 @@ class CanvasManager(
     dom.document.getElementById("main-canvas").asInstanceOf[html.Canvas]
   private val ctx =
     canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
-  val wallComponents: ListBuffer[WallComponent] =
+  private val wallComponents: ListBuffer[WallComponent] =
     ListBuffer.empty[WallComponent]
+  private val slotComponents: ListBuffer[SlotComponent] =
+    ListBuffer.empty[SlotComponent]
+  private val rouletteComponents: ListBuffer[RouletteComponent] =
+    ListBuffer.empty[RouletteComponent]
+  private val blackjackComponents: ListBuffer[BlackJackComponent] =
+    ListBuffer.empty[BlackJackComponent]
 
   private val resizeTarget: Var[Option[WallComponent]] = Var(None)
   private val resizeStartPosition: Var[Vector2D] = Var(Vector2D.zero)
@@ -54,8 +61,17 @@ class CanvasManager(
     )
     clearCanvas()
 
+  def entityIsAlreadyPresent(point: Vector2D): Boolean =
+    !wallComponents.exists(_.contains(point)) &&
+      !slotComponents.exists(_.contains(point)) &&
+      !rouletteComponents.exists(_.contains(point)) &&
+      !blackjackComponents.exists(_.contains(point))
+
   private def redrawAllComponents(): Unit =
     wallComponents.foreach(_.render(ctx))
+    slotComponents.foreach(_.render(ctx))
+    rouletteComponents.foreach(_.render(ctx))
+    blackjackComponents.foreach(_.render(ctx))
 
   private def resizeCanvas(): Unit =
     val container = canvas.parentElement
@@ -72,6 +88,29 @@ class CanvasManager(
     val walls = (for wall <- wallComponents yield wall.model.now()).toList
     eventBus.writer.onNext(UpdateWalls(walls))
     drawComponent(wall)
+
+  def addSlotComponent(slot: SlotComponent): Unit =
+    slotComponents += slot
+    signalGameAdd()
+    drawComponent(slot)
+
+  def addRouletteComponent(roulette: RouletteComponent): Unit =
+    rouletteComponents += roulette
+    signalGameAdd()
+    drawComponent(roulette)
+
+  def addBlackJackComponent(blackjack: BlackJackComponent): Unit =
+    blackjackComponents += blackjack
+    signalGameAdd()
+    drawComponent(blackjack)
+
+  private def signalGameAdd(): Unit =
+    val slots = (for slot <- slotComponents yield slot.model.now()).toList
+    val roulettes =
+      (for roulette <- rouletteComponents yield roulette.model.now()).toList
+    val blackjacks =
+      (for blackjack <- blackjackComponents yield blackjack.model.now()).toList
+    eventBus.writer.onNext(updateGamesList(slots ::: roulettes ::: blackjacks))
 
   private def drawComponent[E <: Entity](component: EntityComponent[E]): Unit =
     component.render(ctx)

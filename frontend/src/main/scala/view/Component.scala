@@ -3,17 +3,11 @@ package view
 import com.raquo.laminar.api.L.Var
 import model.entities.Entity
 import model.entities.Wall
+import model.entities.games.BlackJackGame
+import model.entities.games.RouletteGame
+import model.entities.games.SlotMachineGame
 import org.scalajs.dom
 import utils.Vector2D
-
-//case class Component(
-//    x: Double,
-//    y: Double,
-//    componentType: String,
-//    originalX: Double,
-//    originalY: Double,
-//    properties: Map[String, Any] = Map.empty
-//)
 
 trait EntityComponent[E <: Entity]:
   val model: Var[E]
@@ -47,3 +41,84 @@ class WallComponent(initialModel: Wall) extends EntityComponent[Wall]:
 
   def resize(width: Double, height: Double): Unit =
     model.update(wall => wall.withSize(width, height))
+
+class SlotComponent(initialModel: SlotMachineGame)
+    extends EntityComponent[SlotMachineGame]:
+  override val model: Var[SlotMachineGame] = Var(initialModel)
+
+  def render(ctx: dom.CanvasRenderingContext2D): Unit =
+    ctx.fillStyle = "#3498db"
+    val modelComponent = model.now()
+    ctx.fillRect(
+      modelComponent.position.x,
+      modelComponent.position.y,
+      modelComponent.width,
+      modelComponent.height
+    )
+
+    // Draw border
+    ctx.strokeStyle = "#2980b9"
+    ctx.lineWidth = 2
+    ctx.strokeRect(
+      modelComponent.position.x,
+      modelComponent.position.y,
+      modelComponent.width,
+      modelComponent.height
+    )
+
+  def contains(point: Vector2D): Boolean =
+    model.now().contains(point)
+
+class RouletteComponent(initialModel: RouletteGame)
+    extends EntityComponent[RouletteGame]:
+  override val model: Var[RouletteGame] = Var(initialModel)
+
+  def render(ctx: dom.CanvasRenderingContext2D): Unit =
+    ctx.fillStyle = "#3498db"
+    val modelComponent = model.now()
+    ctx.fillRect(
+      modelComponent.position.x,
+      modelComponent.position.y,
+      modelComponent.width,
+      modelComponent.height
+    )
+
+    // Draw border
+    ctx.strokeStyle = "#2980b9"
+    ctx.lineWidth = 2
+    ctx.strokeRect(
+      modelComponent.position.x,
+      modelComponent.position.y,
+      modelComponent.width,
+      modelComponent.height
+    )
+
+  def contains(point: Vector2D): Boolean =
+    model.now().contains(point)
+
+class BlackJackComponent(initialModel: BlackJackGame)
+    extends EntityComponent[BlackJackGame]:
+  override val model: Var[BlackJackGame] = Var(initialModel)
+
+  def render(ctx: dom.CanvasRenderingContext2D): Unit =
+    ctx.fillStyle = "#3498db"
+    val modelComponent = model.now()
+    ctx.fillRect(
+      modelComponent.position.x,
+      modelComponent.position.y,
+      modelComponent.width,
+      modelComponent.height
+    )
+
+    // Draw border
+    ctx.strokeStyle = "#2980b9"
+    ctx.lineWidth = 2
+    ctx.strokeRect(
+      modelComponent.position.x,
+      modelComponent.position.y,
+      modelComponent.width,
+      modelComponent.height
+    )
+
+  def contains(point: Vector2D): Boolean =
+    model.now().contains(point)
