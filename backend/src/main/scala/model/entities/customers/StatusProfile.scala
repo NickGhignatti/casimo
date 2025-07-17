@@ -4,4 +4,4 @@ trait StatusProfile:
   val riskProfile: RiskProfile
 
 enum RiskProfile:
-  case VIP, Regular, Casual
+  case VIP, Regular, Casual, Impulsive

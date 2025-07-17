@@ -29,9 +29,9 @@ private case class MockCustomer(
   ): MockCustomer =
     this.copy(betStrategy = newStrat)
 
-val mockGame = GameBuilder.slot(Vector2D.zero)
 
 class TestBettingStrategy extends AnyFunSuite:
+  private val mockGame = GameBuilder.slot(Vector2D.zero)
 
   test(
     "creating a customer with a Bet strategy should store the type of strategy"
