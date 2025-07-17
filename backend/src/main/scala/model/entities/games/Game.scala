@@ -1,7 +1,8 @@
 package model.entities.games
 
 import scala.util.Random
-import model.entities.{CollidableEntity, Entity}
+
+import model.entities.CollidableEntity
 import model.entities.games.dsl.use
 import utils.Result
 import utils.Result.Failure
