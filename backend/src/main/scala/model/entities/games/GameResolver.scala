@@ -14,7 +14,7 @@ object GameResolver:
         case CustState.Idle          => false
     )
     playingCustomers.map { customer =>
-      customer.customerState match
+      (customer.customerState: @unchecked) match
         case CustState.Playing(game) =>
           game.play(SlotBet(10.0)) match // TODO
             case Result.Success(value) =>

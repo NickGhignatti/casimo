@@ -3,18 +3,18 @@ package update
 import scala.annotation.tailrec
 import scala.util.Random
 
-import model.GlobalConfig
 import model.SimulationState
 import model.data.DataManager
-import model.entities.Spawner
 import model.entities.customers.Customer
-import model.entities.customers.DefaultMovementManager
 import model.entities.games.GameResolver
+import model.entities.spawner.GaussianStrategy
+import model.entities.spawner.Spawner
+import model.managers.BaseManager
 import model.managers.|
 import update.Event._
 import utils.Vector2D
 
-object Update:
+case class Update(customerManager: BaseManager[SimulationState]):
 
   def updateSimulationManager(
       dataManager: DataManager,
@@ -22,19 +22,16 @@ object Update:
   ): DataManager = dataManager.copy(state = state)
 
   @tailrec
-  def update(state: SimulationState, event: Event): SimulationState =
+  final def update(state: SimulationState, event: Event): SimulationState =
     event match
       case SimulationTick =>
         state.spawner match
           case None => update(state, UpdateCustomersPosition)
-          case Some(value) if value.customerQuantity == state.customers.size =>
-            update(state, UpdateCustomersPosition)
           case Some(value) =>
             update(value.spawn(state), UpdateCustomersPosition)
 
       case UpdateCustomersPosition =>
-        given GlobalConfig = GlobalConfig()
-        update(state | DefaultMovementManager(), UpdateGames)
+        update(state | customerManager, UpdateGames)
 
       case UpdateGames =>
         val updatedGames =
@@ -49,6 +46,11 @@ object Update:
 
       case AddCustomers(n) =>
         state.copy(
-          spawner =
-            Some(Spawner(Random.nextString(12), Vector2D(20.0, 10.0), n, 10)),
+          spawner = Some(
+            Spawner(
+              Random.nextString(12),
+              Vector2D(200.0, 200.0),
+              GaussianStrategy(100, 6, 2)
+            )
+          )
         )
