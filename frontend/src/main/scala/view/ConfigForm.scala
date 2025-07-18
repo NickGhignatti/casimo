@@ -1,15 +1,14 @@
 package view
 
-import com.raquo.laminar.api.L._
+import com.raquo.laminar.api.L.*
 import com.raquo.laminar.api.L.unsafeWindowOwner
 import com.raquo.laminar.nodes.ReactiveHtmlElement
+import model.SimulationState
 import model.entities.customers.DefaultMovementManager
-import model.entities.spawner.ConstantStrategy
-import model.entities.spawner.SpawningStrategyBuilder
 import org.scalajs.dom.HTMLDivElement
 import update.Update
 
-case class ConfigForm(update: Var[Update]):
+case class ConfigForm(update: Var[Update], model: Var[SimulationState]):
 
   given Owner = unsafeWindowOwner
   private val maxSpeedVar = Var(1000.0)
@@ -32,26 +31,17 @@ case class ConfigForm(update: Var[Update]):
   private val stepStartVar = Var(9.0)
   private val stepEndVar = Var(17.0)
 
-  // Signal for spawning strategy
-  private val spawningStrategySignal = strategyTypeVar.signal.flatMapSwitch {
-    case "constant" =>
-      constantRateVar.signal.map(rate =>
-        SpawningStrategyBuilder().constant(rate).build()
-      )
-    case "gaussian" =>
-      Signal
-        .combine(gaussianPeakVar, gaussianMeanVar, gaussianStdDevVar)
-        .map((peak, mean, stdDev) =>
-          SpawningStrategyBuilder().gaussian(peak, mean, stdDev).build()
-        )
-    case "step" =>
-      Signal
-        .combine(stepLowRateVar, stepHighRateVar, stepStartVar, stepEndVar)
-        .map((low, high, start, end) =>
-          SpawningStrategyBuilder().step(low, high, start, end).build()
-        )
-    case _ => Signal.fromValue(ConstantStrategy(0))
-  }
+  def currentStrategyType: String = strategyTypeVar.now()
+  def constantStrategyConfigInfo: Int = constantRateVar.now()
+  def gaussianStrategyConfigInfo: (Double, Double, Double) =
+    (gaussianPeakVar.now(), gaussianMeanVar.now(), gaussianStdDevVar.now())
+  def stepStrategyConfigInfo: (Double, Double, Double, Double) =
+    (
+      stepLowRateVar.now(),
+      stepHighRateVar.now(),
+      stepStartVar.now(),
+      stepEndVar.now()
+    )
 
   Signal
     .combineWithFn(

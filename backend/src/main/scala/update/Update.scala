@@ -9,7 +9,6 @@ import model.entities.Wall
 import model.entities.customers.Customer
 import model.entities.games.Game
 import model.entities.games.GameResolver
-import model.entities.spawner.GaussianStrategy
 import model.entities.spawner.Spawner
 import model.managers.BaseManager
 import model.managers.|
@@ -27,7 +26,6 @@ case class Update(customerManager: BaseManager[SimulationState]):
   final def update(state: SimulationState, event: Event): SimulationState =
     event match
       case SimulationTick =>
-        println(state.games)
         state.spawner match
           case None => update(state, UpdateCustomersPosition)
           case Some(value) =>
@@ -47,13 +45,13 @@ case class Update(customerManager: BaseManager[SimulationState]):
       case UpdateCustomersState =>
         state
 
-      case AddCustomers(n) =>
+      case AddCustomers(strategy) =>
         state.copy(
           spawner = Some(
             Spawner(
-              Random.nextString(12),
+              "Spawner",
               Vector2D(200.0, 200.0),
-              GaussianStrategy(100, 6, 2)
+              strategy
             )
           )
         )
