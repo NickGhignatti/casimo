@@ -1,6 +1,6 @@
 package view
 
-import com.raquo.laminar.api.L.*
+import com.raquo.laminar.api.L._
 import model.SimulationState
 import model.entities.spawner.SpawningStrategyBuilder
 import org.scalajs.dom

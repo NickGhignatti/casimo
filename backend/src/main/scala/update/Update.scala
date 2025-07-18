@@ -1,7 +1,6 @@
 package update
 
 import scala.annotation.tailrec
-import scala.util.Random
 
 import model.SimulationState
 import model.data.DataManager

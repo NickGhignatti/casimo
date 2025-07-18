@@ -1,6 +1,6 @@
 package view
 
-import com.raquo.laminar.api.L.*
+import com.raquo.laminar.api.L._
 import com.raquo.laminar.api.L.unsafeWindowOwner
 import com.raquo.laminar.nodes.ReactiveHtmlElement
 import model.SimulationState
