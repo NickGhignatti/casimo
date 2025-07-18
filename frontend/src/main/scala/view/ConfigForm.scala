@@ -61,49 +61,67 @@ case class ConfigForm(update: Var[Update], model: Var[SimulationState]):
 
   def init(): ReactiveHtmlElement[HTMLDivElement] =
     div(
-      h3("Movement Manager Form"),
-      parameter(
-        "Max Speed",
-        maxSpeedVar
-      ),
-      parameter(
-        "Perception Radius",
-        perceptionRadiusVar
-      ),
-      parameter(
-        "Avoid Radius",
-        avoidRadiusVar
-      ),
-      parameter(
-        "Alignment Weight",
-        alignmentWeightVar
-      ),
-      parameter(
-        "Cohesion Weight",
-        cohesionWeightVar
-      ),
-      parameter(
-        "Separation Weight",
-        separationWeightVar
-      ),
-      parameter(
-        "Games Attractiveness Weight",
-        gamesAttractivenessWeightVar
-      ),
-      parameter(
-        "Sitting Radius",
-        sittingRadiusVar
-      ),
-      hr(),
-      h3("Spawning Strategy Configuration"),
-      strategySelector(),
       div(
-        child <-- strategyTypeVar.signal.map {
-          case "constant" => constantStrategyConfig()
-          case "gaussian" => gaussianStrategyConfig()
-          case "step"     => stepStrategyConfig()
-          case _          => div() // Custom strategy placeholder
-        }
+        className := "config-container",
+        // Column 1: Movement Manager
+        div(
+          className := "movement-manager-section",
+          h3(
+            className := "section-header",
+            "Movement Manager"
+          ),
+          parameter(
+            "Max Speed",
+            maxSpeedVar
+          ),
+          parameter(
+            "Perception Radius",
+            perceptionRadiusVar
+          ),
+          parameter(
+            "Avoid Radius",
+            avoidRadiusVar
+          ),
+          parameter(
+            "Alignment Weight",
+            alignmentWeightVar
+          ),
+          parameter(
+            "Cohesion Weight",
+            cohesionWeightVar
+          ),
+          parameter(
+            "Separation Weight",
+            separationWeightVar
+          ),
+          parameter(
+            "Games Attractiveness Weight",
+            gamesAttractivenessWeightVar
+          ),
+          parameter(
+            "Sitting Radius",
+            sittingRadiusVar
+          )
+        ),
+        // Column 2: Spawner Configuration
+        div(
+          className := "spawner-section",
+          h3(className := "section-header", "Spawner Configuration"),
+          strategySelector(),
+          div(
+            className := "strategy-params",
+            child <-- strategyTypeVar.signal.map {
+              case "constant" => constantStrategyConfig()
+              case "gaussian" => gaussianStrategyConfig()
+              case "step"     => stepStrategyConfig()
+              case _ =>
+                div(
+                  className := "custom-placeholder",
+                  "Custom strategy configuration coming soon!"
+                )
+            }
+          )
+        )
       )
     )
 
@@ -112,6 +130,7 @@ case class ConfigForm(update: Var[Update], model: Var[SimulationState]):
       variable: Var[Double]
   ): HtmlElement =
     div(
+      className := "parameter-row",
       label(labelText),
       input(
         typ := "number",
@@ -122,6 +141,7 @@ case class ConfigForm(update: Var[Update], model: Var[SimulationState]):
 
   private def strategySelector(): HtmlElement =
     div(
+      className := "strategy-selector",
       label("Strategy Type"),
       select(
         value <-- strategyTypeVar,
