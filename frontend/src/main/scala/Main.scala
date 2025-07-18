@@ -20,8 +20,8 @@ def main(): Unit =
       val updateVar = Var(Update(DefaultMovementManager()))
 
       val sidebar = Sidebar()
-      val buttonBar = ButtonBar(modelVar, updateVar)
-      val configForm = ConfigForm(updateVar)
+      val configForm = ConfigForm(updateVar, modelVar)
+      val buttonBar = ButtonBar(modelVar, updateVar, configForm)
       val canvasManager = CanvasManager(modelVar, updateVar, buttonBar.eventBus)
 
       canvasManager.init()

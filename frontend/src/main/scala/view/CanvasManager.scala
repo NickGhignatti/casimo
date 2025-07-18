@@ -59,6 +59,7 @@ class CanvasManager(
         redrawAllComponents()
       }
     )
+    dom.window.addEventListener("load", { _ => resizeCanvas() })
     clearCanvas()
 
   def entityIsAlreadyPresent(point: Vector2D): Boolean =
@@ -77,6 +78,8 @@ class CanvasManager(
     val container = canvas.parentElement
     canvas.width = container.clientWidth
     canvas.height = container.clientHeight
+    println(canvas.width)
+    println(canvas.height)
 
   private def clearCanvas(): Unit =
     ctx.fillStyle = "#f0f0f0"
