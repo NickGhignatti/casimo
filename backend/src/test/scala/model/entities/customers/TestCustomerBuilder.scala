@@ -1,12 +1,11 @@
 package model.entities.customers
 
-import org.scalatest.funsuite.AnyFunSuite
-import org.scalatest.matchers.should.Matchers
-import utils.Vector2D
-import model.entities.customers.*
 import model.entities.customers.CustState.{Idle, Playing}
 import model.entities.customers.RiskProfile.{Impulsive, Regular}
 import model.entities.games.{Blackjack, GameBuilder, Roulette, SlotMachine}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
+import utils.Vector2D
 
 
 class TestCustomerBuilder extends AnyFunSuite with Matchers {
