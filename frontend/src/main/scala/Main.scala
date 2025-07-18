@@ -11,7 +11,7 @@ import view.Sidebar
 
 @main
 def main(): Unit =
-  val model = SimulationState(List.empty, List.empty, None)
+  val model = SimulationState(List.empty, List.empty, None, List.empty)
 
   document.addEventListener(
     "DOMContentLoaded",
@@ -19,10 +19,10 @@ def main(): Unit =
       val modelVar = Var(model)
       val updateVar = Var(Update(DefaultMovementManager()))
 
-      val canvasManager = CanvasManager(modelVar)
       val sidebar = Sidebar()
-      val buttonBar = ButtonBar(modelVar, updateVar)
-      val configForm = ConfigForm(updateVar)
+      val configForm = ConfigForm(updateVar, modelVar)
+      val buttonBar = ButtonBar(modelVar, updateVar, configForm)
+      val canvasManager = CanvasManager(modelVar, updateVar, buttonBar.eventBus)
 
       canvasManager.init()
       sidebar.init(canvasManager)

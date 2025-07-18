@@ -5,7 +5,7 @@ import org.scalajs.dom.html
 
 class Sidebar:
   private val sidebar = dom.document.getElementById("sidebar")
-  private val components = List("C1", "C2", "C3", "C4")
+  private val components = List("Roulette", "Slot", "BlackJack", "Wall")
 
   def init(canvasManager: CanvasManager): Unit =
     components.foreach { comp =>
