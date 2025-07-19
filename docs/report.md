@@ -242,8 +242,83 @@ Boredom[Customer]: // Just adding a new behaviour to the Customer by composition
 ```
 By leveraging these traits composition system, our `Customer` model stays **type safe**, **cohesive**, and easy to evolve, supporting future expansion of behaviors and customer types without compromising the maintainability.
 
+#### Customers spawner
 
+The `Spawner` system manages the generation of entities (customers) in the simulation using configurable spawning strategies. 
+The design follows these core principles:
+- Decoupling : Spawners are unaware of strategy implementation details
+- Flexibility : Strategies can be combined and extended
+- Time-based : Strategies react to simulation time progression
+- Immutability : Strategies are pure functions of time
 
+The responsibilities of this entity are:
+- Position management (where entities spawn)
+- Time tracking (when entities spawn)
+- Delegation to strategy (how many entities spawn)
+
+The `SpawnerStrategy` is the entity designed to return the number of customers, following a specific strategy, to spawn which is designed to use 
+generic and famous spawning behaviours and permit the user to define custom spawning strategies thanks to a scala DSL.
+
+Kind of generic behaviour the `SpawningStrategy` should provide are:
+- `constant` : mechanism to spawn a fixed number of customers every tick
+- `gaussian` : mechanism to simulate a gaussian behaviour of the spawner
+- `step` : mechanism where the spawn rates change abruptly at specific times
+
+The behaviour of a `SpawningStrategy` can be modelled in an interface like:
+```scala 3
+trait SpawningStrategy:
+  def customersAt(time: Double): Int
+```
+```mermaid
+sequenceDiagram
+    participant SimulationLoop
+    participant Spawner
+    participant SpawningStrategy
+    
+    SimulationLoop->>Spawner: spawn(state) at time T
+    activate Spawner
+    
+    Spawner->>SpawningStrategy: customersAt(currentTime)
+    activate SpawningStrategy
+    
+    SpawningStrategy-->>Spawner: count: Int
+    deactivate SpawningStrategy
+    
+    Spawner->>Spawner: Generate 'count' customers
+    Spawner->>Spawner: Update currentTime += 1
+    
+    Spawner-->>SimulationLoop: Updated state
+    deactivate Spawner
+    
+    Note right of SpawningStrategy: Strategy implementations:
+    alt ConstantStrategy
+        SpawningStrategy-->>Spawner: Fixed rate
+    else GaussianStrategy
+        SpawningStrategy-->>Spawner: Rate based on bell curve
+    else StepStrategy
+        SpawningStrategy-->>Spawner: High rate if time in [start,end]
+    end
+```
+
+By designing the creation of these strategies through a builder we can allow to combine strategies or customize them by applying factors.
+
+#### Walls
+
+The `Wall` is a foundational element in our casino simulation application, serving as impassable barriers that define physical boundaries.
+
+The `Wall` was designed with these core principles:
+- Immutability: `Wall` state changes create new instances
+- Reactivity: UI automatically updates when walls change
+- Composability: Built from reusable traits
+- Interactivity: Intuitive drag-and-drop placement
+- Collision Awareness: Prevents invalid placements
+
+Due to the numerous behaviours the `Wall` entity should have design it as a mixin is a great solution, follows the list of 
+behaviours that the entity has:
+- `Positioned` : express that the entity has a position
+- `Sized` : which express that the entity has a size
+- `CollidableEntity` : which express the fact that the entity can collide with others entity
+- `SizeChangingEntity` : which express the resize behaviour of the entity
 
 ## Implementation
 ### Student contributions
