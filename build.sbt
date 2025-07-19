@@ -95,6 +95,7 @@ lazy val backend = crossProject(JSPlatform, JVMPlatform)
       "-Wunused:imports"
     ),
     libraryDependencies ++= Seq(
+      "it.unibo.alice.tuprolog" % "tuprolog" % "3.3.0",
       "org.scalatest" %% "scalatest" % "3.2.19" % Test,
       "org.scalatestplus" %% "scalacheck-1-18" % "3.2.19.0" % Test
     )
@@ -110,6 +111,7 @@ lazy val backend = crossProject(JSPlatform, JVMPlatform)
         .withCheckIR(false)
     },
     libraryDependencies ++= Seq(
+      "it.unibo.alice.tuprolog" % "tuprolog" % "3.3.0",
       "org.scala-js" %%% "scalajs-dom" % "2.8.0",
       "com.raquo" %%% "laminar" % "17.0.0"
     )

@@ -7,6 +7,7 @@ import model.entities.games.GameBuilder
 import model.entities.games.RouletteBet
 import model.entities.games.SlotBet
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
 import utils.Result
 import utils.Vector2D
 
@@ -29,9 +30,9 @@ private case class MockCustomer(
   ): MockCustomer =
     this.copy(betStrategy = newStrat)
 
-val mockGame = GameBuilder.slot(Vector2D.zero)
 
-class TestBettingStrategy extends AnyFunSuite:
+class TestBettingStrategy extends AnyFunSuite with Matchers:
+  private val mockGame = GameBuilder.slot(Vector2D.zero)
 
   test(
     "creating a customer with a Bet strategy should store the type of strategy"
@@ -147,7 +148,7 @@ class TestBettingStrategy extends AnyFunSuite:
       List(1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35)
 
     val mock = MockCustomer(
-      customerState = Playing(GameBuilder.roulette(Vector2D.zero)),
+      customerState = Playing(GameBuilder.blackjack(Vector2D.zero)),
       bankroll = 1000.0,
       betStrategy = Martingale[MockCustomer](10.0, targetList)
     )
@@ -162,3 +163,54 @@ class TestBettingStrategy extends AnyFunSuite:
     assert(firstBet.amount == 10.0)
     assert(secondBet.amount == 20.0)
     assert(thirdBet.amount == 10.0)
+
+  test("In Oscar grind maintain betAmount on failure"):
+    val bankroll = 100.0
+    val mock = MockCustomer(
+      customerState = Playing(GameBuilder.blackjack(Vector2D.zero)),
+      bankroll = bankroll,
+      betStrategy = OscarGrind[MockCustomer](5.0, bankroll, 17)
+    )
+    val bet = mock.placeBet()
+    val mockLose = mock.updateBankroll(-bet.amount)
+    val lose = mockLose.updateAfter(Result.Failure(bet.amount))
+    val mockWin = lose.updateBankroll(bet.amount)
+    val win = mockWin.updateAfter(Result.Success(mock.betStrategy.betAmount))
+    val newBet = win.placeBet()
+    val mockAnotherLose = win.updateBankroll(- newBet.amount)
+    val anotherLose = mockAnotherLose.updateAfter(Result.Failure(mock.betStrategy.betAmount))
+
+    lose.betStrategy.betAmount shouldEqual 5.0
+    anotherLose.betStrategy.betAmount shouldEqual 10.0
+
+  test("In Oscar Grind resets betAmount to baseBet when bankroll increased above startingBankroll"):
+    val bankroll = 100.0
+    val mock = MockCustomer(
+      customerState = Playing(GameBuilder.blackjack(Vector2D.zero)),
+      bankroll = bankroll,
+      betStrategy = OscarGrind[MockCustomer](5.0, bankroll, 17)
+    )
+    val bet = mock.placeBet()
+    val mock2 = mock.updateBankroll(bet.amount)
+    val afterWin = mock2.updateAfter(Result.Success(mock.betStrategy.betAmount))
+    val stratAfterWin = afterWin.betStrategy.asInstanceOf[OscarGrind[MockCustomer]]
+
+    stratAfterWin.betAmount shouldEqual 5.0
+    stratAfterWin.startingBankroll shouldEqual 105.0
+
+
+  test("In Oscar grind increments betAmount by baseBet on success that don't surpass starting bankroll "):
+    val bankroll = 100.0
+    val mock = MockCustomer(
+      customerState = Playing(GameBuilder.blackjack(Vector2D.zero)),
+      bankroll = bankroll,
+      betStrategy = OscarGrind[MockCustomer](5.0, bankroll, 17)
+    )
+    val bet = mock.placeBet()
+    val mockLose = mock.updateBankroll(- bet.amount)
+    val lose = mockLose.updateAfter(Result.Failure(bet.amount))
+    val mockWin = lose.updateBankroll(bet.amount)
+    val stratAfterWin = mockWin.updateAfter(Result.Success(mock.betStrategy.betAmount)).betStrategy.asInstanceOf[OscarGrind[MockCustomer]]
+
+    stratAfterWin.betAmount shouldEqual 10.0
+    stratAfterWin.startingBankroll shouldEqual 100.0
