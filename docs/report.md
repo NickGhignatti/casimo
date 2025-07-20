@@ -301,6 +301,8 @@ sequenceDiagram
 ```
 
 By designing the creation of these strategies through a builder we can allow to combine strategies or customize them by applying factors.
+Or even better, we designed an internal DSL which boost the creativity of the user: it allows to customize the predefined 
+strategies or to create your own one.
 
 #### Walls
 
@@ -319,6 +321,36 @@ behaviours that the entity has:
 - `Sized` : which express that the entity has a size
 - `CollidableEntity` : which express the fact that the entity can collide with others entity
 - `SizeChangingEntity` : which express the resize behaviour of the entity
+
+#### Games
+The core abstraction is provided by the `Game` trait, representing a generic gambling station in the Casino. 
+It’s designed to model concurrency and fairness while allowing flexibility across different game types. 
+Three concrete implementations — `RouletteGame`, `SlotMachineGame`, and `BlackJackGame` — extend this trait to specialize behavior based on game logic and betting styles.
+
+```mermaid
+classDiagram
+  class Game {
+    <<trait>>
+  }
+  class SlotMachineGame
+  class RouletteGame
+  class BlackJackGame
+
+  Game <|-- SlotMachineGame
+  Game <|-- RouletteGame
+  Game <|-- BlackJackGame
+
+```
+To deal with the concurrency on this kind of entity was decided to create some functions which allow to lock/unlock the game.
+This functions will alter the `GameState` which represent the current state of the `Game`, with all the customers that are
+currently playing that specific game.
+Thanks to the implementation of a monad which allow to manage two different states (`Result`), deal with the error in case 
+of the impossibility to play the game is easy.
+
+Also keeping track of the gains and loss of our game is important, to avoid to overload of task our games a `GameHistory` entity was designed.
+The behaviour of this entity is simple, a `GameHistory` is designed to deal with just one `Game` and the communication with it is limited,
+it is designed to deal with a `DataManager` which is an entity designed for keeping track of important data in the simulation.
+
 
 ## Implementation
 ### Student contributions
