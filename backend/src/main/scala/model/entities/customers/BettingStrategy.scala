@@ -11,12 +11,12 @@ trait HasBetStrategy[T <: HasBetStrategy[T] & Bankroll[T] & CustomerState[T]]:
   def placeBet(): Bet = betStrategy.placeBet(this)
 
   def updateAfter(result: BetResult): T =
-    changedBetStrategy(betStrategy.updateAfter(this, result))
+    withBetStrategy(betStrategy.updateAfter(this, result))
 
   def changeBetStrategy(newStrat: BettingStrategy[T]): T =
-    changedBetStrategy(newStrat)
+    withBetStrategy(newStrat)
 
-  protected def changedBetStrategy(newStrat: BettingStrategy[T]): T
+  def withBetStrategy(newStrat: BettingStrategy[T]): T
 
 trait BettingStrategy[A <: Bankroll[A] & CustomerState[A]]:
   val betAmount: Double

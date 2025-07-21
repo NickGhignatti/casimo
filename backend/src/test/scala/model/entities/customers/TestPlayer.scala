@@ -15,25 +15,6 @@ import utils.Vector2D
 import utils.Vector2D.distance
 
 class TestPlayer extends AnyFunSuite:
-  private case class Customer(
-      position: Vector2D,
-      direction: Vector2D = Vector2D.zero,
-      favouriteGames: Seq[GameType] = Seq.empty,
-      isPlaying: Boolean = false
-  ) extends Player[Customer]:
-
-    override def updatedPosition(newPosition: Vector2D): Customer =
-      copy(position = newPosition)
-
-    override def updatedDirection(newDirection: Vector2D): Customer =
-      copy(direction = newDirection)
-
-    override val id: String = java.util.UUID.randomUUID().toString
-
-    override def play: Customer = copy(isPlaying = true)
-
-    override def stopPlaying: Customer = copy(isPlaying = false)
-
   private val games = Seq(
     GameBuilder.slot(Vector2D.zero),
     GameBuilder.blackjack(Vector2D.zero),
@@ -41,7 +22,7 @@ class TestPlayer extends AnyFunSuite:
   )
 
   test("A customer should get closer to its favourite game"):
-    val customer = Customer(Vector2D(1, 1), favouriteGames = Seq(SlotMachine))
+    val customer = Customer().withPosition(Vector2D(1, 1)).withFavouriteGames(Seq(SlotMachine))
     val context: Context[Customer] = Context(customer, games)
     val updatedCustomer =
       (context | GamesAttractivenessManager()).player | MoverManager()
@@ -51,7 +32,7 @@ class TestPlayer extends AnyFunSuite:
     )
 
   test("A customer close to its favourite game should sit and play"):
-    val customer = Customer(Vector2D(2, 0), favouriteGames = Seq(SlotMachine))
+    val customer = Customer().withPosition(Vector2D(2, 0)).withFavouriteGames(Seq(SlotMachine))
     val context: Context[Customer] = Context(customer, games)
     val updatedContext =
       context | PlayerSitterManager(sittingRadius = 10)

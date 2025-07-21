@@ -1,13 +1,13 @@
 package model.entities.customers
 
+import scala.util.Random
+
 import model.SimulationState
 import model.entities.Entity
 import model.entities.Player
 import model.entities.customers.CustState.Idle
-import model.entities.customers.CustState.Playing
 import model.entities.customers.RiskProfile.Regular
 import model.entities.games.Blackjack
-import model.entities.games.GameBuilder
 import model.entities.games.GameType
 import model.entities.games.Roulette
 import model.entities.games.SlotMachine
@@ -21,105 +21,71 @@ import model.managers.|
 import utils.Vector2D
 
 case class Customer(
-    id: String,
-    position: Vector2D,
-    direction: Vector2D = Vector2D.zero,
-    bankroll: Double,
-    riskProfile: RiskProfile = Regular,
-    customerState: CustState = Idle,
-    betStrategy: BettingStrategy[Customer] = FlatBetting(5.0, 1),
-    favouriteGames: Seq[GameType] = Seq(SlotMachine)
-) extends Entity,
-      Movable[Customer],
-      Player[Customer],
-      Bankroll[Customer],
-      StatusProfile,
-      CustomerState[Customer],
-      HasBetStrategy[Customer]:
-
-  def updatedPosition(newPosition: Vector2D): Customer =
-    this.copy(position = newPosition)
-
-  protected def updatedBankroll(newRoll: Double): Customer =
-    this.copy(bankroll = newRoll)
-
-  protected def changedState(newState: CustState): Customer =
-    this.copy(customerState = newState)
-
-  override def updatedDirection(newDirection: Vector2D): Customer =
-    this.copy(direction = newDirection)
-
-  protected def changedBetStrategy(
-      newStrat: BettingStrategy[Customer]
-  ): Customer =
-    this.copy(betStrategy = newStrat)
-
-  override def play: Customer =
-    this.changeState(Playing(GameBuilder.blackjack(Vector2D.zero)))
-
-  override def stopPlaying: Customer = this.changeState(Idle)
-
-import scala.util.Random
-
-case class CustomerBuilder(
     id: String = java.util.UUID.randomUUID().toString,
     position: Vector2D = Vector2D.zero,
     direction: Vector2D = Vector2D.zero,
     bankroll: Double = 1000.0,
+    boredom: Double = 15.0,
+    frustration: Double = 0.0,
     riskProfile: RiskProfile = Regular,
     customerState: CustState = Idle,
-    betStrategy: BettingStrategy[Customer] = FlatBetting(
-      5.0,
-      List(1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35)
-    ),
+    betStrategy: BettingStrategy[Customer] = FlatBetting(5.0, 1),
+    isPlaying: Boolean = false,
     favouriteGames: Seq[GameType] = Seq(Roulette, Blackjack, SlotMachine)
-):
-  def withId(id: String): CustomerBuilder = copy(id = id)
+) extends Entity,
+      Movable[Customer],
+      Bankroll[Customer],
+      BoredomFrustration[Customer],
+      StatusProfile,
+      CustomerState[Customer],
+      HasBetStrategy[Customer],
+      Player[Customer]:
 
-  def withPosition(pos: Vector2D): CustomerBuilder = copy(position = pos)
+  def withId(newId: String): Customer =
+    this.copy(id = newId)
 
-  def withDirection(dir: Vector2D): CustomerBuilder = copy(direction = dir)
+  def withPosition(newPosition: Vector2D): Customer =
+    this.copy(position = newPosition)
 
-  def withBankroll(bankroll: Double): CustomerBuilder =
-    copy(bankroll = bankroll)
+  def withBankroll(newRoll: Double): Customer =
+    this.copy(bankroll = newRoll)
 
-  def withRiskProfile(rp: RiskProfile): CustomerBuilder = copy(riskProfile = rp)
+  def withBoredom(newBoredom: Double): Customer =
+    this.copy(boredom = newBoredom)
 
-  def withCustomerState(cs: CustState): CustomerBuilder =
-    copy(customerState = cs)
+  def withFrustration(newFrustration: Double): Customer =
+    this.copy(frustration = newFrustration)
 
-  def withBetStrategy(bs: BettingStrategy[Customer]): CustomerBuilder =
-    copy(betStrategy = bs)
+  def withCustomerState(newState: CustState): Customer =
+    this.copy(customerState = newState)
 
-  def withFavouriteGames(games: Seq[GameType]): CustomerBuilder =
-    copy(favouriteGames = games)
+  def withDirection(newDirection: Vector2D): Customer =
+    this.copy(direction = newDirection)
+
+  def withBetStrategy(
+      newStrat: BettingStrategy[Customer]
+  ): Customer =
+    this.copy(betStrategy = newStrat)
+
+  def withFavouriteGames(newFavGame: Seq[GameType]): Customer =
+    this.copy(favouriteGames = newFavGame)
+
+  def play: Customer =
+    this.copy(isPlaying = true)
+
+  def stopPlaying: Customer =
+    this.copy(isPlaying = false)
 
   def randomizePosition(
       xRange: (Double, Double),
       yRange: (Double, Double)
-  ): CustomerBuilder =
+  ): Customer =
     val x = Random.between(xRange._1, xRange._2)
     val y = Random.between(yRange._1, yRange._2)
-    copy(position = Vector2D(x, y))
+    withPosition(Vector2D(x, y))
 
-  def build(): Customer =
-    Customer(
-      id,
-      position,
-      direction,
-      bankroll,
-      riskProfile,
-      customerState,
-      betStrategy,
-      favouriteGames
-    )
-
-object CustomerBuilder:
-  def apply(): CustomerBuilder = new CustomerBuilder()
-
-  /** Crea un builder con dati random base */
-  def random(): CustomerBuilder =
-    CustomerBuilder()
+  def random(): Customer =
+    Customer()
       .withId(java.util.UUID.randomUUID().toString)
       .randomizePosition((-100.0, 100.0), (-100.0, 100.0))
       .withBankroll(Random.between(50.0, 500.0))

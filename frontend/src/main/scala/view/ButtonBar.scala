@@ -56,7 +56,7 @@ class ButtonBar(
       case "Run" =>
         dom.window.setInterval(
           () => eventBus.writer.onNext(Event.SimulationTick),
-          500
+          50
         )
       case "Reset" => ???
       case "Save"  => ???
