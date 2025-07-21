@@ -16,7 +16,7 @@ import utils.Vector2D
 
 case class Update(customerManager: BaseManager[SimulationState]):
 
-  def updateSimulationManager(
+  def updateSimulationDataManager(
       dataManager: DataManager,
       state: SimulationState
   ): DataManager = dataManager.copy(state = state)

@@ -3,6 +3,8 @@ package view
 import com.raquo.laminar.api.L._
 import model.SimulationState
 import model.entities.spawner.SpawningStrategyBuilder
+import org.nspl._
+import org.nspl.canvasrenderer._
 import org.scalajs.dom
 import org.scalajs.dom.html
 import update.Event
@@ -11,16 +13,18 @@ import update.Update
 class ButtonBar(
     model: Var[SimulationState],
     update: Var[Update],
-    configForm: ConfigForm
+    configForm: ConfigForm,
+    modal: Modal,
+    eventBus: EventBus[Event]
 ):
   private val buttonBar = dom.document.getElementById("button-bar")
-  private val buttons = List("Add", "Run", "Reset", "Save", "Load")
+  private val buttons = List("Add", "Run", "Reset", "Save", "Load", "Data")
 
-  val eventBus = new EventBus[Event]
+  val data = Seq.range(0, 100).map(i => i.toDouble -> math.sin(i / 10.0))
+  val plot = xyplot(data)(par(ylab = "X", xlab = "Y"))
 
-  eventBus.events
-    .scanLeft(model.now())((m, e) => update.now().update(m, e))
-    .foreach(model.set)(using unsafeWindowOwner)
+//  val (canvas: org.scalajs.dom.html.Canvas, updatePlot) =
+//    org.nspl.canvasrenderer.render(plot, width = 600, height = 400)
 
   def init(): Unit =
     buttons.foreach { text =>
@@ -61,4 +65,5 @@ class ButtonBar(
       case "Reset" => ???
       case "Save"  => ???
       case "Load"  => ???
+      case "Data"  => modal.open()
       case _       => ???
