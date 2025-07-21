@@ -12,10 +12,10 @@ class TestAvoidWallsManager extends AnyFunSuite:
   private case class MockMovable(direction: Vector2D, position: Vector2D)
       extends Movable[MockMovable]:
 
-    override def updatedPosition(newPosition: Vector2D): MockMovable =
+    override def withPosition(newPosition: Vector2D): MockMovable =
       this.copy(position = newPosition)
 
-    override def updatedDirection(newDirection: Vector2D): MockMovable =
+    override def withDirection(newDirection: Vector2D): MockMovable =
       this.copy(direction = newDirection)
 
   private case class Wall(position: Vector2D, width: Double, height: Double)

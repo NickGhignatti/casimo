@@ -1,15 +1,14 @@
 package update
 
 import scala.annotation.tailrec
-import scala.util.Random
 
 import model.SimulationState
 import model.data.DataManager
 import model.entities.Wall
 import model.entities.customers.Customer
 import model.entities.customers.DefaultMovementManager
+import model.entities.games.Game
 import model.entities.games.GameResolver
-import model.entities.spawner.GaussianStrategy
 import model.entities.spawner.Spawner
 import model.managers.|
 import update.Event._
@@ -45,16 +44,19 @@ case class Update(customerManager: DefaultMovementManager):
       case UpdateCustomersState =>
         state
 
-      case AddCustomers(n) =>
+      case AddCustomers(strategy) =>
         state.copy(
           spawner = Some(
             Spawner(
-              Random.nextString(12),
+              "Spawner",
               Vector2D(200.0, 200.0),
-              GaussianStrategy(100, 6, 2)
+              strategy
             )
           )
         )
 
       case UpdateWalls(walls: List[Wall]) =>
         state.copy(walls = walls)
+
+      case updateGamesList(games: List[Game]) =>
+        state.copy(games = games)

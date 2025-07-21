@@ -1,6 +1,8 @@
 package model.entities.customers
 
 import model.SimulationState
+import model.entities.customers.CustState.Playing
+import model.entities.games.GameBuilder
 import model.managers.|
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
@@ -41,6 +43,7 @@ class DefaultMovementManagerTest extends AnyFunSuite:
           position = Vector2D(0, 0),
           direction = Vector2D(0, 0),
           bankroll = 100.0,
+          customerState = Playing(GameBuilder.blackjack(Vector2D.zero)),
           isPlaying = true
         ),
         Customer(

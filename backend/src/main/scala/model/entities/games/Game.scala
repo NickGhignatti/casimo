@@ -2,7 +2,7 @@ package model.entities.games
 
 import scala.util.Random
 
-import model.entities.Entity
+import model.entities.CollidableEntity
 import model.entities.games.dsl.use
 import utils.Result
 import utils.Result.Failure
@@ -19,7 +19,7 @@ trait Game(
     val position: Vector2D,
     val gameState: GameState,
     val gameHistory: GameHistory
-) extends Entity:
+) extends CollidableEntity:
 
   def gameType: GameType
   def updateHistory(gain: Double): Game
@@ -60,6 +60,9 @@ case class RouletteGame(
   override def updateHistory(gain: Double): Game =
     this.copy(gameHistory = this.gameHistory.update(gain))
 
+  override val width: Double = 15
+  override val height: Double = 15
+
 case class SlotMachineGame(
     override val id: String,
     override val position: Vector2D,
@@ -90,6 +93,9 @@ case class SlotMachineGame(
 
   override def updateHistory(gain: Double): Game =
     this.copy(gameHistory = this.gameHistory.update(gain))
+
+  override val width: Double = 15
+  override val height: Double = 15
 
 case class BlackJackGame(
     override val id: String,
@@ -122,10 +128,13 @@ case class BlackJackGame(
   override def updateHistory(gain: Double): Game =
     this.copy(gameHistory = this.gameHistory.update(gain))
 
+  override val width: Double = 15
+  override val height: Double = 15
+
 object GameBuilder:
   def roulette(position: Vector2D): RouletteGame =
     RouletteGame(
-      Random.nextString(10),
+      "Roulette-" + Random.nextInt(),
       position,
       GameState(0, 6, List.empty),
       GameHistory(List.empty)
@@ -133,7 +142,7 @@ object GameBuilder:
 
   def slot(position: Vector2D): SlotMachineGame =
     SlotMachineGame(
-      Random.nextString(10),
+      "Slot-" + Random.nextInt(),
       position,
       GameState(0, 1, List.empty),
       GameHistory(List.empty)
@@ -141,7 +150,7 @@ object GameBuilder:
 
   def blackjack(position: Vector2D): BlackJackGame =
     BlackJackGame(
-      Random.nextString(10),
+      "BlackJack-" + Random.nextInt(),
       position,
       GameState(0, 7, List.empty),
       GameHistory(List.empty)
