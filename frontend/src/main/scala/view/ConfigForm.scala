@@ -10,66 +10,73 @@ import update.Update
 case class ConfigForm(update: Var[Update]):
 
   given Owner = unsafeWindowOwner
-  private val maxSpeedVar = Var(1000.0)
-  private val perceptionRadiusVar = Var(200000.0)
-  private val avoidRadiusVar = Var(50.0)
-  private val alignmentWeightVar = Var(1.0)
-  private val cohesionWeightVar = Var(1.0)
-  private val separationWeightVar = Var(1.0)
-  private val gamesAttractivenessWeightVar = Var(1.0)
-  private val sittingRadiusVar = Var(100.0)
-
-  Signal
-    .combineWithFn(
-      maxSpeedVar,
-      perceptionRadiusVar,
-      avoidRadiusVar,
-      alignmentWeightVar,
-      cohesionWeightVar,
-      separationWeightVar,
-      gamesAttractivenessWeightVar,
-      sittingRadiusVar
-    )(
-      DefaultMovementManager(_, _, _, _, _, _, _, _)
+  private case class Parameter(
+      label: String,
+      variable: Var[Double],
+      updater: (DefaultMovementManager, Double) => DefaultMovementManager
+  )
+  private val parameters = List(
+    Parameter("Max Speed", Var(1000.0), (m, v) => m.copy(maxSpeed = v)),
+    Parameter(
+      "Perception Radius",
+      Var(100.0),
+      (m, v) => m.copy(perceptionRadius = v)
+    ),
+    Parameter("Avoid Radius",
+      Var(50.0),
+      (m, v) => m.copy(avoidRadius = v)),
+    Parameter(
+      "Alignment Weight",
+      Var(1.0),
+      (m, v) => m.copy(alignmentWeight = v)
+    ),
+    Parameter(
+      "Cohesion Weight",
+      Var(1.0),
+      (m, v) => m.copy(cohesionWeight = v)
+    ),
+    Parameter(
+      "Separation Weight",
+      Var(1.0),
+      (m, v) => m.copy(separationWeight = v)
+    ),
+    Parameter(
+      "Games Attractiveness Weight",
+      Var(1.0),
+      (m, v) => m.copy(gamesAttractivenessWeight = v)
+    ),
+    Parameter(
+      "Sitting Radius",
+      Var(100.0),
+      (m, v) => m.copy(sittingRadius = v)
+    ),
+    Parameter(
+      "Avoid Walls Weight",
+      Var(5.0),
+      (m, v) => m.copy(avoidWallsWeight = v)
+    ),
+    Parameter(
+      "Avoid Walls Perception Size",
+      Var(100.0),
+      (m, v) => m.copy(avoidWallsPerceptionSize = v)
     )
-    .map(Update(_))
-    .foreach(update.set)
+  )
+  parameters
+    .map { case Parameter(_, variable, updater) => (variable.signal, updater) }
+    .foreach { case (variable, updater) =>
+      variable
+        .map(updater(update.now().customerManager, _))
+        .foreach(newManager =>
+          update.set(update.now().copy(customerManager = newManager))
+        )
+    }
 
   def init(): ReactiveHtmlElement[HTMLDivElement] =
     div(
       h3("Movement Manager Form"),
-      parameter(
-        "Max Speed",
-        maxSpeedVar
-      ),
-      parameter(
-        "Perception Radius",
-        perceptionRadiusVar
-      ),
-      parameter(
-        "Avoid Radius",
-        avoidRadiusVar
-      ),
-      parameter(
-        "Alignment Weight",
-        alignmentWeightVar
-      ),
-      parameter(
-        "Cohesion Weight",
-        cohesionWeightVar
-      ),
-      parameter(
-        "Separation Weight",
-        separationWeightVar
-      ),
-      parameter(
-        "Games Attractiveness Weight",
-        gamesAttractivenessWeightVar
-      ),
-      parameter(
-        "Sitting Radius",
-        sittingRadiusVar
-      ),
+      parameters.map { case Parameter(label, variable, _) =>
+        parameter(label, variable)
+      },
       hr()
     )
 

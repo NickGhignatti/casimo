@@ -16,7 +16,7 @@ object Boids:
       this.copy(boid = boid.updatedDirection(newDirection))
 
     def directionAdded(addingDirection: Vector2D): State[M] =
-      this.copy(boid = boid.updatedDirection(boid.direction + addingDirection))
+      this.copy(boid = boid.addedDirection(addingDirection))
 
     export boid.{position, direction}
 
@@ -36,12 +36,11 @@ object Boids:
       )
 
     private def separation(boid: M, positions: Seq[Vector2D]): Vector2D =
-      if positions.isEmpty then Vector2D.zero
-      else
-        positions
-          .filter(distance(boid.position, _) < avoidRadius)
-          .map(pos => (boid.position - pos).normalize)
-          .reduce(_ + _)
+      positions
+        .filter(distance(boid.position, _) < avoidRadius)
+        .map(pos => (boid.position - pos).normalize)
+        .reduceOption(_ + _)
+        .getOrElse(Vector2D.zero)
 
     override def updatedWeight(weight: Double): WeightedManager[State[M]] =
       this.copy(weight = weight)

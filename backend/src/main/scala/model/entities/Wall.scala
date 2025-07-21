@@ -11,7 +11,7 @@ trait Sized:
   val width: Double
   val height: Double
 
-trait CollidableEntity extends Entity with Sized with Positioned:
+trait Collidable extends Sized with Positioned:
   final def contains(point: Vector2D): Boolean =
     point.x >= position.x &&
       point.x <= position.x + width &&
@@ -29,6 +29,19 @@ trait CollidableEntity extends Entity with Sized with Positioned:
 
     horizontalOverlap && verticalOverlap
 
+  def topLeft: Vector2D = position
+
+  def topRight: Vector2D =
+    Vector2D(position.x + width, position.y)
+
+  def bottomLeft: Vector2D =
+    Vector2D(position.x, position.y + height)
+
+  def bottomRight: Vector2D =
+    Vector2D(position.x + width, position.y + height)
+
+  def vertices: Seq[Vector2D] = Seq(topLeft, topRight, bottomLeft, bottomRight)
+
 trait SizeChangingEntity extends Sized:
   def withWidth(newWidth: Double): this.type
   def withHeight(newHeight: Double): this.type
@@ -41,8 +54,9 @@ case class Wall(
     height: Double
 ) extends Positioned,
       Sized,
-      CollidableEntity,
-      SizeChangingEntity:
+      Collidable,
+      SizeChangingEntity,
+      Entity:
 
   def withWidth(newWidth: Double): this.type =
     this.copy(width = newWidth).asInstanceOf[this.type]

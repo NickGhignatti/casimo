@@ -4,21 +4,23 @@ import model.entities.Player
 import model.entities.games.Game
 import model.managers.BaseManager
 import model.managers.WeightedManager
+import model.managers.movements.PlayerManagers.Context
 import utils.Result
 import utils.Vector2D
 import utils.Vector2D.direction
 import utils.Vector2D.distance
 
-case class Context[P <: Player[P]](player: P, games: Seq[Game]):
-  protected[movements] def bestGameAvailable: Option[Game] =
-    extension [A](result: Result[A, A])
-      private def option(): Option[A] =
-        result match
-          case Result.Success(value) => Some(value)
-          case _                     => None
-    games
-      .find(_.gameType == player.favouriteGames.head)
-      .flatMap(_.lock(player.id).option())
+object PlayerManagers:
+  case class Context[P <: Player[P]](player: P, games: Seq[Game]):
+    protected[movements] def bestGameAvailable: Option[Game] =
+      extension [A](result: Result[A, A])
+        private def option(): Option[A] =
+          result match
+            case Result.Success(value) => Some(value)
+            case _                     => None
+      games
+        .find(_.gameType == player.favouriteGames.head)
+        .flatMap(_.lock(player.id).option())
 
 case class GamesAttractivenessManager[C <: Player[C]](
     weight: Double = 1.0

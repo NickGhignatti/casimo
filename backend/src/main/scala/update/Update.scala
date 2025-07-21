@@ -7,15 +7,15 @@ import model.SimulationState
 import model.data.DataManager
 import model.entities.Wall
 import model.entities.customers.Customer
+import model.entities.customers.DefaultMovementManager
 import model.entities.games.GameResolver
 import model.entities.spawner.GaussianStrategy
 import model.entities.spawner.Spawner
-import model.managers.BaseManager
 import model.managers.|
 import update.Event._
 import utils.Vector2D
 
-case class Update(customerManager: BaseManager[SimulationState]):
+case class Update(customerManager: DefaultMovementManager):
 
   def updateSimulationManager(
       dataManager: DataManager,
