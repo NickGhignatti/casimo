@@ -1,139 +1,180 @@
 package model.managers
 
-import alice.tuprolog.SolveInfo
-import alice.tuprolog.Term
+import alice.tuprolog._
+import model.entities.Entity
 import model.entities.customers.Bankroll
-import model.entities.customers.CustState.Idle
+import model.entities.customers.BoredomFrustration
 import model.entities.customers.CustState.Playing
 import model.entities.customers.CustomerState
+import model.entities.customers.FlatBetting
 import model.entities.customers.HasBetStrategy
-import utils.Scala2P.mkPrologEngine
-/*TODO: provare a farlo con prolog (⊙_⊙;)
- */
+import model.entities.customers.Martingale
+import model.entities.customers.OscarGrind
+import model.entities.customers.StatusProfile
+import model.entities.games.Blackjack
+import model.entities.games.Roulette
+import model.entities.games.SlotMachine
+
 class CustomerStrategyManager[
-    A <: HasBetStrategy[A] & CustomerState[A] & Bankroll[A]
+    A <: HasBetStrategy[A] & StatusProfile & CustomerState[A] & Bankroll[A] &
+      Entity & BoredomFrustration[A]
 ] extends BaseManager[Seq[A]]:
 
   def update(customers: Seq[A]): Seq[A] =
-    val (playingCustomers, idleCustomers) =
-      customers.partition(_.customerState match
-        case Playing(_) => true
-        case Idle       => false
-      )
-
-    val rules: String =
-      """
-        |%--- Profile
-        |profile(john, vip).
-        |
-        |%--- Dynamic State
-        |state(john, frustration, 0.6).  % 60% frustration
-        |state(john, boredom, 0.2).      % 20% boredom
-        |state(john, loss_streak, 2).
-        |
-        |%--- Current game
-        |current_game(john, blackjack).
-        |
-        |%--- Trigger
-        |trigger(vip_blackjack_frustrated, Cust) :-
-        |  profile(Cust, vip),
-        |  current_game(Cust, blackjack),
-        |  state(Cust, frustration, F), F > 0.5.
-        |
-        |trigger(roulette_loss2, Cust) :-
-        |  current_game(Cust, roulette),
-        |  state(Cust, loss_streak, N), N >= 2.
-        |
-        |trigger(slot_frustrated, Cust) :-
-        |  current_game(Cust, slot),
-        |  state(Cust, frustration, F), F > 0.5.
-        |
-        |%--- Correspondent Strategy
-        |strategy(Cust, Strategy) :-
-        |  trigger(vip_blackjack_frustrated, Cust), Strategy = kelly;
-        |  trigger(roulette_loss2, Cust), Strategy = martingale;
-        |  trigger(slot_frustrated, Cust), Strategy = flat;
-        |  Strategy = flat.  % fallback
-        """.stripMargin
-
-    val facts = createFacts(playingCustomers)
-
-    val engine: Term => LazyList[SolveInfo] = mkPrologEngine(facts + rules)
-    /*val startPos = Term.createTerm(
-      s"pos(${player.position.x - padding.x},${player.position.y - padding.y})"
+    val (playing, idle) = customers.partition(_.customerState match
+      case Playing(_) => true
+      case _          => false
     )
 
-    val input = Struct("build_distances", startPos)
-    engine(input).headOption
-     */
+    val facts = createFacts(playing)
+    val prologTheory = facts + rules
+    val engine = new Prolog()
+    engine.setTheory(new Theory(prologTheory))
+    val updated = fetchStrategies(engine, playing)
 
-    idleCustomers ++ fetchStrategies(engine)
+    idle ++ updated
 
-  private def createFacts(customer: Seq[A]): String = ???
-  /*val facts = new StringBuilder
+  private val rules: String =
+    """
+    % --- Profili cliente
+profile(Cust, vip).
+profile(Cust, regular).
+profile(Cust, impulsive).
+profile(Cust, casual).
 
-    facts ++=
-      s"player(pos(${customer.position.x - padding.x},${customer.position.y - padding.y}), ${customer.visibility()}).\n"
+% --- Stato dinamico (valori simulati a runtime da Scala)
+state(Cust, frustration, Frust).      % 0–100
+state(Cust, boredom, Bored).          % 0–100
+state(Cust, loss_streak, N).          %  ≥ 0
+state(Cust, bankroll_current, Cur).
+state(Cust, bankroll_start, Start).
 
-    currentRoom.items.foreach(i =>
-      facts ++=
-        s"obstacle(pos(${i.position.get.x - padding.x},${i.position.get.y - padding.y})).\n"
-    )
+% --- Gioco attualmente in corso
+current_game(Cust, blackjack).
+current_game(Cust, roulette).
+current_game(Cust, slot).
 
-    currentRoom.getAliveEnemies.foreach(e =>
-      facts ++=
-        s"enemy(${e.id},pos(${e.position.x - padding.x},${e.position.y - padding.y})).\n" +
-          s"obstacle(pos(${e.position.x - padding.x},${e.position.y - padding.y})).\n"
-    )
+% --- Trigger logici
 
-    facts ++= s"distance(pos(${customer.position.x - padding.x},${customer.position.y - padding.y}), 0).\n"
-    facts.toString()
+trigger(vip_blackjack_loss4, C) :-
+    profile(C, vip),
+    current_game(C, blackjack),
+    state(C, loss_streak, N), N >= 4.
 
-  private case class Move(
-                           id: String,
-                           cur: Point2D,
-                           next: Point2D,
-                           cost: scala.Int
-                         )*/
+trigger(vip_roulette_loss4, C) :-
+    profile(C, vip),
+    current_game(C, roulette),
+    state(C, loss_streak, N), N >= 4.
 
-  private def fetchStrategies(engine: Term => LazyList[SolveInfo]): Seq[A] = ???
-  /*val mVar = Var("M")
+trigger(vip_slot_frustrated, C) :-
+    profile(C, vip),
+    current_game(C, slot),
+    state(C, frustration, F), F > 50.
 
-    engine(Struct("best_moves_all", mVar)).headOption.fold(Nil): info =>
-      val listMoves = info.getVarValue("M").asInstanceOf[Struct]
-      if listMoves.isEmptyList then Nil
-      else
-        import scala.jdk.CollectionConverters.*
-        listMoves
-          .listIterator()
-          .asScala
-          .toList
-          .map: t =>
-            val mv = t.asInstanceOf[Struct]
-            Move(
-              mv.getArg(0).getTerm.toString,
-              asPoint(mv.getArg(1).getTerm),
-              asPoint(mv.getArg(2).getTerm),
-              asInt(mv.getArg(3).getTerm)
-            )*/
-/*
-  private def groupMoves(moves: List[Move]): Map[String, List[Point2D]] =
-    moves
-      .groupMap(_.id)(m => (m.next, m.cost))
-      .map((id, moves) =>
-        val min = moves.map(_._2).min
-        id -> moves.filter(_._2.equals(min)).map(_._1)
-      )
+trigger(regular_blackjack_bored, C) :-
+    profile(C, regular),
+    current_game(C, blackjack),
+    state(C, boredom, B), B > 50.
 
-  private def decideMoves(
-                           moves: Map[String, List[Point2D]]
-                         ): Map[String, Point2D] =
-    val order = moves.toList.sortBy(_._2.size).map(_._1)
-    val (_, chosen) =
-      order.foldLeft((Set.empty[Point2D], Map.empty[String, Point2D])):
-        case ((reserved, steps), id) =>
-          moves(id).find(!reserved(_)) match
-            case Some(p) => (reserved + p, steps.updated(id, p))
-            case None    => (reserved, steps)
+trigger(regular_roulette_loss3, C) :-
+    profile(C, regular),
+    current_game(C, roulette),
+    state(C, loss_streak, N), N >= 3.
 
-    chosen*/
+trigger(riskaverse_frustrated, C) :-
+    ( profile(C, risk_averse) ; profile(C, casual) ),
+    state(C, frustration, F), F > 50.
+
+trigger(impulsive_blackjack_loss3, C) :-
+    profile(C, impulsive),
+    current_game(C, blackjack),
+    state(C, loss_streak, N), N >= 3.
+
+trigger(impulsive_roulette_loss4, C) :-
+    profile(C, impulsive),
+    current_game(C, roulette),
+    state(C, loss_streak, N), N >= 4.
+
+trigger(impulsive_slot_frustrated, C) :-
+    profile(C, impulsive),
+    current_game(C, slot),
+    state(C, frustration, F), F > 50.
+
+% --- Strategia associata (name, params)
+
+% VIP
+strategy(C, oscar, [Bet]) :- trigger(vip_blackjack_loss4, C), base_bet(C, 3, Bet).
+strategy(C, oscar, [Bet]) :- trigger(vip_roulette_loss4, C), base_bet(C, 3, Bet).
+strategy(C, flat,  [Bet]) :- trigger(vip_slot_frustrated, C), base_bet(C, 1, Bet).
+
+% Regular
+strategy(C, flat,  [Bet]) :- trigger(regular_blackjack_bored, C), base_bet(C, 2, Bet).
+strategy(C, oscar, [Bet]) :- trigger(regular_roulette_loss3, C), base_bet(C, 2, Bet).
+strategy(C, flat,  [Bet]) :- profile(C, regular), current_game(C, slot), base_bet(C, 2, Bet).
+
+% Casual / Risk-Averse
+strategy(C, exit, [])     :- trigger(riskaverse_frustrated, C).
+
+% Impulsive
+strategy(C, oscar, [Bet]) :- trigger(impulsive_blackjack_loss3, C), base_bet(C, 2, Bet).
+strategy(C, flat,  [Bet]) :- trigger(impulsive_roulette_loss4, C), base_bet(C, 2, Bet).
+strategy(C, flat,  [Bet]) :- trigger(impulsive_slot_frustrated, C), base_bet(C, 2, Bet).
+
+% --- Fallback
+strategy(C, flat, [Bet])  :- base_bet(C, 2, Bet).
+
+% --- Base bet calculator: Base is (Current * Percent) // 100
+base_bet(C, Percent, Base) :-
+    state(C, bankroll_current, Cur),
+    Base is (Cur * Percent) // 100.
+
+    """
+
+  private def createFacts(cs: Seq[A]): String =
+    cs.map { c =>
+      val id = c.id
+      val fr = f"${c.frustration.toInt}"
+      val bo = f"${c.boredom.toInt}"
+      val bs = f"${c.bankroll.toInt}"
+      val b0 = f"${c.startingBankroll.toInt}"
+
+      val ls = c.betStrategy match
+        case martingale: Martingale[A] => martingale.lossStreak
+        case oscarGrind: OscarGrind[A] => oscarGrind.lossStreak
+        case _                         => 0
+
+      val gmRaw = c.getGameOrElse.get.gameType match
+        case Blackjack   => "blackjack"
+        case Roulette    => "roulette"
+        case SlotMachine => "slot"
+      val gm = gmRaw.replaceAll("[^a-z0-9_]", "_")
+      // Pulisce il profilo
+      val prRaw = c.riskProfile.toString.toLowerCase
+      val pr = prRaw.replaceAll("[^a-z0-9_]", "_")
+      s"""
+         |profile($id, ${c.riskProfile.toString.toLowerCase}).
+         |state($id, frustration, $fr).
+         |state($id, boredom, $bo).
+         |state($id, loss_streak, $ls).
+         |state($id, bankroll_start, $b0).
+         |state($id, bankroll_current, $bs).
+         |current_game($id, $gm).
+       """.stripMargin
+    }.mkString("\n")
+
+  private def fetchStrategies(engine: Prolog, playing: Seq[A]): Seq[A] =
+    playing.map { c =>
+      val goal = s"strategy(${c.id}, Strat, Params)."
+      val solve = engine.solve(goal)
+      if solve.isSuccess then
+        val name = solve.getTerm("Strat").toString
+        val params = solve.getTerm("Params").asInstanceOf[Struct]
+        val base = params.getArg(0).toString.toDouble
+        val strat = name match
+          case "flat"       => FlatBetting[A](base, c.betStrategy.option)
+          case "martingale" => Martingale[A](base, c.betStrategy.option)
+          case "oscar" => OscarGrind[A](base, c.bankroll, c.betStrategy.option)
+          case _       => FlatBetting[A](base, c.betStrategy.option)
+        c.changeBetStrategy(strat)
+      else c
+    }
