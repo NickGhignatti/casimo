@@ -4,7 +4,7 @@ import model.entities.Collidable
 import model.entities.customers.Movable
 import model.managers.WeightedManager
 import model.managers.movements.AvoidWallsManager.Context
-import model.managers.movements.AvoidWallsManager.Square
+import model.managers.movements.FOV.canSee
 import utils.Vector2D
 
 case class AvoidWallsManager[C <: Movable[C]](
@@ -12,19 +12,12 @@ case class AvoidWallsManager[C <: Movable[C]](
     weight: Double = 1
 ) extends WeightedManager[Context[C]]:
   override def update(slice: Context[C]): Context[C] =
-    val avoidSquare = Square(slice.movable.position, avoidSquareSize)
-    val avoidingDirection = slice.avoids
-      .flatMap(collidable =>
-        collidable.vertices.filter(
-          avoidSquare.contains
-        ) concat avoidSquare.vertices.filter(collidable.contains)
+    val movable = slice.movable
+    if movable.position.canSee(slice.avoids)(
+        movable.position + movable.direction
       )
-      .map(Vector2D.direction(_, slice.movable.position))
-      .reduceOption(_ + _)
-      .getOrElse(Vector2D.zero)
-    slice.copy(
-      movable = slice.movable.addedDirection(avoidingDirection * weight)
-    )
+    then slice
+    else slice.copy(movable = movable.withDirection(Vector2D.zero))
 
   override def updatedWeight(weight: Double): WeightedManager[Context[C]] =
     copy(weight = weight)

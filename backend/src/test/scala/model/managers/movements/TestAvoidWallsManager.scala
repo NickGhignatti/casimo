@@ -21,7 +21,7 @@ class TestAvoidWallsManager extends AnyFunSuite:
       extends Collidable
 
   test(
-    "A movable which is close to a wall should change its direction to avoid it"
+    "A movable which is close to a wall should not collide with the wall"
   ):
     val movable = MockMovable(
       position = Vector2D(5, 0),
@@ -31,4 +31,4 @@ class TestAvoidWallsManager extends AnyFunSuite:
     val walls = Seq(wall)
     val context = Context(movable, walls)
     val updatedContext = context | AvoidWallsManager(100)
-    assert(updatedContext.movable.direction.x > movable.direction.x)
+    assert(updatedContext.movable.position.x > wall.position.x + 1)
