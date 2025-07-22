@@ -22,12 +22,14 @@ trait Game(
 ) extends CollidableEntity:
 
   def gameType: GameType
-  def updateHistory(gain: Double): Game
+  def updateHistory(customerId: String, gain: Double): Game
   def lock(id: String): Result[Game, Game]
   def unlock(id: String): Result[Game, Game]
   def play[B <: Bet](bet: B): Result[BetResult, String]
 
   def bankroll: Double = this.gameHistory.overallGains
+  def getLastRoundResult: List[Gain] =
+    this.gameHistory.gains.takeRight(this.gameState.currentPlayers)
 
 case class RouletteGame(
     override val id: String,
@@ -57,8 +59,8 @@ case class RouletteGame(
     case _ =>
       Failure("Applied a bet different from the RouletteBet to the Roulette!")
 
-  override def updateHistory(gain: Double): Game =
-    this.copy(gameHistory = this.gameHistory.update(gain))
+  override def updateHistory(customerId: String, gain: Double): Game =
+    this.copy(gameHistory = this.gameHistory.update(customerId, gain))
 
   override val width: Double = 15
   override val height: Double = 15
@@ -91,8 +93,8 @@ case class SlotMachineGame(
     case _ =>
       Failure("Applied a bet different from the SlotBet to the Slot machine!")
 
-  override def updateHistory(gain: Double): Game =
-    this.copy(gameHistory = this.gameHistory.update(gain))
+  override def updateHistory(customerId: String, gain: Double): Game =
+    this.copy(gameHistory = this.gameHistory.update(customerId, gain))
 
   override val width: Double = 15
   override val height: Double = 15
@@ -125,8 +127,8 @@ case class BlackJackGame(
     case _ =>
       Failure("Applied a bet different from the BlackJackBet to the blackjack!")
 
-  override def updateHistory(gain: Double): Game =
-    this.copy(gameHistory = this.gameHistory.update(gain))
+  override def updateHistory(customerId: String, gain: Double): Game =
+    this.copy(gameHistory = this.gameHistory.update(customerId, gain))
 
   override val width: Double = 15
   override val height: Double = 15

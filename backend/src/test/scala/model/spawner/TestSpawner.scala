@@ -18,7 +18,7 @@ class TestSpawner extends AnyFunSuite:
   val stepStrategy: StepStrategy = StepStrategy(2, 5, 9, 17)
 
   test("Spawner should spawn correct number of customers based on strategy"):
-    val spawner = Spawner("test-spawner", position, constantStrategy)
+    val spawner = Spawner("test-spawner", position, constantStrategy, 0.0, 1.0)
     val initialState =
       SimulationState(Seq.empty, List.empty, Some(spawner), List.empty)
 
@@ -26,7 +26,7 @@ class TestSpawner extends AnyFunSuite:
     assert(newState.customers.size == 3)
 
   test("Spawner should increment currentTime after spawning"):
-    val spawner = Spawner("test-spawner", position, constantStrategy, 5.0)
+    val spawner = Spawner("test-spawner", position, constantStrategy, 5.0, 1.0)
     val initialState =
       SimulationState(Seq.empty, List.empty, Some(spawner), List.empty)
 
@@ -36,7 +36,7 @@ class TestSpawner extends AnyFunSuite:
       case None          => fail("Spawner not found in state")
 
   test("Spawner should position customers around spawner location"):
-    val spawner = Spawner("test-spawner", position, constantStrategy)
+    val spawner = Spawner("test-spawner", position, constantStrategy, 0.0, 1.0)
     val initialState =
       SimulationState(Seq.empty, List.empty, Some(spawner), List.empty)
 
@@ -47,7 +47,7 @@ class TestSpawner extends AnyFunSuite:
       assert(math.abs(customer.position.y - position.y) <= 5.0)
 
   test("Spawner should create customers with valid properties"):
-    val spawner = Spawner("test-spawner", position, constantStrategy)
+    val spawner = Spawner("test-spawner", position, constantStrategy, 0.0, 1.0)
     val initialState =
       SimulationState(Seq.empty, List.empty, Some(spawner), List.empty)
 
@@ -59,7 +59,8 @@ class TestSpawner extends AnyFunSuite:
       assert(customer.bankroll >= 30 && customer.bankroll < 5000)
 
   test("Spawner should work with GaussianStrategy"):
-    val spawner = Spawner("gaussian-spawner", position, gaussianStrategy, 10.0)
+    val spawner =
+      Spawner("gaussian-spawner", position, gaussianStrategy, 10.0, 1.0)
     val initialState =
       SimulationState(Seq.empty, List.empty, Some(spawner), List.empty)
 
@@ -68,7 +69,7 @@ class TestSpawner extends AnyFunSuite:
     assert(newState.customers.size == 100)
 
   test("Spawner should work with StepStrategy during active period"):
-    val spawner = Spawner("step-spawner", position, stepStrategy, 10.0)
+    val spawner = Spawner("step-spawner", position, stepStrategy, 10.0, 1.0)
     val initialState =
       SimulationState(Seq.empty, List.empty, Some(spawner), List.empty)
 
@@ -77,7 +78,7 @@ class TestSpawner extends AnyFunSuite:
     assert(newState.customers.size == 5)
 
   test("Spawner should work with StepStrategy outside active period"):
-    val spawner = Spawner("step-spawner", position, stepStrategy, 5.0)
+    val spawner = Spawner("step-spawner", position, stepStrategy, 5.0, 1.0)
     val initialState =
       SimulationState(Seq.empty, List.empty, Some(spawner), List.empty)
 
@@ -88,7 +89,7 @@ class TestSpawner extends AnyFunSuite:
   test("Spawner should maintain existing customers"):
     val existingCustomer =
       Customer("existing-1", Vector2D(50, 50), Vector2D(1, 1), 100)
-    val spawner = Spawner("test-spawner", position, constantStrategy)
+    val spawner = Spawner("test-spawner", position, constantStrategy, 0.0, 1.0)
     val initialState =
       SimulationState(
         Seq(existingCustomer),
@@ -102,7 +103,7 @@ class TestSpawner extends AnyFunSuite:
     assert(newState.customers.exists(_.id == "existing-1"))
 
   test("Spawner should update itself in the simulation state"):
-    val spawner = Spawner("test-spawner", position, constantStrategy, 7.0)
+    val spawner = Spawner("test-spawner", position, constantStrategy, 7.0, 1.0)
     val initialState =
       SimulationState(Seq.empty, List.empty, Some(spawner), List.empty)
 
@@ -115,7 +116,7 @@ class TestSpawner extends AnyFunSuite:
 
   test("Spawner with zero-spawn strategy should create no customers"):
     val zeroStrategy = ConstantStrategy(0)
-    val spawner = Spawner("zero-spawner", position, zeroStrategy)
+    val spawner = Spawner("zero-spawner", position, zeroStrategy, 0.0, 1.0)
     val initialState =
       SimulationState(Seq.empty, List.empty, Some(spawner), List.empty)
 

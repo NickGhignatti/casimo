@@ -3,7 +3,6 @@ package model.entities.games
 import model.entities.customers.CustState
 import model.entities.customers.CustState.Playing
 import model.entities.customers.Customer
-import model.entities.customers.RiskProfile.Regular
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
 

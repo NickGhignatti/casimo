@@ -2,6 +2,7 @@ package model.entities.customers
 
 trait Bankroll[T <: Bankroll[T]]:
   val bankroll: Double
+  val startingBankroll: Double
   require(
     bankroll >= 0,
     s"Bankroll amount must be positive, instead is $bankroll"
