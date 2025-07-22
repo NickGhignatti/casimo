@@ -3,8 +3,6 @@ package view
 import com.raquo.laminar.api.L._
 import model.SimulationState
 import model.entities.spawner.SpawningStrategyBuilder
-import org.nspl._
-import org.nspl.canvasrenderer._
 import org.scalajs.dom
 import org.scalajs.dom.html
 import update.Event
