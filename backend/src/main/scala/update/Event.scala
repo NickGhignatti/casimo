@@ -13,3 +13,4 @@ enum Event:
   case AddCustomers(strategy: SpawningStrategy)
   case UpdateWalls(walls: List[Wall])
   case updateGamesList(games: List[Game])
+  case ResetSimulation
