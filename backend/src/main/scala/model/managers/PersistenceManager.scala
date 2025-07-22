@@ -26,17 +26,17 @@ case class PersistenceManager[
           val modifiers = riskProfileModifiers(c.riskProfile)
           val bankrollRatio = c.bankroll / c.startingBankroll
 
-          if c.boredom > bThreshold - bThreshold * modifiers.boredomModifier ||
-            c.frustration > fThreshold - fThreshold * modifiers.frustrationModifier ||
+          if c.boredom > bThreshold * modifiers.boredomModifier ||
+            c.frustration > fThreshold * modifiers.frustrationModifier ||
             c.betStrategy.betAmount > c.bankroll ||
             bankrollRatio > modifiers.takeProfit ||
             bankrollRatio < modifiers.stopLoss
           then
             val newC = c.stopPlaying.updateBoredom(
-              -15.0 + 15.0 * modifiers.boredomModifier
+              -15.0 * modifiers.boredomModifier
             )
-            newC.changeState(Idle)
-          else c.updateBoredom(3.0 + 3.0 * modifiers.boredomModifier)
+            newC.changeState(Idle).stopPlaying
+          else c.updateBoredom(3.0 * modifiers.boredomModifier)
 
         case Idle => c
     }
@@ -46,26 +46,26 @@ case class PersistenceManager[
       VIP -> RiskProfileModifiers(
         takeProfit = 3.0,
         stopLoss = 0.3,
-        boredomModifier = 0.30,
-        frustrationModifier = -0.20
+        boredomModifier = 1.30,
+        frustrationModifier = 0.80
       ),
       Regular -> RiskProfileModifiers(
         takeProfit = 2.5,
         stopLoss = 0.3,
-        boredomModifier = 0.0,
-        frustrationModifier = 0.0
+        boredomModifier = 1.0,
+        frustrationModifier = 1.0
       ),
       Casual -> RiskProfileModifiers(
         takeProfit = 1.5,
         stopLoss = 0.5,
-        boredomModifier = 0.40,
-        frustrationModifier = 0.30
+        boredomModifier = 1.40,
+        frustrationModifier = 1.30
       ),
       Impulsive -> RiskProfileModifiers(
         takeProfit = 5.0,
         stopLoss = 0.0,
-        boredomModifier = -0.30,
-        frustrationModifier = 0.5
+        boredomModifier = 0.70,
+        frustrationModifier = 1.5
       )
     )
   private case class RiskProfileModifiers(

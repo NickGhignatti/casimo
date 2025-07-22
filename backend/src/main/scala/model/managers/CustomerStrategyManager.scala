@@ -12,20 +12,30 @@ import model.entities.customers.Martingale
 import model.entities.customers.OscarGrind
 import model.entities.customers.StatusProfile
 import model.entities.games.Blackjack
+import model.entities.games.Game
 import model.entities.games.Roulette
 import model.entities.games.SlotMachine
 
 class CustomerStrategyManager[
     A <: HasBetStrategy[A] & StatusProfile & CustomerState[A] & Bankroll[A] &
       Entity & BoredomFrustration[A]
-] extends BaseManager[Seq[A]]:
+](games: List[Game])
+    extends BaseManager[Seq[A]]:
 
   def update(customers: Seq[A]): Seq[A] =
     val (playing, idle) = customers.partition(_.customerState match
       case Playing(_) => true
       case _          => false
     )
+    val updateStepStrategy = playing.map(c =>
+      val updatedGame = games.find(_.id == c.getGameOrElse.get.id).get
 
+      val gain = -updatedGame.getLastRoundResult
+        .filter(g => g.getCustomerWhichPlayed == c.id)
+        .head
+        .getMoneyGain
+      c.updateAfter(gain)
+    )
     val facts = createFacts(playing)
     val prologTheory = facts + rules
     val engine = new Prolog()
@@ -60,49 +70,62 @@ current_game(Cust, slot).
 trigger(vip_blackjack_loss4, C) :-
     profile(C, vip),
     current_game(C, blackjack),
-    state(C, loss_streak, N), N >= 4.
+    state(C, loss_streak, N),
+     nonvar(N),N >= 4,!.
 
 trigger(vip_roulette_loss4, C) :-
     profile(C, vip),
     current_game(C, roulette),
-    state(C, loss_streak, N), N >= 4.
+    state(C, loss_streak, N),
+     nonvar(N), N >= 4, !.
 
 trigger(vip_slot_frustrated, C) :-
     profile(C, vip),
     current_game(C, slot),
-    state(C, frustration, F), F > 60.
+    state(C, frustration, F),
+    nonvar(F), F > 60, !.
 
 
   % --- Regular Trigger
 trigger(regular_blackjack_loss3, C) :-
     profile(C, regular),
     current_game(C, blackjack),
-    state(C, loss_streak, N), N >= 3.
+    state(C, loss_streak, N),
+    nonvar(N), N >= 3, !.
 
 
 trigger(regular_roulette_bored, C) :-
     profile(C, regular),
     current_game(C, roulette),
-    state(C, boredom, B), B > 60.
+    state(C, boredom, B),
+    nonvar(B), B > 60, !.
+
+
+trigger(regular_slot_frustrated, C) :-
+	profile(C, regular),
+    current_game(C, slot),
+    state(C, frustration, F),
+    nonvar(F), F > 70, !.
 
 
   % --- Impulsive Trigger
 trigger(impulsive_blackjack_loss3, C) :-
     profile(C, impulsive),
     current_game(C, blackjack),
-    state(C, loss_streak, N), N >= 3.
+    state(C, loss_streak, N),
+    nonvar(N), N >= 3, !.
 
 trigger(impulsive_roulette_loss4, C) :-
     profile(C, impulsive),
     current_game(C, roulette),
     state(C, loss_streak, N),
-    N >= 4.
+    nonvar(N), N >= 4, !.
 
 trigger(impulsive_slot_frustrated, C) :-
     profile(C, impulsive),
     current_game(C, slot),
     state(C, frustration, F),
-    F > 50.
+    nonvar(F), F > 50, !.
 
 % --- Strategy Link (name, params)
 
@@ -112,9 +135,9 @@ strategy(C, oscar, [Bet]) :- trigger(vip_roulette_loss4, C), base_bet(C, 3, Bet)
 strategy(C, flat,  [Bet]) :- trigger(vip_slot_frustrated, C), base_bet(C, 1, Bet).
 
 % Regular
-strategy(C, flat,  [Bet]) :- trigger(regular_blackjack_loss3, C), base_bet(C, 2, Bet).
-strategy(C, martingale, [Bet]) :- trigger(regular_roulette_bored, C), base_bet(C, 2, Bet).
-strategy(C, flat,  [Bet]) :- profile(C, regular), current_game(C, slot), base_bet(C, 2, Bet).
+strategy(C, flat,  [Bet]) :- trigger(regular_blackjack_loss3, C), base_bet(C, 2, Bet),!.
+strategy(C, martingale, [Bet]) :- trigger(regular_roulette_bored, C), base_bet(C, 2, Bet),!.
+strategy(C, flat,  [Bet]) :- trigger(regular_slot_frustrated,C), base_bet(C, 1, Bet).
 
 % Casual
 
@@ -124,13 +147,11 @@ strategy(C, oscar, [Bet]) :- trigger(impulsive_blackjack_loss3, C), base_bet(C, 
 strategy(C, flat,  [Bet]) :- trigger(impulsive_roulette_loss4, C), base_bet(C, 3, Bet).
 strategy(C, flat,  [Bet]) :- trigger(impulsive_slot_frustrated, C), base_bet(C, 2, Bet).
 
-% --- Fallback
-strategy(C, flat, [Bet])  :- base_bet(C, 2, Bet).
 
 % --- Base bet percentage: Base is (Current * Percent) // 100
 base_bet(C, Percent, Base) :-
     state(C, bankroll_current, Cur),
-    Base is (Cur * Percent) // 100.
+    Base is (Cur * Percent) // 100, !.
 
     """
 
