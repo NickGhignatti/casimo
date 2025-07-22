@@ -3,6 +3,8 @@ package view
 import com.raquo.laminar.api.L._
 import model.SimulationState
 import model.data.DataManager
+import org.nspl.Color
+import org.nspl.line
 import org.nspl.par
 import org.nspl.xyplot
 import org.scalajs.dom
@@ -18,7 +20,6 @@ class Modal(
   private val gamesBankroll: Var[List[Double]] = Var(List.empty)
   private val customersBankroll: Var[List[Double]] = Var(List.empty)
 
-  // Import all necessary given instances and implicits
   import org.nspl.canvasrenderer.given
   import org.nspl.given
 
@@ -46,38 +47,41 @@ class Modal(
       try
         import org.nspl.data.*
 
-        // Create data using explicit Row conversion
-        val gamesData = gamesSeries.map { case (x, y) => (x, y) }.toSeq
-        val customersData = customersSeries.map { case (x, y) => (x, y) }.toSeq
+        val gamesData = gamesSeries.map { case (x, y) => (x, y) }
+        val customersData = customersSeries.map { case (x, y) => (x, y) }
 
-        val plot = xyplot(customersData)(
-          par(
-            ylab = "Bankroll Value",
-            xlab = "Time Step",
-            main = "Games Bankroll Over Time"
+        val plot =
+          xyplot(customersData -> line(), gamesData -> line(color = Color.RED))(
+            par(
+              ylab = "Bankroll Value",
+              xlab = "Time Step",
+              main = "Games Bankroll Over Time"
+            )
           )
-        )
 
         val (canvas: html.Canvas, updatePlot) =
-          org.nspl.canvasrenderer.render(plot, width = 800, height = 500)
+          org.nspl.canvasrenderer.render(
+            plot,
+            width = 800,
+            height = 900
+          )
 
         canvas
       catch
         case e: Exception =>
           println(s"Error creating NSPL plot: ${e.getMessage}")
-          // Fallback: create a simple canvas with basic drawing
           createFallbackCanvas()
     } else
       createFallbackCanvas()
 
   private def createFallbackCanvas(): html.Canvas =
+    println("here")
     val canvas = dom.document.createElement("canvas").asInstanceOf[html.Canvas]
-    canvas.width = 600
-    canvas.height = 400
+    canvas.width = 800
+    canvas.height = 500
 
     val ctx = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
 
-    // Draw a simple fallback plot
     ctx.fillStyle = "#f0f0f0"
     ctx.fillRect(0, 0, 600, 400)
 
@@ -90,14 +94,12 @@ class Modal(
     ctx.fillText("Bankroll Over Time", 250, 30)
     ctx.fillText("Time Step", 300, 380)
 
-    // Rotate and draw y-label
     ctx.save()
     ctx.translate(20, 200)
     ctx.rotate(-Math.PI / 2)
     ctx.fillText("Bankroll Value", 0, 0)
     ctx.restore()
 
-    // Draw simple line if we have data
     val gamesSeries = gamesBankroll.now()
     if (gamesSeries.nonEmpty) {
       ctx.strokeStyle = "#ff0000"
@@ -131,7 +133,6 @@ class Modal(
         )
         updateBankrolls()
 
-        // Update the plot canvas
         try
           val newCanvas = createPlot()
           plotCanvas.set(Some(newCanvas))
@@ -156,7 +157,6 @@ class Modal(
           cls := "plot-container",
           child <-- plotCanvas.signal.map {
             case Some(canvas) =>
-              // Create a div wrapper for the canvas
               val wrapper = div()
               wrapper.ref.appendChild(canvas)
               wrapper
