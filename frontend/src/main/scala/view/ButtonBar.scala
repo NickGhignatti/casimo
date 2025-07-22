@@ -13,7 +13,8 @@ class ButtonBar(
     update: Var[Update],
     configForm: ConfigForm,
     modal: Modal,
-    eventBus: EventBus[Event]
+    eventBus: EventBus[Event],
+    canvasManager: CanvasManager
 ):
   private val timerId: Var[Option[Int]] = Var(None)
 
@@ -61,6 +62,7 @@ class ButtonBar(
           )
         )
       case "Reset" =>
+        canvasManager.reset()
         eventBus.writer.onNext(Event.ResetSimulation)
         if (timerId.now().isDefined) {
           dom.window.clearInterval(timerId.now().get)

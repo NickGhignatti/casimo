@@ -33,9 +33,16 @@ def main(): Unit =
       val sidebar = Sidebar()
       val modal = new Modal(modelVar, updateVar, dataManagerVar)
       val configForm = ConfigForm(updateVar, modelVar)
-      val buttonBar =
-        ButtonBar(modelVar, updateVar, configForm, modal, eventBus)
       val canvasManager = CanvasManager(modelVar, updateVar, eventBus)
+      val buttonBar =
+        ButtonBar(
+          modelVar,
+          updateVar,
+          configForm,
+          modal,
+          eventBus,
+          canvasManager
+        )
 
       canvasManager.init()
       sidebar.init(canvasManager)

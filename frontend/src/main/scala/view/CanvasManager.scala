@@ -1,7 +1,5 @@
 package view
 
-import scala.collection.mutable.ListBuffer
-
 import com.raquo.laminar.api.L.EventBus
 import com.raquo.laminar.api.L.Var
 import com.raquo.laminar.api.L.unsafeWindowOwner
@@ -25,14 +23,12 @@ class CanvasManager(
     dom.document.getElementById("main-canvas").asInstanceOf[html.Canvas]
   private val ctx =
     canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
-  private val wallComponents: ListBuffer[WallComponent] =
-    ListBuffer.empty[WallComponent]
-  private val slotComponents: ListBuffer[SlotComponent] =
-    ListBuffer.empty[SlotComponent]
-  private val rouletteComponents: ListBuffer[RouletteComponent] =
-    ListBuffer.empty[RouletteComponent]
-  private val blackjackComponents: ListBuffer[BlackJackComponent] =
-    ListBuffer.empty[BlackJackComponent]
+  private val wallComponents: Var[List[WallComponent]] = Var(List.empty)
+  private val slotComponents: Var[List[SlotComponent]] = Var(List.empty)
+  private val rouletteComponents: Var[List[RouletteComponent]] = Var(List.empty)
+  private val blackjackComponents: Var[List[BlackJackComponent]] = Var(
+    List.empty
+  )
 
   private val resizeTarget: Var[Option[WallComponent]] = Var(None)
   private val resizeStartPosition: Var[Vector2D] = Var(Vector2D.zero)
@@ -62,17 +58,23 @@ class CanvasManager(
     dom.window.addEventListener("load", { _ => resizeCanvas() })
     clearCanvas()
 
+  def reset(): Unit =
+    wallComponents.set(List.empty)
+    slotComponents.set(List.empty)
+    rouletteComponents.set(List.empty)
+    blackjackComponents.set(List.empty)
+
   def entityIsAlreadyPresent(point: Vector2D): Boolean =
-    !wallComponents.exists(_.contains(point)) &&
-      !slotComponents.exists(_.contains(point)) &&
-      !rouletteComponents.exists(_.contains(point)) &&
-      !blackjackComponents.exists(_.contains(point))
+    !wallComponents.now().exists(_.contains(point)) &&
+      !slotComponents.now().exists(_.contains(point)) &&
+      !rouletteComponents.now().exists(_.contains(point)) &&
+      !blackjackComponents.now().exists(_.contains(point))
 
   private def redrawAllComponents(): Unit =
-    wallComponents.foreach(_.render(ctx))
-    slotComponents.foreach(_.render(ctx))
-    rouletteComponents.foreach(_.render(ctx))
-    blackjackComponents.foreach(_.render(ctx))
+    wallComponents.now().foreach(_.render(ctx))
+    slotComponents.now().foreach(_.render(ctx))
+    rouletteComponents.now().foreach(_.render(ctx))
+    blackjackComponents.now().foreach(_.render(ctx))
 
   private def resizeCanvas(): Unit =
     val container = canvas.parentElement
@@ -85,32 +87,34 @@ class CanvasManager(
 
   // components part
   def addWallComponent(wall: WallComponent): Unit =
-    wallComponents += wall
-    val walls = (for wall <- wallComponents yield wall.model.now()).toList
+    wallComponents.set(wallComponents.now() :+ wall)
+    val walls = (for wall <- wallComponents.now() yield wall.model.now()).toList
     eventBus.writer.onNext(UpdateWalls(walls))
     drawComponent(wall)
 
   def addSlotComponent(slot: SlotComponent): Unit =
-    slotComponents += slot
+    slotComponents.set(slotComponents.now() :+ slot)
     signalGameAdd()
     drawComponent(slot)
 
   def addRouletteComponent(roulette: RouletteComponent): Unit =
-    rouletteComponents += roulette
+    rouletteComponents.set(rouletteComponents.now() :+ roulette)
     signalGameAdd()
     drawComponent(roulette)
 
   def addBlackJackComponent(blackjack: BlackJackComponent): Unit =
-    blackjackComponents += blackjack
+    blackjackComponents.set(blackjackComponents.now() :+ blackjack)
     signalGameAdd()
     drawComponent(blackjack)
 
   private def signalGameAdd(): Unit =
-    val slots = (for slot <- slotComponents yield slot.model.now()).toList
+    val slots = (for slot <- slotComponents.now() yield slot.model.now()).toList
     val roulettes =
-      (for roulette <- rouletteComponents yield roulette.model.now()).toList
+      (for roulette <- rouletteComponents.now()
+      yield roulette.model.now()).toList
     val blackjacks =
-      (for blackjack <- blackjackComponents yield blackjack.model.now()).toList
+      (for blackjack <- blackjackComponents.now()
+      yield blackjack.model.now()).toList
     eventBus.writer.onNext(updateGamesList(slots ::: roulettes ::: blackjacks))
 
   private def drawComponent[E <: Entity](component: EntityComponent[E]): Unit =
@@ -130,6 +134,7 @@ class CanvasManager(
   private def handleMouseDown(e: MouseEvent): Unit =
     val mousePos = getMousePosition(e)
     wallComponents
+      .now()
       .find(_.contains(mousePos))
       .foreach(w => startResizing(w, mousePos))
 
@@ -157,10 +162,12 @@ class CanvasManager(
 
   private def handleMouseUp(e: MouseEvent): Unit =
     if (resizeTarget.now().isDefined) {
-      val wallIndex = wallComponents.indexOf(resizeTarget.now().get)
-      wallComponents.remove(wallIndex)
-      wallComponents.addOne(resizeTarget.now().get)
-      val walls = (for wall <- wallComponents yield wall.model.now()).toList
+      wallComponents.set(
+        wallComponents.now().filter(w => w != resizeTarget.now().get)
+      )
+      wallComponents.set(wallComponents.now() :+ resizeTarget.now().get)
+      val walls =
+        (for wall <- wallComponents.now() yield wall.model.now()).toList
       eventBus.writer.onNext(UpdateWalls(walls))
     }
     resizeTarget.update(_ => None)
