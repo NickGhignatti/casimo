@@ -1,7 +1,7 @@
 package model.data
 
 import model.SimulationState
-import model.entities.customers.{CustomerBuilder, DefaultMovementManager}
+import model.entities.customers.{Customer, DefaultMovementManager}
 import org.scalatest.funsuite.AnyFunSuite
 import update.Event.SimulationTick
 import update.Update
@@ -25,8 +25,8 @@ class TestDataManager extends AnyFunSuite:
   test("customers bankroll should remain constant if there are no games"):
     val simulationState = SimulationState(
       List(
-        CustomerBuilder().withBankroll(30.0).build(),
-        CustomerBuilder().withBankroll(50.0).build()
+        Customer().withBankroll(30.0),
+        Customer().withBankroll(50.0)
       ),
       List.empty,
       None,
