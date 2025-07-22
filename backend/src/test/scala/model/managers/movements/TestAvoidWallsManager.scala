@@ -30,5 +30,5 @@ class TestAvoidWallsManager extends AnyFunSuite:
     val wall = Wall(Vector2D(0, 10), 1, 5)
     val walls = Seq(wall)
     val context = Context(movable, walls)
-    val updatedContext = context | AvoidWallsManager(100)
+    val updatedContext = context | AvoidWallsManager()
     assert(updatedContext.movable.position.x > wall.position.x + 1)

@@ -17,7 +17,7 @@ case class ConfigForm(update: Var[Update], model: Var[SimulationState]):
       updater: (DefaultMovementManager, Double) => DefaultMovementManager
   )
   private val parameters = List(
-    Parameter("Max Speed", Var(1000.0), (m, v) => m.copy(maxSpeed = v)),
+    Parameter("Max Speed", Var(20.0), (m, v) => m.copy(maxSpeed = v)),
     Parameter(
       "Perception Radius",
       Var(100.0),
@@ -48,16 +48,6 @@ case class ConfigForm(update: Var[Update], model: Var[SimulationState]):
       "Sitting Radius",
       Var(100.0),
       (m, v) => m.copy(sittingRadius = v)
-    ),
-    Parameter(
-      "Avoid Walls Weight",
-      Var(5.0),
-      (m, v) => m.copy(avoidWallsWeight = v)
-    ),
-    Parameter(
-      "Avoid Walls Perception Size",
-      Var(100.0),
-      (m, v) => m.copy(avoidWallsPerceptionSize = v)
     )
   )
   // Spawning strategy selection
