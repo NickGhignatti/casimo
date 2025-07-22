@@ -30,7 +30,7 @@ case class Customer(
     frustration: Double = 0.0,
     riskProfile: RiskProfile = Regular,
     customerState: CustState = Idle,
-    betStrategy: BettingStrategy[Customer] = FlatBetting(5.0, 1),
+    betStrategy: BettingStrategy[Customer] = FlatBetting(10.0, defaultRedBet),
     isPlaying: Boolean = false,
     favouriteGames: Seq[GameType] = Seq(Roulette, Blackjack, SlotMachine)
 ) extends Entity,

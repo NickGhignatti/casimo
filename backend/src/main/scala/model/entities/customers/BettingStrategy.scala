@@ -38,6 +38,9 @@ trait BettingStrategy[A <: Bankroll[A] & CustomerState[A]]:
       "Bet should be placed only if the customer is playing a game"
     )
 
+def defaultRedBet =
+  List(16, 1, 3, 5, 7, 9, 12, 14, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36)
+
 case class FlatBetting[A <: Bankroll[A] & CustomerState[A]](
     betAmount: Double,
     option: List[Int]

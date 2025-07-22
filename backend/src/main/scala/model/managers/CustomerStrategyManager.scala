@@ -1,10 +1,10 @@
 package model.managers
 
-import alice.tuprolog._
+import alice.tuprolog.*
 import model.entities.Entity
 import model.entities.customers.Bankroll
 import model.entities.customers.BoredomFrustration
-import model.entities.customers.CustState.Playing
+import model.entities.customers.CustState.{Idle, Playing}
 import model.entities.customers.CustomerState
 import model.entities.customers.FlatBetting
 import model.entities.customers.HasBetStrategy
@@ -36,26 +36,27 @@ class CustomerStrategyManager[
 
   private val rules: String =
     """
-    % --- Profili cliente
+    % --- Customer Profile
 profile(Cust, vip).
 profile(Cust, regular).
 profile(Cust, impulsive).
 profile(Cust, casual).
 
-% --- Stato dinamico (valori simulati a runtime da Scala)
+% --- State
 state(Cust, frustration, Frust).      % 0–100
 state(Cust, boredom, Bored).          % 0–100
 state(Cust, loss_streak, N).          %  ≥ 0
 state(Cust, bankroll_current, Cur).
 state(Cust, bankroll_start, Start).
 
-% --- Gioco attualmente in corso
+% --- Current Game State
 current_game(Cust, blackjack).
 current_game(Cust, roulette).
 current_game(Cust, slot).
 
-% --- Trigger logici
+% --- Logic Trigger
 
+  % --- VIP Trigger
 trigger(vip_blackjack_loss4, C) :-
     profile(C, vip),
     current_game(C, blackjack),
@@ -69,22 +70,23 @@ trigger(vip_roulette_loss4, C) :-
 trigger(vip_slot_frustrated, C) :-
     profile(C, vip),
     current_game(C, slot),
-    state(C, frustration, F), F > 50.
+    state(C, frustration, F), F > 60.
 
-trigger(regular_blackjack_bored, C) :-
+
+  % --- Regular Trigger
+trigger(regular_blackjack_loss3, C) :-
     profile(C, regular),
     current_game(C, blackjack),
-    state(C, boredom, B), B > 50.
-
-trigger(regular_roulette_loss3, C) :-
-    profile(C, regular),
-    current_game(C, roulette),
     state(C, loss_streak, N), N >= 3.
 
-trigger(riskaverse_frustrated, C) :-
-    ( profile(C, risk_averse) ; profile(C, casual) ),
-    state(C, frustration, F), F > 50.
 
+trigger(regular_roulette_bored, C) :-
+    profile(C, regular),
+    current_game(C, roulette),
+    state(C, boredom, B), B > 60.
+
+
+  % --- Impulsive Trigger
 trigger(impulsive_blackjack_loss3, C) :-
     profile(C, impulsive),
     current_game(C, blackjack),
@@ -93,14 +95,16 @@ trigger(impulsive_blackjack_loss3, C) :-
 trigger(impulsive_roulette_loss4, C) :-
     profile(C, impulsive),
     current_game(C, roulette),
-    state(C, loss_streak, N), N >= 4.
+    state(C, loss_streak, N),
+    N >= 4.
 
 trigger(impulsive_slot_frustrated, C) :-
     profile(C, impulsive),
     current_game(C, slot),
-    state(C, frustration, F), F > 50.
+    state(C, frustration, F),
+    F > 50.
 
-% --- Strategia associata (name, params)
+% --- Strategy Link (name, params)
 
 % VIP
 strategy(C, oscar, [Bet]) :- trigger(vip_blackjack_loss4, C), base_bet(C, 3, Bet).
@@ -108,22 +112,22 @@ strategy(C, oscar, [Bet]) :- trigger(vip_roulette_loss4, C), base_bet(C, 3, Bet)
 strategy(C, flat,  [Bet]) :- trigger(vip_slot_frustrated, C), base_bet(C, 1, Bet).
 
 % Regular
-strategy(C, flat,  [Bet]) :- trigger(regular_blackjack_bored, C), base_bet(C, 2, Bet).
-strategy(C, oscar, [Bet]) :- trigger(regular_roulette_loss3, C), base_bet(C, 2, Bet).
+strategy(C, flat,  [Bet]) :- trigger(regular_blackjack_loss3, C), base_bet(C, 2, Bet).
+strategy(C, martingale, [Bet]) :- trigger(regular_roulette_bored, C), base_bet(C, 2, Bet).
 strategy(C, flat,  [Bet]) :- profile(C, regular), current_game(C, slot), base_bet(C, 2, Bet).
 
-% Casual / Risk-Averse
-strategy(C, exit, [])     :- trigger(riskaverse_frustrated, C).
+% Casual
+
 
 % Impulsive
-strategy(C, oscar, [Bet]) :- trigger(impulsive_blackjack_loss3, C), base_bet(C, 2, Bet).
-strategy(C, flat,  [Bet]) :- trigger(impulsive_roulette_loss4, C), base_bet(C, 2, Bet).
+strategy(C, oscar, [Bet]) :- trigger(impulsive_blackjack_loss3, C), base_bet(C, 3, Bet).
+strategy(C, flat,  [Bet]) :- trigger(impulsive_roulette_loss4, C), base_bet(C, 3, Bet).
 strategy(C, flat,  [Bet]) :- trigger(impulsive_slot_frustrated, C), base_bet(C, 2, Bet).
 
 % --- Fallback
 strategy(C, flat, [Bet])  :- base_bet(C, 2, Bet).
 
-% --- Base bet calculator: Base is (Current * Percent) // 100
+% --- Base bet percentage: Base is (Current * Percent) // 100
 base_bet(C, Percent, Base) :-
     state(C, bankroll_current, Cur),
     Base is (Cur * Percent) // 100.
@@ -132,7 +136,7 @@ base_bet(C, Percent, Base) :-
 
   private def createFacts(cs: Seq[A]): String =
     cs.map { c =>
-      val id = c.id
+      val id = s"'${c.id}'"
       val fr = f"${c.frustration.toInt}"
       val bo = f"${c.boredom.toInt}"
       val bs = f"${c.bankroll.toInt}"
@@ -148,9 +152,8 @@ base_bet(C, Percent, Base) :-
         case Roulette    => "roulette"
         case SlotMachine => "slot"
       val gm = gmRaw.replaceAll("[^a-z0-9_]", "_")
-      // Pulisce il profilo
-      val prRaw = c.riskProfile.toString.toLowerCase
-      val pr = prRaw.replaceAll("[^a-z0-9_]", "_")
+      // Clean profile from illegal prolog character
+      val pr = c.riskProfile.toString.toLowerCase.replaceAll("[^a-z0-9_]", "_")
       s"""
          |profile($id, ${c.riskProfile.toString.toLowerCase}).
          |state($id, frustration, $fr).
@@ -164,7 +167,8 @@ base_bet(C, Percent, Base) :-
 
   private def fetchStrategies(engine: Prolog, playing: Seq[A]): Seq[A] =
     playing.map { c =>
-      val goal = s"strategy(${c.id}, Strat, Params)."
+      val id = s"'${c.id}'"
+      val goal = s"strategy($id, Strat, Params)."
       val solve = engine.solve(goal)
       if solve.isSuccess then
         val name = solve.getTerm("Strat").toString

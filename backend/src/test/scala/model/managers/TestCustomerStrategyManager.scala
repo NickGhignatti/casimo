@@ -3,84 +3,41 @@ package model.managers
 import model.entities.customers.CustState.Playing
 import model.entities.customers.RiskProfile.{Regular, VIP}
 import org.scalatest.funsuite.AnyFunSuite
-import model.entities.customers.{Customer, Martingale, OscarGrind}
+import model.entities.customers.{BettingStrategy, Customer, Martingale, OscarGrind, defaultRedBet}
 import model.entities.games.GameBuilder
+import org.scalatest.matchers.should.Matchers
 import utils.Vector2D
 
-class TestCustomerStrategyManager extends AnyFunSuite:
+class TestCustomerStrategyManager extends AnyFunSuite, Matchers:
 
   private def makeManager = new CustomerStrategyManager[Customer]
-
-  test("VIP Martingale/Roulette triggered after 4 losses on roulette result in Oscar Grind played") {
+  private val mockGame = GameBuilder.roulette(Vector2D.zero)
+  test("VIP Martingale/Roulette triggered after 4 losses on roulette result in Oscar Grind played"):
     val cust = Customer().withId("testA")
       .withFrustration(10.0)
       .withBoredom(10.0)
-      .withCustomerState(Playing(GameBuilder.roulette(Vector2D.zero)))
+      .withCustomerState(Playing(mockGame))
       .withBetStrategy(Martingale[Customer](10.0,40.0,List(5,6,7),4))
       .withBankroll(100.0)
       .withProfile(VIP)
     val out = makeManager.update(Seq(cust))
     assert(out.head.betStrategy.isInstanceOf[OscarGrind[Customer]])
-  }
 
 
+  test("Don't triggering any changeBet should keep the current bet strategy"):
+    val strat: BettingStrategy[Customer] = Martingale[Customer](10.0, defaultRedBet)
+    val cust = Customer()
+      .withCustomerState(Playing(mockGame)).play
+      .withBetStrategy(strat)
 
-case class TestCustomer(
-                         id: Int,
-                         frustration: Double,
-                         boredom: Double,
-                         lossStreak: Int,
-                         bankrollStart: Double,
-                         bankrollCurrent: Double,
-                         currentGame: String,
-                         profile: String,
-                         var strategy: String = ""
-                       )
-//  test("Stop-loss triggers flat low bet") {
-//    val cust = TestCustomer(3, 10, 10, 0, 100.0, 40.0, "slot", "vip")
-//    val out = makeManager.update(Seq(cust))
-//    assert(out.head.strategy.matches("FlatBet\\(4\\.0.*"))
-//  }
-//
-//  test("Take-profit triggers flat low bet") {
-//    val cust = TestCustomer(4, 10, 10, 0, 100.0, 160.0, "blackjack", "vip")
-//    val out = makeManager.update(Seq(cust))
-//    assert(out.head.strategy.matches("FlatBet\\(1\\.6.*"))
-//  }
-//
-//  test("Default flat bet at 2%") {
-//    val cust = TestCustomer(5, 10, 10, 0, 100.0, 80.0, "slot", "casual")
-//    val out = makeManager.update(Seq(cust))
-//    assert(out.head.strategy.matches("FlatBet\\(1\\.6.*"))
-//  }
-//
-//  test("Stop_frust triggers 1% flat on frustration") {
-//    val cust = TestCustomer(6, 60.0, 10, 0, 100.0, 100.0, "blackjack", "regular")
-//    val out = makeManager.update(Seq(cust))
-//    val base = 1.00
-//    assert(out.head.strategy.matches(s"FlatBet\\($base.*"))
-//  }
-//
-//  test("Stop_bored triggers 1% flat on boredom") {
-//    val cust = TestCustomer(7, 10.0, 60.0, 0, 100.0, 100.0, "slot", "casual")
-//    val out = makeManager.update(Seq(cust))
-//    val base = 1.0
-//    assert(out.head.strategy.matches(s"FlatBet\\($base.*"))
-//  }
-//
-//  test("Parsing Params – martingale 3% of bankroll") {
-//    val cust = TestCustomer(8, 10, 10, 2, 100.0, 200.0, "roulette", "regular")
-//    val out = makeManager.update(Seq(cust))
-//    val expected = 200.0 * 0.03
-//    assert(out.head.strategy.contains(f"MartingaleStrategy\\($expected%.2f"))
-//  }
-//
-//  test("VIP impulsive with loss streak uses martingale then oscar after 3") {
-//    val c2 = TestCustomer(9, 10, 10, 2, 100.0, 200.0, "blackjack", "impulsive")
-//    val c3 = c2.copy(lossStreak = 3)
-//    val out2 = makeManager.update(Seq(c2))
-//    val out3 = makeManager.update(Seq(c3))
-//    assert(out2.head.strategy.contains("MartingaleStrategy"))
-//    assert(out3.head.strategy.contains("OscarGrindStrategy"))
-//  }
+    val out = makeManager.update(Seq(cust))
+    out.head.betStrategy shouldEqual strat
 
+  /*test("Regular Roulette triggered after surpassing the boredom threshold"):
+    val cust = Customer()
+      .withCustomerState(Playing(mockGame)).play
+      .withBetStrategy(OscarGrind[Customer](10.0,1000.0,defaultRedBet))
+      .withBoredom(70.0)
+
+    val out = makeManager.update(Seq(cust))
+    out.head.betStrategy shouldEqual Martingale(20.0,defaultRedBet)*/
