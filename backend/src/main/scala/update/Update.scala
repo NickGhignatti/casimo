@@ -60,3 +60,5 @@ case class Update(customerManager: BaseManager[SimulationState]):
 
       case updateGamesList(games: List[Game]) =>
         state.copy(games = games)
+
+      case ResetSimulation => SimulationState.empty()
