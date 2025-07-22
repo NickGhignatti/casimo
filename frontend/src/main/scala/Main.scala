@@ -14,7 +14,7 @@ import view.Sidebar
 
 @main
 def main(): Unit =
-  val model = SimulationState(List.empty, List.empty, None, List.empty)
+  val model = SimulationState.empty()
   val dataManager = DataManager(model)
 
   document.addEventListener(

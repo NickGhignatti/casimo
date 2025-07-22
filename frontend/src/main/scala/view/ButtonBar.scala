@@ -15,6 +15,8 @@ class ButtonBar(
     modal: Modal,
     eventBus: EventBus[Event]
 ):
+  private val timerId: Var[Option[Int]] = Var(None)
+
   private val buttonBar = dom.document.getElementById("button-bar")
   private val buttons = List("Add", "Run", "Reset", "Save", "Load", "Data")
 
@@ -50,12 +52,20 @@ class ButtonBar(
           )
         )
       case "Run" =>
-        dom.window.setInterval(
-          () => eventBus.writer.onNext(Event.SimulationTick),
-          50
+        timerId.set(
+          Some(
+            dom.window.setInterval(
+              () => eventBus.writer.onNext(Event.SimulationTick),
+              50
+            )
+          )
         )
-      case "Reset" => ???
-      case "Save"  => ???
-      case "Load"  => ???
-      case "Data"  => modal.open()
-      case _       => ???
+      case "Reset" =>
+        eventBus.writer.onNext(Event.ResetSimulation)
+        if (timerId.now().isDefined) {
+          dom.window.clearInterval(timerId.now().get)
+        }
+      case "Save" => ???
+      case "Load" => ???
+      case "Data" => modal.open()
+      case _      => ???

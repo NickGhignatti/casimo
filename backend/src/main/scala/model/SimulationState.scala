@@ -11,3 +11,7 @@ case class SimulationState(
     spawner: Option[Spawner],
     walls: List[Wall]
 )
+
+object SimulationState:
+  def empty(): SimulationState =
+    SimulationState(Seq.empty, List.empty, None, List.empty)

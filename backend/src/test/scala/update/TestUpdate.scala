@@ -2,10 +2,10 @@ package update
 
 import model.SimulationState
 import model.data.DataManager
-import model.entities.customers.DefaultMovementManager
+import model.entities.customers.{Customer, DefaultMovementManager}
 import model.entities.games.GameBuilder
 import org.scalatest.funsuite.AnyFunSuite
-import update.Event.updateGamesList
+import update.Event.{ResetSimulation, updateGamesList}
 import utils.Vector2D
 
 class TestUpdate extends AnyFunSuite:
@@ -28,7 +28,9 @@ class TestUpdate extends AnyFunSuite:
       )
     val update = Update(DefaultMovementManager())
     assert(
-      update.updateSimulationDataManager(manager, finalState).state == finalState
+      update
+        .updateSimulationDataManager(manager, finalState)
+        .state == finalState
     )
 
   test("update should update the games when added"):
@@ -44,3 +46,15 @@ class TestUpdate extends AnyFunSuite:
     val secondState =
       update.update(firstState, updateGamesList(List(slot, roulette)))
     assert(secondState.games == List(slot, roulette))
+
+  test("reset should return a new empty simulation"):
+    val simulationState = SimulationState(
+      Seq(Customer().withId("test1")),
+      List(GameBuilder.slot(Vector2D.zero)),
+      None,
+      List.empty
+    )
+    val update = Update(DefaultMovementManager())
+    assert(
+      SimulationState.empty() == update.update(simulationState, ResetSimulation)
+    )
