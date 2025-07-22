@@ -1,20 +1,18 @@
 package model.managers
 
 import model.entities.Player
-import model.entities.customers.{
-  Bankroll,
-  BoredomFrustration,
-  CustomerState,
-  HasBetStrategy,
-  RiskProfile,
-  StatusProfile
-}
+import model.entities.customers.Bankroll
+import model.entities.customers.BoredomFrustration
 import model.entities.customers.CustState.Idle
 import model.entities.customers.CustState.Playing
+import model.entities.customers.CustomerState
+import model.entities.customers.HasBetStrategy
+import model.entities.customers.RiskProfile
 import model.entities.customers.RiskProfile.Casual
 import model.entities.customers.RiskProfile.Impulsive
 import model.entities.customers.RiskProfile.Regular
 import model.entities.customers.RiskProfile.VIP
+import model.entities.customers.StatusProfile
 
 case class PersistenceManager[
     A <: BoredomFrustration[A] & CustomerState[A] & Bankroll[A] &

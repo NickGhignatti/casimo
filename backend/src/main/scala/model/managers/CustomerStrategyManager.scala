@@ -1,10 +1,10 @@
 package model.managers
 
-import alice.tuprolog.*
+import alice.tuprolog._
 import model.entities.Entity
 import model.entities.customers.Bankroll
 import model.entities.customers.BoredomFrustration
-import model.entities.customers.CustState.{Idle, Playing}
+import model.entities.customers.CustState.Playing
 import model.entities.customers.CustomerState
 import model.entities.customers.FlatBetting
 import model.entities.customers.HasBetStrategy
