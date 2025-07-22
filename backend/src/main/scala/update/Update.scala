@@ -1,17 +1,16 @@
 package update
 
 import scala.annotation.tailrec
-
 import model.SimulationState
 import model.data.DataManager
 import model.entities.Wall
 import model.entities.customers.Customer
 import model.entities.games.Game
 import model.entities.games.GameResolver
-import model.entities.spawner.Spawner
+import model.entities.spawner.{Spawner, TimeManager}
 import model.managers.BaseManager
 import model.managers.|
-import update.Event._
+import update.Event.*
 import utils.Vector2D
 
 case class Update(customerManager: BaseManager[SimulationState]):

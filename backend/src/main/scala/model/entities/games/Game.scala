@@ -18,7 +18,7 @@ trait Game(
     val id: String,
     val position: Vector2D,
     val gameState: GameState,
-    val gameHistory: GameHistory
+    val gameHistory: GainHistory
 ) extends CollidableEntity:
 
   def gameType: GameType
@@ -33,7 +33,7 @@ case class RouletteGame(
     override val id: String,
     override val position: Vector2D,
     override val gameState: GameState,
-    override val gameHistory: GameHistory
+    override val gameHistory: GainHistory
 ) extends Game(id, position, gameState, gameHistory):
   override def gameType: GameType = Roulette
 
@@ -67,7 +67,7 @@ case class SlotMachineGame(
     override val id: String,
     override val position: Vector2D,
     override val gameState: GameState,
-    override val gameHistory: GameHistory
+    override val gameHistory: GainHistory
 ) extends Game(id, position, gameState, gameHistory):
   override def gameType: GameType = SlotMachine
 
@@ -101,7 +101,7 @@ case class BlackJackGame(
     override val id: String,
     override val position: Vector2D,
     override val gameState: GameState,
-    override val gameHistory: GameHistory
+    override val gameHistory: GainHistory
 ) extends Game(id, position, gameState, gameHistory):
   override def gameType: GameType = Blackjack
 
@@ -137,7 +137,7 @@ object GameBuilder:
       "Roulette-" + Random.nextInt(),
       position,
       GameState(0, 6, List.empty),
-      GameHistory(List.empty)
+      GainHistory(List.empty)
     )
 
   def slot(position: Vector2D): SlotMachineGame =
@@ -145,7 +145,7 @@ object GameBuilder:
       "Slot-" + Random.nextInt(),
       position,
       GameState(0, 1, List.empty),
-      GameHistory(List.empty)
+      GainHistory(List.empty)
     )
 
   def blackjack(position: Vector2D): BlackJackGame =
@@ -153,5 +153,5 @@ object GameBuilder:
       "BlackJack-" + Random.nextInt(),
       position,
       GameState(0, 7, List.empty),
-      GameHistory(List.empty)
+      GainHistory(List.empty)
     )

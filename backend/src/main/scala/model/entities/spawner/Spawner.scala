@@ -11,12 +11,14 @@ case class Spawner(
     id: String,
     position: Vector2D,
     strategy: SpawningStrategy,
-    currentTime: Double = 0.0
+    currentTime: Double = 0.0,
+    ticksToSpawn: Double = 10.0
 ) extends Entity:
 
   def spawn(
       state: SimulationState
   ): SimulationState =
+    if ((currentTime + 1) % ticksToSpawn == 0) {}
     state.copy(
       customers =
         state.customers ++ Seq.fill(strategy.customersAt(currentTime))(
