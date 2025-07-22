@@ -175,6 +175,93 @@ An important design choice in our application is the use of a MVU architecture, 
 Cornerstone component is the update function, which has been designed in a way to simulate a loop in order to allow a better management of the simulation state.
 ![MVU Update Function Diagram](resources/update_loop.png)
 
+#### Update
+The Update system represents the core simulation engine responsible for managing the state transitions and event processing 
+in a casino simulation environment. Built using functional programming principles and tail recursion optimization, 
+the system processes discrete simulation events in a deterministic sequence, ensuring consistent state management across 
+all simulation components including customers, games, walls, and spawners.
+
+The Update system follows an event-driven architecture combined with the State pattern, where simulation state transitions 
+are triggered by specific events processed through a central update loop. The design emphasizes immutability and functional 
+composition, using tail recursion to ensure stack safety during extended simulation runs.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Initialized
+
+    Initialized --> Spawning : SimulationTick (with spawner)
+    Initialized --> CustomerUpdate : SimulationTick (no spawner)
+
+    Spawning --> CustomerUpdate : Spawn Complete
+
+    CustomerUpdate --> GameUpdate : Customers Positioned
+
+    GameUpdate --> BankrollUpdate : Games Resolved
+
+    BankrollUpdate --> CustomerStateUpdate : Finances Updated
+
+    CustomerStateUpdate --> WaitingForTick : Cycle Complete
+
+    WaitingForTick --> Spawning : Next SimulationTick (with spawner)
+    WaitingForTick --> CustomerUpdate : Next SimulationTick (no spawner)
+
+    WaitingForTick --> ConfigurationChange : Configuration Events
+    ConfigurationChange --> WaitingForTick : Configuration Applied
+
+    WaitingForTick --> [*] : ResetSimulation
+
+    note right of Spawning
+        Spawner creates new customers
+        based on configured strategy
+    end note
+
+    note right of GameUpdate
+        GameResolver processes customer
+        interactions with games
+    end note
+```
+
+```mermaid
+flowchart TD
+    A[Event Received] --> B{Event Type?}
+
+    B -->|SimulationTick| C{Spawner Exists?}
+    C -->|Yes| D[Execute Spawn Logic]
+    C -->|No| E[Skip Spawn]
+    D --> F[Trigger UpdateCustomersPosition]
+    E --> F
+
+    B -->|UpdateCustomersPosition| G[Apply Customer Manager]
+    G --> H[Trigger UpdateGames]
+
+    B -->|UpdateGames| I[Resolve Game Interactions]
+    I --> J[Update Game States]
+    J --> K[Trigger UpdateSimulationBankrolls]
+
+    B -->|UpdateSimulationBankrolls| L[Process Financial Updates]
+    L --> M[Trigger UpdateCustomersState]
+
+    B -->|UpdateCustomersState| N[Finalize Customer State]
+    N --> O[Return Updated State]
+
+    B -->|AddCustomers| P[Create/Update Spawner]
+    P --> Q[Return State with Spawner]
+
+    B -->|UpdateWalls| R[Replace Wall Configuration]
+    R --> S[Return State with New Walls]
+
+    B -->|UpdateGamesList| T[Replace Game Configuration]
+    T --> U[Return State with New Games]
+
+    B -->|ResetSimulation| V[Create Empty State]
+    V --> W[Return Reset State]
+```
+The system processes all state changes through discrete events, providing clear separation of concerns and making the simulation deterministic and testable.
+Each event type triggers specific state transformation logic.
+The `SimulationState` serves as the context, while different events represent state transition triggers. The `Update` class 
+acts as the state manager, coordinating transitions between different simulation phases.
+
+
 #### Customer Composition
 
 We choose to implement the `Customer` behavior using **F‑bounded polymorphic traits**. This choice brings some great feature enabling a **modular** and **extensible** design.
@@ -351,6 +438,116 @@ Also keeping track of the gains and loss of our game is important, to avoid to o
 The behaviour of this entity is simple, a `GameHistory` is designed to deal with just one `Game` and the communication with it is limited,
 it is designed to deal with a `DataManager` which is an entity designed for keeping track of important data in the simulation.
 
+`GameHistory` is an Entity which keep tracks of the game history, is composition is quite simple, is a list of `Gain` which
+represent the Tuple composed by the ID of the customer who played the game and the gain in terms of money the game did.
+
+#### Game Strategies
+Every game has a `GameStrategy` which is the component where is stored the strategy part of a game, it is responsible for
+simulate the real-world game behaviours through some predefined strategies and custom ones
+
+The design follows the Strategy pattern combined with the Builder pattern to create a flexible and extensible architecture for different casino games.
+The system supports three main game types: Slot machines, Roulette, and BlackJack, each with customizable betting strategies and conditions.
+
+The system is built around a core trait `GameStrategy` that defines the contract for all gambling strategies. 
+Each game type implements this strategy through a two-phase construction process: a builder phase for configuration and an instance phase for execution.
+
+A dedicated DSL module provides a more natural and readable way to construct strategies, making the API more user-friendly and expressive.
+
+```mermaid
+classDiagram
+    class GameStrategy {
+        <<trait>>
+        +use() BetResult
+    }
+    
+    class SlotStrategyBuilder {
+        -betAmount: Option[Double]
+        -condition: Option[Function0[Boolean]]
+        +bet(amount: Double) SlotStrategyBuilder
+        +when(cond: Boolean) SlotStrategyInstance
+    }
+    
+    class SlotStrategyInstance {
+        -betAmount: Double
+        -condition: Function0[Boolean]
+        +use() BetResult
+    }
+    
+    class RouletteStrategyBuilder {
+        -betAmount: Option[Double]
+        -targets: Option[List[Int]]
+        +bet(amount: Double) RouletteStrategyBuilder
+        +on(targets: List[Int]) RouletteStrategyBuilder
+        +when(cond: Boolean) RouletteStrategyInstance
+    }
+    
+    class RouletteStrategyInstance {
+        -betAmount: Double
+        -targets: List[Int]
+        -condition: Function0[Boolean]
+        +use() BetResult
+    }
+    
+    class BlackJackStrategyBuilder {
+        -betAmount: Option[Double]
+        -minimumVal: Option[Int]
+        -condition: Option[Function0[Boolean]]
+        +bet(amount: Double) BlackJackStrategyBuilder
+        +accept(minimum: Int) BlackJackStrategyBuilder
+        +when(cond: Boolean) BlackJackStrategyInstance
+    }
+    
+    class BlackJackStrategyInstance {
+        -betAmount: Double
+        -minimumValue: Int
+        -condition: Function0[Boolean]
+        -dealCard(cardsValue: Int, stopValue: Int) Int
+        +use() BetResult
+    }
+    
+    GameStrategy <|.. SlotStrategyInstance
+    GameStrategy <|.. RouletteStrategyInstance
+    GameStrategy <|.. BlackJackStrategyInstance
+    
+    SlotStrategyBuilder --> SlotStrategyInstance : creates
+    RouletteStrategyBuilder --> RouletteStrategyInstance : creates
+    BlackJackStrategyBuilder --> BlackJackStrategyInstance : creates
+```
+
+The flow from the creation of the strategies to their use is modelled with the following flowchart:
+
+```mermaid
+flowchart TD
+    A[DSL Entry Point] --> B{Strategy Type Selection}
+    
+    B -->|Slot| C[SlotStrategyBuilder]
+    B -->|Roulette| D[RouletteStrategyBuilder]
+    B -->|BlackJack| E[BlackJackStrategyBuilder]
+    
+    C --> F[Configure Bet Amount]
+    D --> G[Configure Bet Amount & Targets]
+    E --> H[Configure Bet Amount & Minimum Value]
+    
+    F --> I[Set Condition]
+    G --> J[Set Condition]
+    H --> K[Set Condition]
+    
+    I --> L[SlotStrategyInstance]
+    J --> M[RouletteStrategyInstance]
+    K --> N[BlackJackStrategyInstance]
+    
+    L --> O[Execute Strategy]
+    M --> O
+    N --> O
+    
+    O --> P{Condition Met?}
+    P -->|Yes| Q[Run Game Logic]
+    P -->|No| R[Return Failure]
+    
+    Q --> S{Win?}
+    S -->|Yes| T[Return Success with Winnings]
+    S -->|No| U[Return Failure with Loss]
+```
 
 ## Implementation
 ### Student contributions
