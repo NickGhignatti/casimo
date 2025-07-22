@@ -9,21 +9,21 @@ import utils.Vector2D.distance
 object Boids:
   case class State[M <: Movable[M]](boid: M, others: Seq[M])
       extends Movable[State[M]]:
-    override def updatedPosition(newPosition: Vector2D): State[M] =
-      this.copy(boid = boid.updatedPosition(newPosition))
+    override def withPosition(newPosition: Vector2D): State[M] =
+      this.copy(boid = boid.withPosition(newPosition))
 
-    override def updatedDirection(newDirection: Vector2D): State[M] =
-      this.copy(boid = boid.updatedDirection(newDirection))
+    override def withDirection(newDirection: Vector2D): State[M] =
+      this.copy(boid = boid.withDirection(newDirection))
 
     def directionAdded(addingDirection: Vector2D): State[M] =
-      this.copy(boid = boid.updatedDirection(boid.direction + addingDirection))
+      this.copy(boid = boid.withDirection(boid.direction + addingDirection))
 
     export boid.{position, direction}
 
   case class MoverManager[M <: Movable[M]]() extends BaseManager[M]:
 
     override def update(slice: M): M =
-      slice.updatedPosition(slice.position + slice.direction)
+      slice.withPosition(slice.position + slice.direction)
 
   case class SeparationManager[M <: Movable[M]](
       avoidRadius: Double,
@@ -91,7 +91,7 @@ object Boids:
         if v.magnitude < max then v else v.normalize * max
 
     override def update(slice: M): M =
-      slice.updatedDirection(slice.direction.capped(maxSpeed))
+      slice.withDirection(slice.direction.capped(maxSpeed))
 
   case class PerceptionLimiterManager[M <: Movable[M]](perceptionRadius: Double)
       extends BaseManager[State[M]]:

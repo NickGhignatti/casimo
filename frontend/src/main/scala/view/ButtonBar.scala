@@ -11,16 +11,12 @@ import update.Update
 class ButtonBar(
     model: Var[SimulationState],
     update: Var[Update],
-    configForm: ConfigForm
+    configForm: ConfigForm,
+    modal: Modal,
+    eventBus: EventBus[Event]
 ):
   private val buttonBar = dom.document.getElementById("button-bar")
-  private val buttons = List("Add", "Run", "Reset", "Save", "Load")
-
-  val eventBus = new EventBus[Event]
-
-  eventBus.events
-    .scanLeft(model.now())((m, e) => update.now().update(m, e))
-    .foreach(model.set)(using unsafeWindowOwner)
+  private val buttons = List("Add", "Run", "Reset", "Save", "Load", "Data")
 
   def init(): Unit =
     buttons.foreach { text =>
@@ -56,9 +52,10 @@ class ButtonBar(
       case "Run" =>
         dom.window.setInterval(
           () => eventBus.writer.onNext(Event.SimulationTick),
-          500
+          50
         )
       case "Reset" => ???
       case "Save"  => ???
       case "Load"  => ???
+      case "Data"  => modal.open()
       case _       => ???

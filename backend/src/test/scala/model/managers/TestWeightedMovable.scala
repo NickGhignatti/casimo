@@ -10,9 +10,9 @@ import utils.Vector2D
 class TestWeightedMovable extends AnyFunSuite:
   private case class TestMovable(position: Vector2D, direction: Vector2D)
       extends Movable[TestMovable]:
-    override def updatedPosition(newPosition: Vector2D): TestMovable =
+    override def withPosition(newPosition: Vector2D): TestMovable =
       this.copy(position = newPosition)
-    override def updatedDirection(newDirection: Vector2D): TestMovable =
+    override def withDirection(newDirection: Vector2D): TestMovable =
       this.copy(direction = newDirection)
 
   test("Weighting should work with cohesion, alignment and separation"):

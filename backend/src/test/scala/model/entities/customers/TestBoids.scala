@@ -20,10 +20,10 @@ class TestBoids extends AnyFunSuite:
       position: Vector2D,
       direction: Vector2D = Vector2D.zero
   ) extends Movable[Boid]:
-    override def updatedPosition(newPosition: Vector2D): Boid =
+    override def withPosition(newPosition: Vector2D): Boid =
       copy(position = newPosition)
 
-    override def updatedDirection(newDirection: Vector2D): Boid =
+    override def withDirection(newDirection: Vector2D): Boid =
       copy(direction = newDirection)
 
   case class AdapterManager[M <: Movable[M]](manager: BaseManager[State[M]])
