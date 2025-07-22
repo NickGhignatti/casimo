@@ -20,6 +20,7 @@ trait HasBetStrategy[T <: HasBetStrategy[T] & Bankroll[T] & CustomerState[T]]:
 
 trait BettingStrategy[A <: Bankroll[A] & CustomerState[A]]:
   val betAmount: Double
+  val option: List[Int]
   require(
     betAmount >= 0,
     s"Bet amount must be positive, instead is $betAmount"
@@ -36,6 +37,9 @@ trait BettingStrategy[A <: Bankroll[A] & CustomerState[A]]:
       ctx.customerState != Idle,
       "Bet should be placed only if the customer is playing a game"
     )
+
+def defaultRedBet =
+  List(16, 1, 3, 5, 7, 9, 12, 14, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36)
 
 case class FlatBetting[A <: Bankroll[A] & CustomerState[A]](
     betAmount: Double,
@@ -133,6 +137,7 @@ case class OscarGrind[A <: Bankroll[A] & CustomerState[A]](
     baseBet: Double,
     betAmount: Double,
     startingBankroll: Double,
+    lossStreak: Int = 0,
     option: List[Int]
 ) extends BettingStrategy[A]:
 
@@ -148,8 +153,9 @@ case class OscarGrind[A <: Bankroll[A] & CustomerState[A]](
   def updateAfter(ctx: A, result: BetResult): OscarGrind[A] =
     if ctx.bankroll > startingBankroll then
       this.copy(betAmount = baseBet, startingBankroll = ctx.bankroll)
-    else if result.isSuccess then this.copy(betAmount = betAmount + baseBet)
-    else this
+    else if result.isSuccess then
+      this.copy(betAmount = betAmount + baseBet, lossStreak = 0)
+    else this.copy(lossStreak = lossStreak + 1)
 
 object OscarGrind:
 
@@ -158,14 +164,30 @@ object OscarGrind:
       bankroll: Double,
       option: Int
   ): OscarGrind[A] =
-    OscarGrind(baseBet, baseBet, bankroll, List(option))
+    OscarGrind(baseBet, baseBet, bankroll, 0, List(option))
 
   def apply[A <: Bankroll[A] & CustomerState[A]](
       baseBet: Double,
       bankroll: Double,
       options: List[Int]
   ): OscarGrind[A] =
-    OscarGrind(baseBet, baseBet, bankroll, options)
+    OscarGrind(baseBet, baseBet, bankroll, 0, options)
+
+  def apply[A <: Bankroll[A] & CustomerState[A]](
+      baseBet: Double,
+      bankroll: Double,
+      option: Int,
+      lossStreak: Int
+  ): OscarGrind[A] =
+    OscarGrind(baseBet, baseBet, bankroll, lossStreak, List(option))
+
+  def apply[A <: Bankroll[A] & CustomerState[A]](
+      baseBet: Double,
+      bankroll: Double,
+      options: List[Int],
+      lossStreak: Int
+  ): OscarGrind[A] =
+    OscarGrind(baseBet, baseBet, bankroll, lossStreak, options)
 
 //case class ReactiveRandomStrategy(base: Double, min: Double, max: Double) extends BettingStrategy:
 //
