@@ -1,0 +1,30 @@
+package model.managers
+
+import model.entities.Entity
+import model.entities.Player
+import model.entities.customers.Bankroll
+import model.entities.customers.BoredomFrustration
+import model.entities.customers.CustState.Idle
+import model.entities.customers.CustState.Playing
+import model.entities.customers.CustomerState
+import model.entities.customers.HasBetStrategy
+import model.entities.games.Game
+
+case class CustomerBankrollManager[
+    A <: BoredomFrustration[A] & CustomerState[A] & Bankroll[A] &
+      HasBetStrategy[A] & Player[A] & Entity
+](games: List[Game])
+    extends BaseManager[Seq[A]]:
+  def update(customers: Seq[A]): Seq[A] =
+    customers.map { c =>
+      c.customerState match
+        case Playing(game) =>
+          val updatedGame = games.find(_.id == game.id).get
+          val gain = updatedGame.getLastRoundResult
+            .filter(g => g.getCustomerWhichPlayed == c.id)
+            .head
+            .getMoneyGain
+          c.updateBankroll(-gain)
+
+        case Idle => c
+    }

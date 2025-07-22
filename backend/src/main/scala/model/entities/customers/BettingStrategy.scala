@@ -10,7 +10,7 @@ trait HasBetStrategy[T <: HasBetStrategy[T] & Bankroll[T] & CustomerState[T]]:
 
   def placeBet(): Bet = betStrategy.placeBet(this)
 
-  def updateAfter(result: BetResult): T =
+  def updateAfter(result: Double): T =
     withBetStrategy(betStrategy.updateAfter(this, result))
 
   def changeBetStrategy(newStrat: BettingStrategy[T]): T =
@@ -27,7 +27,7 @@ trait BettingStrategy[A <: Bankroll[A] & CustomerState[A]]:
   )
 
   def placeBet(ctx: A): Bet
-  def updateAfter(ctx: A, result: BetResult): BettingStrategy[A]
+  def updateAfter(ctx: A, result: Double): BettingStrategy[A]
   protected def checkRequirement(ctx: A): Unit =
     require(
       betAmount <= ctx.bankroll,
@@ -56,7 +56,7 @@ case class FlatBetting[A <: Bankroll[A] & CustomerState[A]](
           case _           => ???
       // case Idle => throw new MatchError("Wrong customer state")
 
-  def updateAfter(ctx: A, result: BetResult): FlatBetting[A] = this
+  def updateAfter(ctx: A, result: Double): FlatBetting[A] = this
 
 object FlatBetting:
 
@@ -94,10 +94,10 @@ case class Martingale[A <: Bankroll[A] & CustomerState[A]](
           case _         => ???
       // case Idle => throw new MatchError("Wrong customer state")
 
-  def updateAfter(ctx: A, result: BetResult): Martingale[A] =
-    if result.isFailure then
-
+  def updateAfter(ctx: A, result: Double): Martingale[A] =
+    if result < 0 then
       this.copy(betAmount = nextBet(), lossStreak = lossStreak + 1)
+    else if result == 0 then this
     else copy(betAmount = baseBet, lossStreak = 0)
 
   def nextBet(): Double =
@@ -150,11 +150,12 @@ case class OscarGrind[A <: Bankroll[A] & CustomerState[A]](
           case Blackjack => BlackJackBet(betAmount, option.head)
           case _         => ???
 
-  def updateAfter(ctx: A, result: BetResult): OscarGrind[A] =
+  def updateAfter(ctx: A, result: Double): OscarGrind[A] =
     if ctx.bankroll > startingBankroll then
       this.copy(betAmount = baseBet, startingBankroll = ctx.bankroll)
-    else if result.isSuccess then
+    else if result > 0 then
       this.copy(betAmount = betAmount + baseBet, lossStreak = 0)
+    else if result == 0 then this
     else this.copy(lossStreak = lossStreak + 1)
 
 object OscarGrind:
