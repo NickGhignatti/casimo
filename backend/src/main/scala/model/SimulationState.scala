@@ -16,48 +16,41 @@ object SimulationState:
   def empty(): SimulationState =
     SimulationState(Seq.empty, List.empty, None, List.empty)
 
-  class Builder:
-    private var customers: Seq[Customer] = Seq.empty
-    private var games: List[Game] = List.empty
-    private var spawner: Option[Spawner] = None
-    private var walls: List[Wall] = List.empty
+  case class Builder(
+      customers: Seq[Customer],
+      games: List[Game],
+      spawner: Option[Spawner],
+      walls: List[Wall]
+  ):
 
     def withCustomers(customers: Seq[Customer]): Builder =
-      this.customers = customers
-      this
+      this.copy(customers = customers)
 
     def addCustomer(customer: Customer): Builder =
-      this.customers = this.customers :+ customer
-      this
+      this.copy(customers = this.customers :+ customer)
 
     def withGames(games: List[Game]): Builder =
-      this.games = games
-      this
+      this.copy(games = games)
 
     def addGame(game: Game): Builder =
-      this.games = game :: this.games
-      this
+      this.copy(games = game :: this.games)
 
     def withSpawner(spawner: Spawner): Builder =
-      this.spawner = Some(spawner)
-      this
+      this.copy(spawner = Some(spawner))
 
     def withoutSpawner(): Builder =
-      this.spawner = None
-      this
+      this.copy(spawner = None)
 
     def withWalls(walls: List[Wall]): Builder =
-      this.walls = walls
-      this
+      this.copy(walls = walls)
 
     def addWall(wall: Wall): Builder =
-      this.walls = wall :: this.walls
-      this
+      this.copy(walls = wall :: this.walls)
 
     def build(): SimulationState =
       SimulationState(customers, games, spawner, walls)
 
-  def builder(): Builder = new Builder()
+  def builder(): Builder = Builder(Seq.empty, List.empty, None, List.empty)
 
 extension (state: SimulationState)
   def addCustomer(customer: Customer): SimulationState =
