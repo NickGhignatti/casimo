@@ -1,13 +1,13 @@
 package model.managers
 
-import model.entities.customers.{Bankroll, BettingStrategy, BoredomFrustration, CustState, Customer, CustomerState, FlatBetting, HasBetStrategy}
+import model.entities.customers.CustState
 import model.entities.customers.CustState.Idle
 import model.entities.customers.CustState.Playing
+import model.entities.customers.Customer
+import model.entities.customers.FlatBetting
 import model.entities.games.GameBuilder
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
-
-
 
 val mockGame = GameBuilder.slot(Vector2D.zero)
 class TestPersistenceManager extends AnyFunSuite:

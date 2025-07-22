@@ -1,7 +1,8 @@
 package model.data
 
 import model.SimulationState
-import model.entities.customers.{Customer, DefaultMovementManager}
+import model.entities.customers.Customer
+import model.entities.customers.DefaultMovementManager
 import org.scalatest.funsuite.AnyFunSuite
 import update.Event.SimulationTick
 import update.Update

@@ -1,6 +1,5 @@
 package model.entities.customers
 
-import model.entities.customers.CustState.Idle
 import model.entities.customers.CustState.Playing
 import model.entities.games.BlackJackBet
 import model.entities.games.GameBuilder
@@ -10,7 +9,6 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 import utils.Result
 import utils.Vector2D
-
 
 class TestBettingStrategy extends AnyFunSuite with Matchers:
   private val mockGame = GameBuilder.slot(Vector2D.zero)
@@ -158,13 +156,16 @@ class TestBettingStrategy extends AnyFunSuite with Matchers:
     val mockWin = lose.updateBankroll(bet.amount)
     val win = mockWin.updateAfter(Result.Success(mock.betStrategy.betAmount))
     val newBet = win.placeBet()
-    val mockAnotherLose = win.updateBankroll(- newBet.amount)
-    val anotherLose = mockAnotherLose.updateAfter(Result.Failure(mock.betStrategy.betAmount))
+    val mockAnotherLose = win.updateBankroll(-newBet.amount)
+    val anotherLose =
+      mockAnotherLose.updateAfter(Result.Failure(mock.betStrategy.betAmount))
 
     lose.betStrategy.betAmount shouldEqual 5.0
     anotherLose.betStrategy.betAmount shouldEqual 10.0
 
-  test("In Oscar Grind resets betAmount to baseBet when bankroll increased above startingBankroll"):
+  test(
+    "In Oscar Grind resets betAmount to baseBet when bankroll increased above startingBankroll"
+  ):
     val bankroll = 100.0
     val mock = Customer(
       customerState = Playing(GameBuilder.blackjack(Vector2D.zero)),
@@ -179,8 +180,9 @@ class TestBettingStrategy extends AnyFunSuite with Matchers:
     stratAfterWin.betAmount shouldEqual 5.0
     stratAfterWin.startingBankroll shouldEqual 105.0
 
-
-  test("In Oscar grind increments betAmount by baseBet on success that don't surpass starting bankroll "):
+  test(
+    "In Oscar grind increments betAmount by baseBet on success that don't surpass starting bankroll "
+  ):
     val bankroll = 100.0
     val mock = Customer(
       customerState = Playing(GameBuilder.blackjack(Vector2D.zero)),
@@ -188,10 +190,13 @@ class TestBettingStrategy extends AnyFunSuite with Matchers:
       betStrategy = OscarGrind[Customer](5.0, bankroll, 17)
     )
     val bet = mock.placeBet()
-    val mockLose = mock.updateBankroll(- bet.amount)
+    val mockLose = mock.updateBankroll(-bet.amount)
     val lose = mockLose.updateAfter(Result.Failure(bet.amount))
     val mockWin = lose.updateBankroll(bet.amount)
-    val stratAfterWin = mockWin.updateAfter(Result.Success(mock.betStrategy.betAmount)).betStrategy.asInstanceOf[OscarGrind[Customer]]
+    val stratAfterWin = mockWin
+      .updateAfter(Result.Success(mock.betStrategy.betAmount))
+      .betStrategy
+      .asInstanceOf[OscarGrind[Customer]]
 
     stratAfterWin.betAmount shouldEqual 10.0
     stratAfterWin.startingBankroll shouldEqual 100.0
