@@ -129,11 +129,16 @@ case class GamesAttractivenessAdapter(
       slice: SimulationState
   ): SimulationState =
     import PlayerManagers.Context
-    slice.copy(
-      customers = slice.customers
-        .map(Context(_, slice.games))
-        .map(c => if !c.player.isPlaying then c | manager else c)
-        .map(_.player)
+    slice.customers.foldLeft(slice)((state, customer) =>
+      val updatedContext = Context(customer, state.games) | manager
+      state.copy(
+        customers = state.customers.map(c =>
+          if c.id == updatedContext.player.id then updatedContext.player else c
+        ),
+        games = state.games.map(game =>
+          updatedContext.games.find(_.id == game.id).get
+        )
+      )
     )
 
 case class BoidsAdapter(manager: BaseManager[Boids.State[Customer]])

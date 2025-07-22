@@ -62,7 +62,6 @@ object PlayerManagers:
               .withDirection(Vector2D.zero)
               .play,
             games = slice.games
-              .filter(_.id == game.id)
-              .map(_ => game)
+              .map(g => if g.id == game.id then game else g)
           )
         case _ => slice
