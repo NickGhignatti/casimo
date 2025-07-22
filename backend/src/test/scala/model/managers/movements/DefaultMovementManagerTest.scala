@@ -1,7 +1,9 @@
-package model.entities.customers
+package model.managers.movements
 
 import model.SimulationState
 import model.entities.customers.CustState.Playing
+import model.entities.customers.Customer
+import model.entities.customers.DefaultMovementManager
 import model.entities.games.GameBuilder
 import model.managers.|
 import org.scalatest.funsuite.AnyFunSuite
