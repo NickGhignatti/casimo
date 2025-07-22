@@ -1,9 +1,7 @@
 package model.entities.customers
 
-import model.entities.Player
 import model.entities.games.Game
 import model.entities.games.GameBuilder
-import model.entities.games.GameType
 import model.entities.games.SlotMachine
 import model.managers.movements.Boids.MoverManager
 import model.managers.movements.Context
@@ -22,7 +20,9 @@ class TestPlayer extends AnyFunSuite:
   )
 
   test("A customer should get closer to its favourite game"):
-    val customer = Customer().withPosition(Vector2D(1, 1)).withFavouriteGames(Seq(SlotMachine))
+    val customer = Customer()
+      .withPosition(Vector2D(1, 1))
+      .withFavouriteGames(Seq(SlotMachine))
     val context: Context[Customer] = Context(customer, games)
     val updatedCustomer =
       (context | GamesAttractivenessManager()).player | MoverManager()
@@ -32,7 +32,9 @@ class TestPlayer extends AnyFunSuite:
     )
 
   test("A customer close to its favourite game should sit and play"):
-    val customer = Customer().withPosition(Vector2D(2, 0)).withFavouriteGames(Seq(SlotMachine))
+    val customer = Customer()
+      .withPosition(Vector2D(2, 0))
+      .withFavouriteGames(Seq(SlotMachine))
     val context: Context[Customer] = Context(customer, games)
     val updatedContext =
       context | PlayerSitterManager(sittingRadius = 10)

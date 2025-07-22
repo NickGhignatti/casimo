@@ -50,15 +50,13 @@ class DefaultMovementManagerTest extends AnyFunSuite:
           id = "Bob",
           position = Vector2D(10, 10),
           direction = Vector2D(0, 1),
-          bankroll = 100.0,
-
+          bankroll = 100.0
         ),
         Customer(
           id = "Charlie",
           position = Vector2D(20, 20),
           direction = Vector2D(1, 0),
-          bankroll = 100.0,
-
+          bankroll = 100.0
         )
       ),
       games = List.empty,

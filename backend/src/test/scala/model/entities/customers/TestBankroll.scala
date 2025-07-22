@@ -2,8 +2,6 @@ package model.entities.customers
 
 import org.scalatest.funsuite.AnyFunSuite
 
-
-
 class TestBankroll extends AnyFunSuite:
 
   test("creating a class with a positive Bankroll should store the amount"):

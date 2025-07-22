@@ -2,13 +2,12 @@ package model
 
 import model.entities.Wall
 import model.entities.customers.Customer
-import model.entities.games.{
-  BlackJackGame,
-  GameBuilder,
-  RouletteGame,
-  SlotMachineGame
-}
-import model.entities.spawner.{ConstantStrategy, Spawner}
+import model.entities.games.BlackJackGame
+import model.entities.games.GameBuilder
+import model.entities.games.RouletteGame
+import model.entities.games.SlotMachineGame
+import model.entities.spawner.ConstantStrategy
+import model.entities.spawner.Spawner
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
 
