@@ -1,14 +1,8 @@
-package model.entities.customers
+package model.managers.movements
 
+import model.entities.customers.Movable
 import model.managers.BaseManager
-import model.managers.movements.Boids
-import model.managers.movements.Boids.AlignmentManager
-import model.managers.movements.Boids.CohesionManager
-import model.managers.movements.Boids.MoverManager
-import model.managers.movements.Boids.PerceptionLimiterManager
-import model.managers.movements.Boids.SeparationManager
-import model.managers.movements.Boids.State
-import model.managers.movements.Boids.VelocityLimiterManager
+import model.managers.movements.Boids._
 import model.managers.|
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
