@@ -18,16 +18,18 @@ case class Spawner(
   def spawn(
       state: SimulationState
   ): SimulationState =
-    if ((currentTime + 1) % ticksToSpawn == 0) {}
-    state.copy(
-      customers =
-        state.customers ++ Seq.fill(strategy.customersAt(currentTime))(
-          Customer(
-            s"customer-${Random.nextInt()}",
-            this.position.around(5.0),
-            Vector2D(Random.between(0, 5), Random.between(0, 5)),
-            bankroll = Random.between(30, 5000)
-          )
-        ),
-      spawner = Some(this.copy(currentTime = currentTime + 1))
-    )
+    if ((currentTime + 1) % ticksToSpawn == 0) {
+      state.copy(
+        customers =
+          state.customers ++ Seq.fill(strategy.customersAt(currentTime))(
+            Customer(
+              s"customer-${Random.nextInt()}",
+              this.position.around(5.0),
+              Vector2D(Random.between(0, 5), Random.between(0, 5)),
+              bankroll = Random.between(30, 5000)
+            )
+          ),
+        spawner = Some(this.copy(currentTime = currentTime + 1))
+      )
+    }
+    state.copy(spawner = Some(this.copy(currentTime = currentTime + 1)))
