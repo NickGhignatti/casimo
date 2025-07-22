@@ -11,15 +11,18 @@ case class Spawner(
     id: String,
     position: Vector2D,
     strategy: SpawningStrategy,
-    currentTime: Double = 0.0
+    currentTime: Double = 0.0,
+    ticksToSpawn: Double = 10.0
 ) extends Entity:
 
   def spawn(
       state: SimulationState
   ): SimulationState =
-    state.copy(
-      customers =
-        state.customers ++ Seq.fill(strategy.customersAt(currentTime))(
+    if currentTime % ticksToSpawn == 0 then
+      state.copy(
+        customers = state.customers ++ Seq.fill(
+          strategy.customersAt(currentTime / ticksToSpawn)
+        )(
           Customer(
             s"customer-${Random.nextInt()}",
             this.position.around(5.0),
@@ -38,5 +41,6 @@ case class Spawner(
             )
           )
         ),
-      spawner = Some(this.copy(currentTime = currentTime + 1))
-    )
+        spawner = Some(this.copy(currentTime = currentTime + 1))
+      )
+    else state.copy(spawner = Some(this.copy(currentTime = currentTime + 1)))

@@ -17,9 +17,10 @@ object GameResolver:
       g.play(c.placeBet()) match
         case Result.Success(value) =>
           value match
-            case Result.Success(winValue)  => g.updateHistory(winValue)
-            case Result.Failure(lostValue) => game.updateHistory(-lostValue)
-        case Result.Failure(error) => game.updateHistory(0.0)
+            case Result.Success(lostValue) => g.updateHistory(c.id, -lostValue)
+            case Result.Failure(winValue) =>
+              game.updateHistory(c.id, winValue)
+        case Result.Failure(error) => game.updateHistory(c.id, 0.0)
     )
 
   def update(customers: List[Customer], games: List[Game]): List[Game] =
