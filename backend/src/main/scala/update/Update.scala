@@ -10,7 +10,6 @@ import model.entities.customers.DefaultMovementManager
 import model.entities.games.Game
 import model.entities.games.GameResolver
 import model.entities.spawner.Spawner
-import model.managers.BaseManager
 import model.managers.CustomerBankrollManager
 import model.managers.CustomerStrategyManager
 import model.managers.PersistenceManager
