@@ -28,7 +28,7 @@ class TestUpdate extends AnyFunSuite:
       )
     val update = Update(DefaultMovementManager())
     assert(
-      update.updateSimulationManager(manager, finalState).state == finalState
+      update.updateSimulationDataManager(manager, finalState).state == finalState
     )
 
   test("update should update the games when added"):

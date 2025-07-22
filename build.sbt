@@ -1,9 +1,7 @@
-import sbt.Keys.libraryDependencies
+import sbt.Keys.{baseDirectory, libraryDependencies}
 import org.scalajs.linker.interface.{ModuleSplitStyle, OutputPatterns}
-import sbt.internal.SysProp.semanticdb
 import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 import scalajscrossproject.ScalaJSCrossPlugin.autoImport.*
-
 
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
@@ -143,7 +141,8 @@ lazy val frontend = project
     },
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "2.8.0",
-      "com.raquo" %%% "laminar" % "17.0.0"
+      "com.raquo" %%% "laminar" % "17.0.0",
+      "io.github.pityka" %%% "nspl-canvas-js" % "0.9.0"
     )
   )
   .dependsOn(backendJs)
