@@ -16,7 +16,7 @@ import utils.Vector2D
 
 case class Update(customerManager: DefaultMovementManager):
 
-  def updateSimulationManager(
+  def updateSimulationDataManager(
       dataManager: DataManager,
       state: SimulationState
   ): DataManager = dataManager.copy(state = state)
@@ -60,3 +60,5 @@ case class Update(customerManager: DefaultMovementManager):
 
       case updateGamesList(games: List[Game]) =>
         state.copy(games = games)
+
+      case ResetSimulation => SimulationState.empty()
