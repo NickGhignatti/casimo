@@ -1,4 +1,4 @@
-package model.entities.customers
+package model.managers.movements
 
 import model.entities.Player
 import model.entities.games.Game

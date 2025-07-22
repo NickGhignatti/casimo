@@ -1,11 +1,10 @@
-package model.entities.customers
+package model.managers.movements
 
 import model.entities.Collidable
-import model.managers.movements.AvoidWallsManager
+import model.entities.customers.Movable
 import model.managers.movements.AvoidWallsManager.Context
 import model.managers.|
 import org.scalatest.funsuite.AnyFunSuite
-import utils.Rotation._
 import utils.Vector2D
 
 class TestAvoidWallsManager extends AnyFunSuite:

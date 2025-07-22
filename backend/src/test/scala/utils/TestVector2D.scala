@@ -43,11 +43,3 @@ class TestVector2D extends AnyFunSuite:
     val v1 = Vector2D(1.0, 2.0)
     val v2 = Vector2D(1.0, 2.0)
     assert(v1 === v2)
-
-  import utils.Rotation.*
-
-  test("rotate a vector to the right"):
-    assert(Vector2D(1.0, 0.0).rotated(right) almostEqual Vector2D(0.0, -1.0))
-
-  test("rotate a vector to the left"):
-    assert(Vector2D(1.0, 0.0).rotated(left) almostEqual Vector2D(0, 1.0))

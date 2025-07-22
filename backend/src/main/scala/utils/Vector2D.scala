@@ -28,16 +28,3 @@ object Vector2D:
 
   def direction(from: Vector2D, to: Vector2D): Vector2D =
     (to - from).normalize
-
-object Rotation:
-  val right: Double = -Math.PI / 2
-  val left: Double = Math.PI / 2
-
-  extension (vector: Vector2D)
-    def rotated(theta: Double): Vector2D =
-      val cosTheta = Math.cos(theta)
-      val sinTheta = Math.sin(theta)
-      Vector2D(
-        vector.x * cosTheta - vector.y * sinTheta,
-        vector.x * sinTheta + vector.y * cosTheta
-      )
