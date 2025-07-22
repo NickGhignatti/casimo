@@ -21,9 +21,36 @@ The documentation is also automatically generated and deployed to the GitHub Pag
 The application is intended to be used by the manager of a [casino](https://en.wikipedia.org/wiki/Casino) who wants to simulate the behaviour of customers inside a given configuration of the casino in order to predict the revenue of the facility. The manager can configure the spacial organization of the casino (such walls and games) and the behaviour of both games and customers. 
 
 ### Domain model
-- **Customer**: a person who enters the casino and plays games.
-- **Game**: a game that can be played by customers, such as roulette, blackjack, etc.
+- **Customer**: who enters the casino and plays games.
+- **Game**: a game that can be played by customers, such as roulette, blackjack and slot machine.
+- **Door**: a door that allows customers to enter the casino. It is where the customers enter the casino.
+```mermaid
+classDiagram
+class Customer {
+  +bankroll: Double
+  +position: Vector2D
+  +direction: Vector2D
+}
+class Game {
+ +position: Vector2D
+ +width: Double
+ +length: Double
+}
+GameType <|-- Blackjack
+GameType <|-- Roulette
+GameType <|-- SlotMachine
 
+class Door {
+  +position: Vector2D
+}
+
+Door --> Customer : allows entry
+Customer --> Game : plays
+Customer  --> Customer : moves influenced by other
+Customer --> GameType : likes
+Game --> GameType : is a
+Customer --> Game : moves towards its favourite
+```
 ### Functional requirements
 #### User requirements
 ##### Customers
@@ -215,11 +242,115 @@ Boredom[Customer]: // Just adding a new behaviour to the Customer by composition
 ```
 By leveraging these traits composition system, our `Customer` model stays **type safe**, **cohesive**, and easy to evolve, supporting future expansion of behaviors and customer types without compromising the maintainability.
 
-### Design patterns
+#### Customers spawner
 
-### Code organization
+The `Spawner` system manages the generation of entities (customers) in the simulation using configurable spawning strategies. 
+The design follows these core principles:
+- Decoupling : Spawners are unaware of strategy implementation details
+- Flexibility : Strategies can be combined and extended
+- Time-based : Strategies react to simulation time progression
+- Immutability : Strategies are pure functions of time
 
-### Diagrams
+The responsibilities of this entity are:
+- Position management (where entities spawn)
+- Time tracking (when entities spawn)
+- Delegation to strategy (how many entities spawn)
+
+The `SpawnerStrategy` is the entity designed to return the number of customers, following a specific strategy, to spawn which is designed to use 
+generic and famous spawning behaviours and permit the user to define custom spawning strategies thanks to a scala DSL.
+
+Kind of generic behaviour the `SpawningStrategy` should provide are:
+- `constant` : mechanism to spawn a fixed number of customers every tick
+- `gaussian` : mechanism to simulate a gaussian behaviour of the spawner
+- `step` : mechanism where the spawn rates change abruptly at specific times
+
+The behaviour of a `SpawningStrategy` can be modelled in an interface like:
+```scala 3
+trait SpawningStrategy:
+  def customersAt(time: Double): Int
+```
+```mermaid
+sequenceDiagram
+    participant SimulationLoop
+    participant Spawner
+    participant SpawningStrategy
+    
+    SimulationLoop->>Spawner: spawn(state) at time T
+    activate Spawner
+    
+    Spawner->>SpawningStrategy: customersAt(currentTime)
+    activate SpawningStrategy
+    
+    SpawningStrategy-->>Spawner: count: Int
+    deactivate SpawningStrategy
+    
+    Spawner->>Spawner: Generate 'count' customers
+    Spawner->>Spawner: Update currentTime += 1
+    
+    Spawner-->>SimulationLoop: Updated state
+    deactivate Spawner
+    
+    Note right of SpawningStrategy: Strategy implementations:
+    alt ConstantStrategy
+        SpawningStrategy-->>Spawner: Fixed rate
+    else GaussianStrategy
+        SpawningStrategy-->>Spawner: Rate based on bell curve
+    else StepStrategy
+        SpawningStrategy-->>Spawner: High rate if time in [start,end]
+    end
+```
+
+By designing the creation of these strategies through a builder we can allow to combine strategies or customize them by applying factors.
+Or even better, we designed an internal DSL which boost the creativity of the user: it allows to customize the predefined 
+strategies or to create your own one.
+
+#### Walls
+
+The `Wall` is a foundational element in our casino simulation application, serving as impassable barriers that define physical boundaries.
+
+The `Wall` was designed with these core principles:
+- Immutability: `Wall` state changes create new instances
+- Reactivity: UI automatically updates when walls change
+- Composability: Built from reusable traits
+- Interactivity: Intuitive drag-and-drop placement
+- Collision Awareness: Prevents invalid placements
+
+Due to the numerous behaviours the `Wall` entity should have design it as a mixin is a great solution, follows the list of 
+behaviours that the entity has:
+- `Positioned` : express that the entity has a position
+- `Sized` : which express that the entity has a size
+- `CollidableEntity` : which express the fact that the entity can collide with others entity
+- `SizeChangingEntity` : which express the resize behaviour of the entity
+
+#### Games
+The core abstraction is provided by the `Game` trait, representing a generic gambling station in the Casino. 
+It’s designed to model concurrency and fairness while allowing flexibility across different game types. 
+Three concrete implementations — `RouletteGame`, `SlotMachineGame`, and `BlackJackGame` — extend this trait to specialize behavior based on game logic and betting styles.
+
+```mermaid
+classDiagram
+  class Game {
+    <<trait>>
+  }
+  class SlotMachineGame
+  class RouletteGame
+  class BlackJackGame
+
+  Game <|-- SlotMachineGame
+  Game <|-- RouletteGame
+  Game <|-- BlackJackGame
+
+```
+To deal with the concurrency on this kind of entity was decided to create some functions which allow to lock/unlock the game.
+This functions will alter the `GameState` which represent the current state of the `Game`, with all the customers that are
+currently playing that specific game.
+Thanks to the implementation of a monad which allow to manage two different states (`Result`), deal with the error in case 
+of the impossibility to play the game is easy.
+
+Also keeping track of the gains and loss of our game is important, to avoid to overload of task our games a `GameHistory` entity was designed.
+The behaviour of this entity is simple, a `GameHistory` is designed to deal with just one `Game` and the communication with it is limited,
+it is designed to deal with a `DataManager` which is an entity designed for keeping track of important data in the simulation.
+
 
 ## Implementation
 ### Student contributions
@@ -298,6 +429,70 @@ Allowing an easy creation like the following:
 val bankroll = 10.0
 use(SlotStrategy) bet 5.0 when (bankRoll > 0.0)
 ```
+
+### Patrignani Luca
+#### Customer movements
+The customer movements are modeled according to the previously presented architecture: a trait `Movable` is defined as such
+```scala 3
+trait Movable[T <: Movable[T]]:
+  val direction: Vector2D
+  val position: Vector2D
+
+  def updatedPosition(newPosition: Vector2D): T
+
+  def updatedDirection(newDirection: Vector2D): T
+```
+and all movement managers depend only on this trait, not on the concrete implementation of the `Customer`.
+Two movement managers have been implemented:
+- **Boid-like movement**: this implements the boid-like movement described in the user requirements section. It is obtained by combining three other managers, each one implementing one of the three boid-like rules: **Separation**, **Alignment** and **Cohesion**.
+Since the boids logic for a single customer need not only its position and velocity, but also information about the other customers, the `Boids.State` case class is defined, which contains all the information needed to compute the movement of the boid. Then an adapter manager is defined to adapt the `SimulationState` to the necessary `Boids.State` and vice versa. This allows to keep the movement logic independent from the simulation state. The following class diagram describes the dependencies taking as example the `AlignmentManager`, the `SeparationManager` and the `CohesionManager` are implemented in the same way:
+```mermaid
+classDiagram
+class Movable {
+  +direction: Vector2D
+  +position: Vector2D
+}
+Customer --|> Movable
+Boid.State --o Movable : other boids
+Boid.State --o Movable : the single boid
+AlignmentManager --> Boid.State
+BoidAdapter --> SimulationState : adapts
+BoidAdapter --> Boid.State : adapts
+SimulationState --o Customer
+```
+- **Game attraction movement**: this manager implements the game attraction movement, which is the movement of the customer towards its favourite game. The customer's favourite game is needed, so a new trait `Player` is defined extending `Movable`. Similarly to the boids movement managers, the `GamesAttractivenessManager` depends on a `Context` case class, which contains all the information needed to compute the movement of the customer towards its favourite game. The following class diagram describes the dependencies:
+```mermaid
+classDiagram
+class Player
+Customer --|> Player
+Context --o Game
+Context --o Player
+GamesAttractivenessManager --> Context
+GamesAttractivenessAdapter --> SimulationState : adapts
+GamesAttractivenessAdapter --> Context : adapts
+SimulationState --o Customer
+SimulationState --o Game
+Game --> GameType
+Player --> GameType : favourite game
+```
+#### Manager composition
+All movement managers are implemented independently from one another, to combine them a simple bash-like DSL is created: to combine two managers the `|` operator is used, similarly to what the `andThen` method does in Scala between two functions. This operator is also used to apply a manager to update the current state. In order to weight the contribution of each manager the trait `WeightedManager` is defined which supports the `*` operator. The `*` operator multiplies the contribution of the manager by a given weight. The following example shows how to obtain a manager which combines various components to obtain a boids-like movement:
+```scala 3
+val boidManager : BaseManager[SimulationState] = BoidsAdapter(
+        PerceptionLimiterManager(perceptionRadius)
+          | alignmentWeight * AlignmentManager()
+          | cohesionWeight * CohesionManager()
+          | separationWeight * SeparationManager(avoidRadius)
+          | VelocityLimiterManager(maxSpeed)
+          | MoverManager()
+      )
+```
+So given an initial `SimulationState`, the `boidManager` can be applied to it to obtain an updated state, which contains the updated positions and velocities of the customers:
+```scala 3
+val state : SimulationState = ???
+val updatedState = state | boidManager
+```
+
 ### Important implementation aspects
 
 ## Testing

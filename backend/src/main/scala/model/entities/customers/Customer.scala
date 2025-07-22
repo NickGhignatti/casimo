@@ -25,11 +25,12 @@ case class Customer(
     position: Vector2D = Vector2D.zero,
     direction: Vector2D = Vector2D.zero,
     bankroll: Double = 1000.0,
+    startingBankroll: Double = 1000.0,
     boredom: Double = 15.0,
     frustration: Double = 0.0,
     riskProfile: RiskProfile = Regular,
     customerState: CustState = Idle,
-    betStrategy: BettingStrategy[Customer] = FlatBetting(5.0, 1),
+    betStrategy: BettingStrategy[Customer] = FlatBetting(10.0, defaultRedBet),
     isPlaying: Boolean = false,
     favouriteGames: Seq[GameType] = Seq(Roulette, Blackjack, SlotMachine)
 ) extends Entity,
@@ -48,7 +49,7 @@ case class Customer(
     this.copy(position = newPosition)
 
   def withBankroll(newRoll: Double): Customer =
-    this.copy(bankroll = newRoll)
+    this.copy(bankroll = newRoll, startingBankroll = newRoll)
 
   def withBoredom(newBoredom: Double): Customer =
     this.copy(boredom = newBoredom)
@@ -69,6 +70,9 @@ case class Customer(
 
   def withFavouriteGames(newFavGame: Seq[GameType]): Customer =
     this.copy(favouriteGames = newFavGame)
+
+  def withProfile(profile: RiskProfile): Customer =
+    this.copy(riskProfile = profile)
 
   def play: Customer =
     this.copy(isPlaying = true)

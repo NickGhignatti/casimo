@@ -2,10 +2,12 @@ package update
 
 import model.SimulationState
 import model.data.DataManager
-import model.entities.customers.{Customer, DefaultMovementManager}
+import model.entities.customers.Customer
+import model.entities.customers.DefaultMovementManager
 import model.entities.games.GameBuilder
 import org.scalatest.funsuite.AnyFunSuite
-import update.Event.{ResetSimulation, updateGamesList}
+import update.Event.ResetSimulation
+import update.Event.updateGamesList
 import utils.Vector2D
 
 class TestUpdate extends AnyFunSuite:

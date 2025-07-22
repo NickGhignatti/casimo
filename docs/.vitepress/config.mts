@@ -1,7 +1,7 @@
-import { defineConfig } from 'vitepress'
+import { withMermaid } from "vitepress-plugin-mermaid";
 
 // https://vitepress.dev/reference/site-config
-export default defineConfig({
+export default withMermaid({
   title: "Casimo",
   description: "Casimo website",
   base: '/casimo/docs',
@@ -25,5 +25,13 @@ export default defineConfig({
     socialLinks: [
       { icon: 'github', link: 'https://github.com/NickGhignatti/casimo' }
     ],
-  }
+  },
+
+  mermaid: {
+    // refer https://mermaid.js.org/config/setup/modules/mermaidAPI.html#mermaidapi-configuration-defaults for options
+  },
+  // optionally set additional config for plugin itself with MermaidPluginConfig
+  mermaidPlugin: {
+    class: "mermaid my-class", // set additional css classes for parent container
+  },
 })
