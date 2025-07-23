@@ -26,27 +26,27 @@ The development process was divided into three main themes:
 - Customer in-game behaviour (assigned to Galeri): responsible for implementing the customer in-game behaviour.
 
 ### Planned meetings/interactions
-Each week the team holds a sprint start meeting in which the team establishes the tasks to be completed in the next sprint and an effort estimation. 
+Each week the team holds a sprint start meeting in which the team establishes the tasks to be completed in the next sprint and an effort estimation.
 Then each task is assigned to a team member according to both the overall effort of each member and the theme of the task.
 When a blocker is encountered during the development of a task, the team holds a meeting to discuss the issue and pair programming methodology is applied.
 At the end of the week a retrospective meeting is held to review the progress of the tasks and to discuss any issues that may have arisen during the week.
 
 ### Choice of test/build/continuous integration tools
-The team has chosen to use GitHub Actions for continuous integration and deployment. In particular a pipeline has been set up to build and run tests of the project. 
+The team has chosen to use GitHub Actions for continuous integration and deployment. In particular a pipeline has been set up to build and run tests of the project.
 If the build is successful the application is deployed to the GitHub Pages of the repository.
 The documentation is also automatically generated and deployed to the GitHub Pages of the repository.
 
 ### Test
-To ensure the quality and correctness of the implemented features, the Test Driven Development (TDD) paradigm was adopted. 
+To ensure the quality and correctness of the implemented features, the Test Driven Development (TDD) paradigm was adopted.
 This approach allows for timely identification and correction of potential bugs at the level of individual components during the development phases, ensuring a continuous feedback cycle.
 The TDD development process consists of three main steps:
 - Red Phase (testing): a test is written to describe the expected behavior of a component or feature. Since the implementation is not yet in place, the test initially fails.
 - Green Phase (implementation): the component or feature is then implemented to ensure that the previously written test passes successfully.
--Refactor Phase: after the test passes, the code is refactored to improve its quality and readability, ensuring that the test continues to pass.
+  -Refactor Phase: after the test passes, the code is refactored to improve its quality and readability, ensuring that the test continues to pass.
 ## Requirement Specification
 ### Business requirements
-The application is intended to be used by the manager of a [casino](https://en.wikipedia.org/wiki/Casino) who wants to simulate the behaviour of customers inside a given configuration of the casino in order to predict the revenue of the facility. 
-The manager can configure the spacial organization of the casino (such walls and games) and the behaviour of both games and customers. 
+The application is intended to be used by the manager of a [casino](https://en.wikipedia.org/wiki/Casino) who wants to simulate the behaviour of customers inside a given configuration of the casino in order to predict the revenue of the facility.
+The manager can configure the spacial organization of the casino (such walls and games) and the behaviour of both games and customers.
 
 ### Domain model
 - **Customer**: who enters the casino and plays games.
@@ -59,11 +59,6 @@ class Customer {
   +position: Vector2D
   +direction: Vector2D
 }
-class Game {
- +position: Vector2D
- +width: Double
- +length: Double
-}
 GameType <|-- Blackjack
 GameType <|-- Roulette
 GameType <|-- SlotMachine
@@ -72,12 +67,21 @@ class Door {
   +position: Vector2D
 }
 
+class Obstacle {
+    +position: Vector2D
+    +width: Double
+    +height: Double
+}
+
 Door --> Customer : allows entry
 Customer --> Game : plays
 Customer  --> Customer : moves influenced by other
 Customer --> GameType : likes
 Game --> GameType : is a
 Customer --> Game : moves towards its favourite
+Customer --> Obstacle : avoids
+Game --|> Obstacle
+Wall --|> Obstacle
 ```
 ### Functional requirements
 
@@ -99,7 +103,7 @@ function calculate_separation(boid, nearby_boids){
 ```
 function calculate_alignment(boid, nearby_boids){
   average_velocity = (0, 0)
-  if size(nearby_boids) > 0:
+  if size(nearby_boids) > 0 {
     for each other_boid in nearby_boids 
       average_velocity += other_boid.velocity
     average_velocity /= size(nearby_boids)
@@ -113,7 +117,7 @@ function calculate_alignment(boid, nearby_boids){
 ```
 function calculate_cohesion(boid, nearby_boids){
   center_of_mass = (0, 0)
-  if size(nearby_boids) > 0:
+  if size(nearby_boids) > 0 {
     for each other_boid in nearby_boids
       center_of_mass += other_boid.position
     center_of_mass /= size(nearby_boids)
@@ -123,7 +127,9 @@ function calculate_cohesion(boid, nearby_boids){
   }
 }
 ```
-- **Game attracted**: Customers are attracted by their favourite game, in particular the customer looks around for the nearest game of its favourite type and moves towards it. If no game of its liking is found, this behaviour won't affect its movements.
+- **Games attraction**: Customers are attracted by their favourite game, in particular the customer looks around for the nearest game of its favourite type and moves towards it. If no game of its liking is found, this behaviour won't affect its movements.
+
+- **Collisions with walls and games**: Customers can't collide with obstacles, which are games and walls. When the resulting velocity would make the customer collide with obstacles, its velocity is set to zero and the movement canceled.
 
 Each customer is affected only by the boids within a certain distance, defined by the `PERCEPTION_RADIUS`. If a boid is outside this radius, it is not considered in the calculations.
 Each customer updates its position and velocity according to the following algorithm:
@@ -145,8 +151,13 @@ b.velocity += GAME_ATTRACTION_WEIGHT * game_attraction
 if magnitude(b.velocity) > MAX_SPEED
 b.velocity = normalize(b.velocity) * MAX_SPEED      
 
-/* Update position */
-b.position += b.velocity
+if b.canSee(b.position + b.velocity) {
+    /* Update position */
+    b.position += b.velocity
+} else {
+    b.direction = (0, 0)
+}
+    
 ```
 Other parameters that influence the boids' behavior are:
 - `MAX_SPEED`: maximum speed limit for boids
@@ -187,45 +198,45 @@ Each game must maintain a consistent internal state, for example:
 - The system must be able to display the **casino map**, including walls and games
 - The system must be able to display **information about simulation entities**, such as customers and games
 - The system must support the **creation, modification, and deletion** of:
-    - Walls
-    - Games (e.g., Slot Machine, Roulette)
-    - Simulation parameters
+  - Walls
+  - Games (e.g., Slot Machine, Roulette)
+  - Simulation parameters
 
 - The system must be able to **execute the simulation**, including:
-    - Simulating customer movement across the casino
-    - Managing game selection strategies and in-game behaviors
-    - Ensuring no physical overlap between customers and walls or other entities
+  - Simulating customer movement across the casino
+  - Managing game selection strategies and in-game behaviors
+  - Ensuring no physical overlap between customers and walls or other entities
 
 - The system must be able to **log simulation data in real time**, including:
-    - Customers bankrolls
-    - Games bankrolls
+  - Customers bankrolls
+  - Games bankrolls
 
 - The system must allow **parameter tuning via GUI**, including:
-    - Customer behavior variables
-    - Time-based flow curves
+  - Customer behavior variables
+  - Time-based flow curves
 
 - The system must support **visual monitoring of internal states**, including:
-    - Current bankroll
+  - Current bankroll
 
 - The system must be able to **validate the simulation setup**, ensuring consistency and completeness before execution
 
 
 ### Non-functional requirements
 - Performance:
-    - The system should simulate at least 50 concurrent customers with <100ms average update latency
-    - Real-time logging must not cause performance degradation
+  - The system should simulate at least 50 concurrent customers with <100ms average update latency
+  - Real-time logging must not cause performance degradation
 - Scalability:
-    - The simulation engine should support scaling up to 500+ entities (customers + games) with graceful degradation
+  - The simulation engine should support scaling up to 500+ entities (customers + games) with graceful degradation
 - Portability:
-    - The application should be cross-platform or easily portable across supported OSs
+  - The application should be cross-platform or easily portable across supported OSs
 - Maintainability:
-    - Modular architecture with clear separation between GUI, simulation logic, and data layers
+  - Modular architecture with clear separation between GUI, simulation logic, and data layers
 - Usability:
-    - GUI must allow intuitive drag-and-drop for map and game design
-    - All configurable parameters should be accessible via forms or sliders
+  - GUI must allow intuitive drag-and-drop for map and game design
+  - All configurable parameters should be accessible via forms or sliders
 - Reliability:
-    - The simulation must recover gracefully from internal errors without crashing
-    - Consistent logging should allow for post-mortem debugging
+  - The simulation must recover gracefully from internal errors without crashing
+  - Consistent logging should allow for post-mortem debugging
 
 ### Implementation requirements
 - Scala 3.3.5
@@ -242,14 +253,14 @@ Each game must maintain a consistent internal state, for example:
 ### Optional requirements
 - Monitoring of each customer's internal state (e.g., current bankroll, mood level) via GUI
 - A DSL to define custom (including non-Gaussian) curves related to:
-    - Customer flow over time
-    - Initial bankroll distribution of players
-    - Other dynamic simulation parameters
+  - Customer flow over time
+  - Initial bankroll distribution of players
+  - Other dynamic simulation parameters
 - A GUI for monitoring real-time and aggregated data regarding the casino's performance
 
 ## Architectural Design
 ### Overall architecture
-The application rely on a MVU (Model-View-Update) architecture, which is a purely functional architecture. 
+The application rely on a MVU (Model-View-Update) architecture, which is a purely functional architecture.
 Core concepts of this architecture are:
 - **Model**: Represents the state of the application, a pure, immutable data structure where all state changes produce new instances.
 - **View**: A function that takes the model and produces a view, which is a description of what the user interface should look like.
@@ -257,8 +268,8 @@ Core concepts of this architecture are:
 
 ![MVU Architecture Diagram](resources/mvu_architecture_schema.png)
 
-Cornerstone of this architecture is the unidirectional data flow, where at the center of the architecture is the update function, which process messages 
-sent by the view and produces a new model. This kind of update function is what allow this architecture to simulate the loop of a traditional simulation application, 
+Cornerstone of this architecture is the unidirectional data flow, where at the center of the architecture is the update function, which process messages
+sent by the view and produces a new model. This kind of update function is what allow this architecture to simulate the loop of a traditional simulation application,
 maintaining the purely functional nature of the application.
 
 
@@ -270,7 +281,7 @@ maintaining the purely functional nature of the application.
 ### Crucial technological choices for architecture
 #### Scala.js + Laminar: Reactive Frontend & Continuous Deployment
 
-The application rely on a browser-native UI built using **Scala.js** with **Laminar**. This choice was driven by the ability to have a continuous deployment via GitHub Pages while also adopting well to the MVU architecture. 
+The application rely on a browser-native UI built using **Scala.js** with **Laminar**. This choice was driven by the ability to have a continuous deployment via GitHub Pages while also adopting well to the MVU architecture.
 
 Laminar **fine-grained reactivity** ensures that view components update automatically when the model changes, perfectly complementing the MVU dataflow `Model → View → Update` cycle. Rather than manually propagating new state, Laminar delivers updates precisely where they’re needed.
 Also, DOM changes are direct without the need of virtual-DOM abstraction, avoiding performance bottlenecks and potential stale-state problem common with other web framework.
@@ -286,13 +297,13 @@ Cornerstone component is the update function, which has been designed in a way t
 ![MVU Update Function Diagram](resources/update_loop.png)
 
 #### Update
-The Update system represents the core simulation engine responsible for managing the state transitions and event processing 
-in a casino simulation environment. Built using functional programming principles and tail recursion optimization, 
-the system processes discrete simulation events in a deterministic sequence, ensuring consistent state management across 
+The Update system represents the core simulation engine responsible for managing the state transitions and event processing
+in a casino simulation environment. Built using functional programming principles and tail recursion optimization,
+the system processes discrete simulation events in a deterministic sequence, ensuring consistent state management across
 all simulation components including customers, games, walls, and spawners.
 
-The Update system follows an event-driven architecture combined with the State pattern, where simulation state transitions 
-are triggered by specific events processed through a central update loop. The design emphasizes immutability and functional 
+The Update system follows an event-driven architecture combined with the State pattern, where simulation state transitions
+are triggered by specific events processed through a central update loop. The design emphasizes immutability and functional
 composition, using tail recursion to ensure stack safety during extended simulation runs.
 
 ```mermaid
@@ -368,7 +379,7 @@ flowchart TD
 ```
 The system processes all state changes through discrete events, providing clear separation of concerns and making the simulation deterministic and testable.
 Each event type triggers specific state transformation logic.
-The `SimulationState` serves as the context, while different events represent state transition triggers. The `Update` class 
+The `SimulationState` serves as the context, while different events represent state transition triggers. The `Update` class
 acts as the state manager, coordinating transitions between different simulation phases.
 
 
@@ -378,12 +389,12 @@ We choose to implement the `Customer` behavior using **F‑bounded polymorphic t
 
 ```scala 3
 case class Customer(
-    id: String,
-    bankroll: Double,
-    customerState: CustState = Idle
-) extends Entity,
-      Bankroll[Customer],
-      CustomerState[Customer]:
+                           id: String,
+                           bankroll: Double,
+                           customerState: CustState = Idle
+                   ) extends Entity,
+        Bankroll[Customer],
+        CustomerState[Customer]:
 
   protected def updatedBankroll(newRoll: Double): Customer =
     this.copy(bankroll = newRoll)
@@ -427,21 +438,21 @@ val updatedCustomer = newCustomer.updateBankroll(-20.0)
   Each behavior (e.g., bankroll, boredom, status) is isolated within its own trait. This allows introducing new behaviour without altering existing implementations by just defining the trait and mix it in.
 ```scala 3
 case class Customer(
-id: String,
-bankroll: Double,
-customerState: CustState = Idle,
-boredom: Double
-) extends Entity,
-Bankroll[Customer],
-CustomerState[Customer],
-Boredom[Customer]: // Just adding a new behaviour to the Customer by composition
+                           id: String,
+                           bankroll: Double,
+                           customerState: CustState = Idle,
+                           boredom: Double
+                   ) extends Entity,
+        Bankroll[Customer],
+        CustomerState[Customer],
+        Boredom[Customer]: // Just adding a new behaviour to the Customer by composition
 
 ```
 By leveraging these traits composition system, our `Customer` model stays **type safe**, **cohesive**, and easy to evolve, supporting future expansion of behaviors and customer types without compromising the maintainability.
 
 #### Customers spawner
 
-The `Spawner` system manages the generation of entities (customers) in the simulation using configurable spawning strategies. 
+The `Spawner` system manages the generation of entities (customers) in the simulation using configurable spawning strategies.
 The design follows these core principles:
 - Decoupling : Spawners are unaware of strategy implementation details
 - Flexibility : Strategies can be combined and extended
@@ -453,7 +464,7 @@ The responsibilities of this entity are:
 - Time tracking (when entities spawn)
 - Delegation to strategy (how many entities spawn)
 
-The `SpawnerStrategy` is the entity designed to return the number of customers, following a specific strategy, to spawn which is designed to use 
+The `SpawnerStrategy` is the entity designed to return the number of customers, following a specific strategy, to spawn which is designed to use
 generic and famous spawning behaviours and permit the user to define custom spawning strategies thanks to a scala DSL.
 
 Kind of generic behaviour the `SpawningStrategy` should provide are:
@@ -498,7 +509,7 @@ sequenceDiagram
 ```
 
 By designing the creation of these strategies through a builder we can allow to combine strategies or customize them by applying factors.
-Or even better, we designed an internal DSL which boost the creativity of the user: it allows to customize the predefined 
+Or even better, we designed an internal DSL which boost the creativity of the user: it allows to customize the predefined
 strategies or to create your own one.
 
 #### Walls
@@ -512,7 +523,7 @@ The `Wall` was designed with these core principles:
 - Interactivity: Intuitive drag-and-drop placement
 - Collision Awareness: Prevents invalid placements
 
-Due to the numerous behaviours the `Wall` entity should have design it as a mixin is a great solution, follows the list of 
+Due to the numerous behaviours the `Wall` entity should have design it as a mixin is a great solution, follows the list of
 behaviours that the entity has:
 - `Positioned` : express that the entity has a position
 - `Sized` : which express that the entity has a size
@@ -520,8 +531,8 @@ behaviours that the entity has:
 - `SizeChangingEntity` : which express the resize behaviour of the entity
 
 #### Games
-The core abstraction is provided by the `Game` trait, representing a generic gambling station in the Casino. 
-It’s designed to model concurrency and fairness while allowing flexibility across different game types. 
+The core abstraction is provided by the `Game` trait, representing a generic gambling station in the Casino.
+It’s designed to model concurrency and fairness while allowing flexibility across different game types.
 Three concrete implementations — `RouletteGame`, `SlotMachineGame`, and `BlackJackGame` — extend this trait to specialize behavior based on game logic and betting styles.
 
 ```mermaid
@@ -541,7 +552,7 @@ classDiagram
 To deal with the concurrency on this kind of entity was decided to create some functions which allow to lock/unlock the game.
 This functions will alter the `GameState` which represent the current state of the `Game`, with all the customers that are
 currently playing that specific game.
-Thanks to the implementation of a monad which allow to manage two different states (`Result`), deal with the error in case 
+Thanks to the implementation of a monad which allow to manage two different states (`Result`), deal with the error in case
 of the impossibility to play the game is easy.
 
 Also keeping track of the gains and loss of our game is important, to avoid to overload of task our games a `GameHistory` entity was designed.
@@ -558,7 +569,7 @@ simulate the real-world game behaviours through some predefined strategies and c
 The design follows the Strategy pattern combined with the Builder pattern to create a flexible and extensible architecture for different casino games.
 The system supports three main game types: Slot machines, Roulette, and BlackJack, each with customizable betting strategies and conditions.
 
-The system is built around a core trait `GameStrategy` that defines the contract for all gambling strategies. 
+The system is built around a core trait `GameStrategy` that defines the contract for all gambling strategies.
 Each game type implements this strategy through a two-phase construction process: a builder phase for configuration and an instance phase for execution.
 
 A dedicated DSL module provides a more natural and readable way to construct strategies, making the API more user-friendly and expressive.
@@ -663,8 +674,8 @@ flowchart TD
 ### Student contributions
 Nicolò Ghignatti
 #### Result
-Having to deal with data which can have two states (win or loss for a bet, for example) can be quite annoying so, I've 
-decided to implement a monad which can do it for us. Basically it is a enum which can have 2 states: a 
+Having to deal with data which can have two states (win or loss for a bet, for example) can be quite annoying so, I've
+decided to implement a monad which can do it for us. Basically it is a enum which can have 2 states: a
 `Success` or a `Failure`:
 ```scala
 package utils
@@ -710,26 +721,26 @@ in an easy way:
 ```scala
 // this is an example of how the game strategy DSL was implemented
 trait GameStrategy:
-    def use(): Result[Double, Double]
+  def use(): Result[Double, Double]
 
 object SlotStrategy:
-    def apply: SlotStrategyBuilder = SlotStrategyBuilder()
+  def apply: SlotStrategyBuilder = SlotStrategyBuilder()
 
 case class SlotStrategyBuilder( betAmount, condition):
-    def bet(amount: Double): SlotStrategyBuilder =
-      require(amount > 0.0, "Bet amount must be positive")
-    this.copy(betAmount = Some(amount))
+  def bet(amount: Double): SlotStrategyBuilder =
+    require(amount > 0.0, "Bet amount must be positive")
+  this.copy(betAmount = Some(amount))
 
 def when(cond: => Boolean): SlotStrategyInstance =
   SlotStrategyInstance(betAmount.getOrElse(0.0), () => cond)
 
 case class SlotStrategyInstance(betAmount, condition) extends GameStrategy:
-    override def use(): Result[Double, Double] =
-        val values =
-          for _ <- 1 to 5 yield Random.nextInt(5) + 1
-        if condition() && values.distinct.size == 1 then
-          Result.Success(betAmount * 10)
-        else Result.Failure(betAmount)
+  override def use(): Result[Double, Double] =
+    val values =
+      for _ <- 1 to 5 yield Random.nextInt(5) + 1
+    if condition() && values.distinct.size == 1 then
+      Result.Success(betAmount * 10)
+    else Result.Failure(betAmount)
 ```
 Allowing an easy creation like the following:
 ```scala 3
@@ -752,7 +763,7 @@ trait Movable[T <: Movable[T]]:
 and all movement managers depend only on this trait, not on the concrete implementation of the `Customer`.
 Two movement managers have been implemented:
 - **Boid-like movement**: this implements the boid-like movement described in the user requirements section. It is obtained by combining three other managers, each one implementing one of the three boid-like rules: **Separation**, **Alignment** and **Cohesion**.
-Since the boids logic for a single customer need not only its position and velocity, but also information about the other customers, the `Boids.State` case class is defined, which contains all the information needed to compute the movement of the boid. Then an adapter manager is defined to adapt the `SimulationState` to the necessary `Boids.State` and vice versa. This allows to keep the movement logic independent from the simulation state. The following class diagram describes the dependencies taking as example the `AlignmentManager`, the `SeparationManager` and the `CohesionManager` are implemented in the same way:
+  Since the boids logic for a single customer need not only its position and velocity, but also information about the other customers, the `Boids.State` case class is defined, which contains all the information needed to compute the movement of the boid. Then an adapter manager is defined to adapt the `SimulationState` to the necessary `Boids.State` and vice versa. This allows to keep the movement logic independent from the simulation state. The following class diagram describes the dependencies taking as example the `AlignmentManager`, the `SeparationManager` and the `CohesionManager` are implemented in the same way:
 ```mermaid
 classDiagram
 class Movable {
@@ -786,13 +797,13 @@ Player --> GameType : favourite game
 All movement managers are implemented independently from one another, to combine them a simple bash-like DSL is created: to combine two managers the `|` operator is used, similarly to what the `andThen` method does in Scala between two functions. This operator is also used to apply a manager to update the current state. In order to weight the contribution of each manager the trait `WeightedManager` is defined which supports the `*` operator. The `*` operator multiplies the contribution of the manager by a given weight. The following example shows how to obtain a manager which combines various components to obtain a boids-like movement:
 ```scala 3
 val boidManager : BaseManager[SimulationState] = BoidsAdapter(
-        PerceptionLimiterManager(perceptionRadius)
+  PerceptionLimiterManager(perceptionRadius)
           | alignmentWeight * AlignmentManager()
           | cohesionWeight * CohesionManager()
           | separationWeight * SeparationManager(avoidRadius)
           | VelocityLimiterManager(maxSpeed)
           | MoverManager()
-      )
+)
 ```
 So given an initial `SimulationState`, the `boidManager` can be applied to it to obtain an updated state, which contains the updated positions and velocities of the customers:
 ```scala 3
@@ -806,12 +817,12 @@ val updatedState = state | boidManager
 ### Technologies used
 For testing our code we used ScalaTest, probably, the most widely used and flexible testing framework for Scala.
 The choice of this testing technology has different pros:
-- **Rich Testing Styles**: With multiple built-in styles—such as FlatSpec, FunSuite, FunSpec, WordSpec, FreeSpec, 
-    PropSpec, and FeatureSpec—ScalaTest enables you to write tests in the style that best fits your needs: xUnit, BDD, 
-    nested specification, or property-based testing
+- **Rich Testing Styles**: With multiple built-in styles—such as FlatSpec, FunSuite, FunSpec, WordSpec, FreeSpec,
+  PropSpec, and FeatureSpec—ScalaTest enables you to write tests in the style that best fits your needs: xUnit, BDD,
+  nested specification, or property-based testing
 - **Powerful Matchers & DSL**: ScalaTest includes expressive matchers that allow fluent assertions
-- **Deep Ecosystem Integration**: ScalaTest integrates with build tools and frameworks including sbt, Maven, Gradle, 
-    IntelliJ, Eclipse, and testing tools like JUnit, TestNG, ScalaCheck, JMock, EasyMock, Mockito, and Selenium
+- **Deep Ecosystem Integration**: ScalaTest integrates with build tools and frameworks including sbt, Maven, Gradle,
+  IntelliJ, Eclipse, and testing tools like JUnit, TestNG, ScalaCheck, JMock, EasyMock, Mockito, and Selenium
 
 ### Coverage level
 
