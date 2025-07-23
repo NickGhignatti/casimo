@@ -11,7 +11,6 @@ import model.entities.games.Game
 import model.entities.games.GameResolver
 import model.entities.spawner.Spawner
 import model.managers.CustomerBankrollManager
-import model.managers.CustomerStrategyManager
 import model.managers.PersistenceManager
 import model.managers.|
 import update.Event._
