@@ -3,7 +3,7 @@ package model.entities.games
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Result.Failure
 import utils.Result.Success
-import utils.Vector2D
+import utils.{Result, Vector2D}
 
 class TestGame extends AnyFunSuite:
   val mockId = "test"
@@ -101,22 +101,79 @@ class TestGame extends AnyFunSuite:
         assert(lockedGame.gameType == blackjackGame.gameType)
       case _ => fail("Lock should succeed")
 
+  test("Roulette GameType should remain unchanged after unlock operations"):
+    val rouletteGame = GameBuilder.roulette(Vector2D.zero)
+    val lockedGame = rouletteGame.lock(mockId) match
+      case Success(lock) => lock
+      case _             => fail("Lock should succedd")
+
+    lockedGame.unlock(mockId) match
+      case Success(unlockedGame) =>
+        assert(unlockedGame.gameType == Roulette)
+        assert(
+          rouletteGame.gameState.currentPlayers == unlockedGame.gameState.currentPlayers
+        )
+      case _ => fail("Unlock should succeed")
+
+  test("Slot GameType should remain unchanged after unlock operations"):
+    val slotGame = GameBuilder.slot(Vector2D.zero)
+    val lockedGame = slotGame.lock(mockId) match
+      case Success(lock) => lock
+      case _             => fail("Lock should succedd")
+
+    lockedGame.unlock(mockId) match
+      case Success(unlockedGame) =>
+        assert(unlockedGame.gameType == SlotMachine)
+        assert(
+          slotGame.gameState.currentPlayers == unlockedGame.gameState.currentPlayers
+        )
+      case _ => fail("Unlock should succeed")
+
+  test("BlackJack GameType should remain unchanged after unlock operations"):
+    val blackjackGame = GameBuilder.blackjack(Vector2D.zero)
+    val lockedGame = blackjackGame.lock(mockId) match
+      case Success(lock) => lock
+      case _             => fail("Lock should succedd")
+
+    lockedGame.unlock(mockId) match
+      case Success(unlockedGame) =>
+        assert(unlockedGame.gameType == Blackjack)
+        assert(
+          blackjackGame.gameState.currentPlayers == unlockedGame.gameState.currentPlayers
+        )
+      case _ => fail("Unlock should succeed")
+
+  private def checkPropertiesExceptHistory(
+      oldGame: Game,
+      newGame: Game
+  ): Boolean =
+    oldGame.gameType == newGame.gameType &&
+      oldGame.position == newGame.position &&
+      oldGame.gameState == newGame.gameState &&
+      oldGame.id == newGame.id &&
+      oldGame.width == newGame.width &&
+      oldGame.height == newGame.height
+
   test(
     "updateHistory should return new Game instance with same properties except history"
   ):
-    val originalGame = GameBuilder.roulette(Vector2D(5.0, 10.0))
-    val updatedGame = originalGame.updateHistory("player1", 25.0)
+    val oldRoulette = GameBuilder.roulette(Vector2D(5.0, 10.0))
+    val newRoulette = oldRoulette.updateHistory("player1", 25.0)
 
-    // Same properties
-    assert(updatedGame.gameType == originalGame.gameType)
-    assert(updatedGame.position == originalGame.position)
-    assert(updatedGame.gameState == originalGame.gameState)
-    assert(updatedGame.id == originalGame.id)
-    assert(updatedGame.width == originalGame.width)
-    assert(updatedGame.height == originalGame.height)
+    assert(checkPropertiesExceptHistory(oldRoulette, newRoulette))
+    assert(oldRoulette ne newRoulette)
 
-    // Different instance
-    assert(updatedGame ne originalGame)
+    val oldSlot = GameBuilder.slot(Vector2D(5.0, 10.0))
+    val newSlot = oldSlot.updateHistory("player1", 25.0)
+
+    assert(checkPropertiesExceptHistory(oldSlot, newSlot))
+    assert(oldSlot ne newSlot)
+
+    val oldBlackjack = GameBuilder.blackjack(Vector2D(5.0, 10.0))
+    val newBlackjack = oldBlackjack.updateHistory("player1", 25.0)
+
+    assert(checkPropertiesExceptHistory(oldBlackjack, newBlackjack))
+    assert(oldBlackjack ne newBlackjack)
 
   test("isFull should delegate to gameState.isFull"):
     val game = GameBuilder.slot(Vector2D.zero)
@@ -131,3 +188,37 @@ class TestGame extends AnyFunSuite:
     val game = GameBuilder.roulette(Vector2D.zero)
     val results = game.getLastRoundResult
     assert(results.isEmpty)
+
+  test("games when builded should have predefined size"):
+    val slot = GameBuilder.slot(Vector2D.zero)
+    val roulette = GameBuilder.roulette(Vector2D.zero)
+    val blackjack = GameBuilder.blackjack(Vector2D.zero)
+
+    assert(slot.height == 20 && slot.width == 20)
+    assert(roulette.height == 30 && roulette.width == 30)
+    assert(blackjack.height == 40 && blackjack.width == 70)
+
+  test("new games should have 0 as bankrolls"):
+    val slot = GameBuilder.slot(Vector2D.zero)
+
+    assert(slot.bankroll == 0)
+
+  test("games after some play should not have bankrolls to 0"):
+    val slot = GameBuilder.slot(Vector2D.zero)
+
+    val res1 = slot.play(SlotBet(5.0))
+    val newSlot = slot.updateHistory(
+      mockId,
+      res1.getOrElse(Success(5.0)) match
+        case Result.Success(value) => -value
+        case Result.Failure(error) => error
+    )
+    val res2 = newSlot.play(SlotBet(5.0))
+    val newSlot2 = newSlot.updateHistory(
+      mockId,
+      res2.getOrElse(Success(5.0)) match
+        case Result.Success(value) => -value
+        case Result.Failure(error) => error
+    )
+
+    assert(newSlot2.bankroll != 0 && newSlot2.gameHistory.gains.size == 2)
