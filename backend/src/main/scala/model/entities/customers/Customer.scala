@@ -161,7 +161,7 @@ case class WallAvoidingAdapter(
   ): SimulationState =
     slice.copy(
       customers = slice.customers
-        .map(c => AvoidWallsManager.Context(c, slice.walls))
+        .map(c => AvoidWallsManager.Context(c, slice.walls ++ slice.games))
         .map(c => if !c.movable.isPlaying then c | manager else c)
         .map(_.movable)
     )
