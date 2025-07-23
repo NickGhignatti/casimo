@@ -73,3 +73,61 @@ class TestGame extends AnyFunSuite:
   test("BlackJack should fail if not applied RouletteBet"):
     val game = GameBuilder.blackjack(Vector2D.zero)
     assert(game.play(SlotBet(10.0)).isFailure)
+
+  test("Roulette Gametype should remain unchanged after lock operations"):
+    val rouletteGame = GameBuilder.roulette(Vector2D.zero)
+
+    rouletteGame.lock(mockId) match
+      case Success(lockedGame) =>
+        assert(lockedGame.gameType == Roulette)
+        assert(lockedGame.gameType == rouletteGame.gameType)
+      case _ => fail("Lock should succeed")
+
+  test("Slot GameType should remain unchanged after lock operations"):
+    val slotGame = GameBuilder.slot(Vector2D.zero)
+
+    slotGame.lock(mockId) match
+      case Success(lockedGame) =>
+        assert(lockedGame.gameType == SlotMachine)
+        assert(lockedGame.gameType == slotGame.gameType)
+      case _ => fail("Lock should succeed")
+
+  test("BlackJack GameType should remain unchanged after lock operations"):
+    val blackjackGame = GameBuilder.blackjack(Vector2D.zero)
+
+    blackjackGame.lock(mockId) match
+      case Success(lockedGame) =>
+        assert(lockedGame.gameType == Blackjack)
+        assert(lockedGame.gameType == blackjackGame.gameType)
+      case _ => fail("Lock should succeed")
+
+  test(
+    "updateHistory should return new Game instance with same properties except history"
+  ):
+    val originalGame = GameBuilder.roulette(Vector2D(5.0, 10.0))
+    val updatedGame = originalGame.updateHistory("player1", 25.0)
+
+    // Same properties
+    assert(updatedGame.gameType == originalGame.gameType)
+    assert(updatedGame.position == originalGame.position)
+    assert(updatedGame.gameState == originalGame.gameState)
+    assert(updatedGame.id == originalGame.id)
+    assert(updatedGame.width == originalGame.width)
+    assert(updatedGame.height == originalGame.height)
+
+    // Different instance
+    assert(updatedGame ne originalGame)
+
+  test("isFull should delegate to gameState.isFull"):
+    val game = GameBuilder.slot(Vector2D.zero)
+    assert(!game.isFull)
+
+    val lockedGame = game.lock(mockId).getOrElse(game)
+    assert(lockedGame.isFull)
+
+  test(
+    "getLastRoundResult should delegate to gameHistory with correct player count"
+  ):
+    val game = GameBuilder.roulette(Vector2D.zero)
+    val results = game.getLastRoundResult
+    assert(results.isEmpty)
