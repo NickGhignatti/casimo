@@ -8,11 +8,9 @@ import model.entities.Player
 import model.entities.customers.CustState.Idle
 import model.entities.customers.CustState.Playing
 import model.entities.customers.RiskProfile.Regular
-import model.entities.games.Blackjack
 import model.entities.games.Game
 import model.entities.games.GameType
 import model.entities.games.Roulette
-import model.entities.games.SlotMachine
 import model.managers.BaseManager
 import model.managers.movements.AvoidWallsManager
 import model.managers.movements.Boids
@@ -34,7 +32,7 @@ case class Customer(
     riskProfile: RiskProfile = Regular,
     customerState: CustState = Idle,
     betStrategy: BettingStrategy[Customer] = FlatBetting(10.0, defaultRedBet),
-    favouriteGames: Seq[GameType] = Seq(Roulette, Blackjack, SlotMachine)
+    favouriteGame: GameType = Roulette
 ) extends Entity,
       Movable[Customer],
       Bankroll[Customer],
@@ -70,8 +68,8 @@ case class Customer(
   ): Customer =
     this.copy(betStrategy = newStrat)
 
-  def withFavouriteGames(newFavGame: Seq[GameType]): Customer =
-    this.copy(favouriteGames = newFavGame)
+  def withFavouriteGames(newFavGame: GameType): Customer =
+    this.copy(favouriteGame = newFavGame)
 
   def withProfile(profile: RiskProfile): Customer =
     this.copy(riskProfile = profile)
