@@ -4,6 +4,12 @@ import org.scalatest.funsuite.AnyFunSuite
 
 class TestVector2D extends AnyFunSuite:
 
+  val tolerance = 1e-6
+
+  extension (v: Vector2D)
+    def almostEqual(other: Vector2D): Boolean =
+      Math.abs(v.x - other.x) < tolerance && Math.abs(v.y - other.y) < tolerance
+
   test("addition of two vectors"):
     val v1 = Vector2D(1.0, 2.0)
     val v2 = Vector2D(3.0, 4.0)
@@ -26,7 +32,7 @@ class TestVector2D extends AnyFunSuite:
   test("dot product of two vectors"):
     val v1 = Vector2D(1.0, 2.0)
     val v2 = Vector2D(3.0, 4.0)
-    assert(Math.abs((v1 dot v2) - 11.0) < 1e-6)
+    assert(Math.abs((v1 dot v2) - 11.0) < tolerance)
 
   test("normalization of a vector"):
     val v = Vector2D(3.0, 4.0)

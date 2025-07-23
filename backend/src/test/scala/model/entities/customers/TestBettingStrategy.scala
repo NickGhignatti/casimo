@@ -112,10 +112,10 @@ class TestBettingStrategy extends AnyFunSuite with Matchers:
     )
     val firstBet = mock.placeBet()
     val newBettingStrat =
-      mock.updateAfter(Result.Failure(mock.betStrategy.betAmount))
+      mock.updateAfter(- mock.betStrategy.betAmount)
     val secondBet = newBettingStrat.placeBet()
     val lastBettingStrat = newBettingStrat.updateAfter(
-      Result.Failure(newBettingStrat.betStrategy.betAmount)
+      - newBettingStrat.betStrategy.betAmount
     )
     val thirdBet = lastBettingStrat.placeBet()
     assert(firstBet.amount == 10.0)
@@ -133,10 +133,10 @@ class TestBettingStrategy extends AnyFunSuite with Matchers:
     )
     val firstBet = mock.placeBet()
     val newBettingStrat =
-      mock.updateAfter(Result.Failure(mock.betStrategy.betAmount))
+      mock.updateAfter( - mock.betStrategy.betAmount)
     val secondBet = newBettingStrat.placeBet()
     val lastBettingStrat = newBettingStrat.updateAfter(
-      Result.Success(newBettingStrat.betStrategy.betAmount)
+      newBettingStrat.betStrategy.betAmount
     )
     val thirdBet = lastBettingStrat.placeBet()
     assert(firstBet.amount == 10.0)
@@ -152,13 +152,13 @@ class TestBettingStrategy extends AnyFunSuite with Matchers:
     )
     val bet = mock.placeBet()
     val mockLose = mock.updateBankroll(-bet.amount)
-    val lose = mockLose.updateAfter(Result.Failure(bet.amount))
+    val lose = mockLose.updateAfter(- bet.amount)
     val mockWin = lose.updateBankroll(bet.amount)
-    val win = mockWin.updateAfter(Result.Success(mock.betStrategy.betAmount))
+    val win = mockWin.updateAfter(mock.betStrategy.betAmount)
     val newBet = win.placeBet()
     val mockAnotherLose = win.updateBankroll(-newBet.amount)
     val anotherLose =
-      mockAnotherLose.updateAfter(Result.Failure(mock.betStrategy.betAmount))
+      mockAnotherLose.updateAfter(- mock.betStrategy.betAmount)
 
     lose.betStrategy.betAmount shouldEqual 5.0
     anotherLose.betStrategy.betAmount shouldEqual 10.0
@@ -174,7 +174,7 @@ class TestBettingStrategy extends AnyFunSuite with Matchers:
     )
     val bet = mock.placeBet()
     val mock2 = mock.updateBankroll(bet.amount)
-    val afterWin = mock2.updateAfter(Result.Success(mock.betStrategy.betAmount))
+    val afterWin = mock2.updateAfter(mock.betStrategy.betAmount)
     val stratAfterWin = afterWin.betStrategy.asInstanceOf[OscarGrind[Customer]]
 
     stratAfterWin.betAmount shouldEqual 5.0
@@ -191,10 +191,10 @@ class TestBettingStrategy extends AnyFunSuite with Matchers:
     )
     val bet = mock.placeBet()
     val mockLose = mock.updateBankroll(-bet.amount)
-    val lose = mockLose.updateAfter(Result.Failure(bet.amount))
+    val lose = mockLose.updateAfter(- bet.amount)
     val mockWin = lose.updateBankroll(bet.amount)
     val stratAfterWin = mockWin
-      .updateAfter(Result.Success(mock.betStrategy.betAmount))
+      .updateAfter(mock.betStrategy.betAmount)
       .betStrategy
       .asInstanceOf[OscarGrind[Customer]]
 

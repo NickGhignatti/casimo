@@ -6,15 +6,17 @@ import model.SimulationState
 import model.data.DataManager
 import model.entities.Wall
 import model.entities.customers.Customer
+import model.entities.customers.DefaultMovementManager
 import model.entities.games.Game
 import model.entities.games.GameResolver
 import model.entities.spawner.Spawner
-import model.managers.BaseManager
+import model.managers.CustomerBankrollManager
+import model.managers.PersistenceManager
 import model.managers.|
 import update.Event._
 import utils.Vector2D
 
-case class Update(customerManager: BaseManager[SimulationState]):
+case class Update(customerManager: DefaultMovementManager):
 
   def updateSimulationDataManager(
       dataManager: DataManager,
@@ -39,10 +41,16 @@ case class Update(customerManager: BaseManager[SimulationState]):
         update(state.copy(games = updatedGames), UpdateSimulationBankrolls)
 
       case UpdateSimulationBankrolls =>
-        update(state, UpdateCustomersState)
+        val updatedBankroll =
+          CustomerBankrollManager[Customer](state.games).update(state.customers)
+        update(state.copy(customers = updatedBankroll), UpdateCustomersState)
 
       case UpdateCustomersState =>
-        state
+        /*val updatedCustomerStrategy =
+          CustomerStrategyManager[Customer](state.games).update(state.customers)*/
+        val updatedCustomerState =
+          PersistenceManager[Customer]().update(state.customers)
+        state.copy(customers = updatedCustomerState)
 
       case AddCustomers(strategy) =>
         state.copy(

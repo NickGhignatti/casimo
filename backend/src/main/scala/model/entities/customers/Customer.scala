@@ -12,11 +12,12 @@ import model.entities.games.GameType
 import model.entities.games.Roulette
 import model.entities.games.SlotMachine
 import model.managers.BaseManager
+import model.managers.movements.AvoidWallsManager
 import model.managers.movements.Boids
 import model.managers.movements.Boids._
-import model.managers.movements.Context
-import model.managers.movements.GamesAttractivenessManager
-import model.managers.movements.PlayerSitterManager
+import model.managers.movements.PlayerManagers
+import model.managers.movements.PlayerManagers.GamesAttractivenessManager
+import model.managers.movements.PlayerManagers.PlayerSitterManager
 import model.managers.|
 import utils.Vector2D
 
@@ -117,19 +118,27 @@ case class DefaultMovementManager(
           | cohesionWeight * CohesionManager()
           | separationWeight * SeparationManager(avoidRadius)
           | VelocityLimiterManager(maxSpeed)
-          | MoverManager()
       )
+      | WallAvoidingAdapter(AvoidWallsManager())
+      | BoidsAdapter(MoverManager())
 
-case class GamesAttractivenessAdapter(manager: BaseManager[Context[Customer]])
-    extends BaseManager[SimulationState]:
+case class GamesAttractivenessAdapter(
+    manager: BaseManager[PlayerManagers.Context[Customer]]
+) extends BaseManager[SimulationState]:
   override def update(
       slice: SimulationState
   ): SimulationState =
-    slice.copy(
-      customers = slice.customers
-        .map(Context(_, slice.games))
-        .map(c => if !c.player.isPlaying then c | manager else c)
-        .map(_.player)
+    import PlayerManagers.Context
+    slice.customers.foldLeft(slice)((state, customer) =>
+      val updatedContext = Context(customer, state.games) | manager
+      state.copy(
+        customers = state.customers.map(c =>
+          if c.id == updatedContext.player.id then updatedContext.player else c
+        ),
+        games = state.games.map(game =>
+          updatedContext.games.find(_.id == game.id).get
+        )
+      )
     )
 
 case class BoidsAdapter(manager: BaseManager[Boids.State[Customer]])
@@ -142,4 +151,17 @@ case class BoidsAdapter(manager: BaseManager[Boids.State[Customer]])
         .map(Boids.State(_, slice.customers))
         .map(c => if !c.boid.isPlaying then c | manager else c)
         .map(_.boid)
+    )
+
+case class WallAvoidingAdapter(
+    manager: BaseManager[AvoidWallsManager.Context[Customer]]
+) extends BaseManager[SimulationState]:
+  override def update(
+      slice: SimulationState
+  ): SimulationState =
+    slice.copy(
+      customers = slice.customers
+        .map(c => AvoidWallsManager.Context(c, slice.walls ++ slice.games))
+        .map(c => if !c.movable.isPlaying then c | manager else c)
+        .map(_.movable)
     )
