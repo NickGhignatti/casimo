@@ -26,6 +26,7 @@ trait Game(
   def lock(id: String): Result[Game, Game]
   def unlock(id: String): Result[Game, Game]
   def play[B <: Bet](bet: B): Result[BetResult, String]
+  def isFull: Boolean = this.gameState.isFull
 
   def bankroll: Double = this.gameHistory.overallGains
   def getLastRoundResult: List[Gain] =
