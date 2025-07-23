@@ -1,6 +1,24 @@
 # Casimo Documentation
 
 ## Adopted Development Process
+
+### Methodology
+A **SCRUM**-inspired development process was adopted, as suggested, in order to ensure an agile and iterative management of the project activities.
+
+Throughout the entire project lifecycle, the quality of the process improved in parallel with the growth of the development team,
+which successfully tackled the project challenges, gradually strengthening its synergy and cohesion.
+
+### Roles
+- **Product Owner**: Luca Patrignani,  responsible for monitoring the project’s progress, ensuring alignment with business objectives, coordinating the development team, and also serving as a developer.
+- **Team member**: Nicolò Ghignatti, member of the dev team which is repsonsible for the project's progress.
+- **Stakeholder**: Marco Galeri, project sponsor and responsible for the product’s quality and usability. He also serves as a developer.
+
+### YouTrack
+To track all development activities, we used YouTrack as our project management tool:
+- **Task creation** → Each new feature, bug, or refactoring activity was modeled as an issue, with a detailed description and time estimate.
+- **Backlog** → We maintained a well-organized and up-to-date backlog: during Sprint Planning, we selected the most urgent tasks and moved them to the next sprint, while lower-priority requests were deferred to future sprints.
+- **Timesheet** → We logged the time spent on each task, allowing for more accurate estimates of the resources needed for future activities.
+
 ### Task division
 The development process was divided into three main themes:
 - Games logic (assigned to Ghignatti): responsible for implementing the core game logic.
@@ -8,17 +26,27 @@ The development process was divided into three main themes:
 - Customer in-game behaviour (assigned to Galeri): responsible for implementing the customer in-game behaviour.
 
 ### Planned meetings/interactions
-Each week the team holds a sprint start meeting in which the team establishes the tasks to be completed in the next sprint and an effort estimation. Then each task is assigned to a team member according to both the overall effort of each member and the theme of the task.
+Each week the team holds a sprint start meeting in which the team establishes the tasks to be completed in the next sprint and an effort estimation. 
+Then each task is assigned to a team member according to both the overall effort of each member and the theme of the task.
 When a blocker is encountered during the development of a task, the team holds a meeting to discuss the issue and pair programming methodology is applied.
 At the end of the week a retrospective meeting is held to review the progress of the tasks and to discuss any issues that may have arisen during the week.
 
 ### Choice of test/build/continuous integration tools
-The team has chosen to use GitHub Actions for continuous integration and deployment. In particular a pipeline has been set up to build and run tests of the project. If the build is successful the application is deployed to the GitHub Pages of the repository.
+The team has chosen to use GitHub Actions for continuous integration and deployment. In particular a pipeline has been set up to build and run tests of the project. 
+If the build is successful the application is deployed to the GitHub Pages of the repository.
 The documentation is also automatically generated and deployed to the GitHub Pages of the repository.
 
+### Test
+To ensure the quality and correctness of the implemented features, the Test Driven Development (TDD) paradigm was adopted. 
+This approach allows for timely identification and correction of potential bugs at the level of individual components during the development phases, ensuring a continuous feedback cycle.
+The TDD development process consists of three main steps:
+- Red Phase (testing): a test is written to describe the expected behavior of a component or feature. Since the implementation is not yet in place, the test initially fails.
+- Green Phase (implementation): the component or feature is then implemented to ensure that the previously written test passes successfully.
+-Refactor Phase: after the test passes, the code is refactored to improve its quality and readability, ensuring that the test continues to pass.
 ## Requirement Specification
 ### Business requirements
-The application is intended to be used by the manager of a [casino](https://en.wikipedia.org/wiki/Casino) who wants to simulate the behaviour of customers inside a given configuration of the casino in order to predict the revenue of the facility. The manager can configure the spacial organization of the casino (such walls and games) and the behaviour of both games and customers. 
+The application is intended to be used by the manager of a [casino](https://en.wikipedia.org/wiki/Casino) who wants to simulate the behaviour of customers inside a given configuration of the casino in order to predict the revenue of the facility. 
+The manager can configure the spacial organization of the casino (such walls and games) and the behaviour of both games and customers. 
 
 ### Domain model
 - **Customer**: who enters the casino and plays games.
@@ -52,6 +80,7 @@ Game --> GameType : is a
 Customer --> Game : moves towards its favourite
 ```
 ### Functional requirements
+
 #### User requirements
 ##### Customers
 The customers move around the casino according to a [boid](https://en.wikipedia.org/wiki/Boids)-like model. This modeling is taken by the first assigment of PCD course, which is available at [this repo](https://github.com/pcd-2024-2025/assignment-01). Customers are modeled by a `position` and a `velocity` and three rules are applied to them:
@@ -131,11 +160,92 @@ Other parameters that influence the boids' behavior are:
 All of these parameters can be configured by the user in order to simulate different scenarios.
 When a customer is close to a game of its liking, that is the distance between the customer's and game's position is less than `SITTING_RADIUS`, the player sits and plays the game. While a customer is playing it does not move.
 
+##### Games
+The Games module manages the placement, configuration, and behavior of the games within the casino.
+The following functional requirements are designed to ensure a realistic simulation of the interaction between games and customers.
+
+The user must be able to insert and place games on the casino map via the graphical interface. Each game occupies one or more tiles and cannot overlap with walls or other games.
+
+The system must support various types of games, including (but not limited to):
+- Slot Machine
+- Roulette
+- Black Jack
+
+Each type can have different rules that influence the simulation.
+
+The system must allow simulated customers to interact with games based on their strategies:
+- Game selection based on win probability, payout, physical proximity, etc.
+- In-game decisions (e.g., how much to bet, when to stop)
+
+Each game must maintain a consistent internal state, for example:
+- List of active players
+- Number of rounds played
+- Aggregate statistics (win percentages, average bet amounts)
+
 #### System requirements
 
+- The system must be able to display the **casino map**, including walls and games
+- The system must be able to display **information about simulation entities**, such as customers and games
+- The system must support the **creation, modification, and deletion** of:
+    - Walls
+    - Games (e.g., Slot Machine, Roulette)
+    - Simulation parameters
+
+- The system must be able to **execute the simulation**, including:
+    - Simulating customer movement across the casino
+    - Managing game selection strategies and in-game behaviors
+    - Ensuring no physical overlap between customers and walls or other entities
+
+- The system must be able to **log simulation data in real time**, including:
+    - Customers bankrolls
+    - Games bankrolls
+
+- The system must allow **parameter tuning via GUI**, including:
+    - Customer behavior variables
+    - Time-based flow curves
+
+- The system must support **visual monitoring of internal states**, including:
+    - Current bankroll
+
+- The system must be able to **validate the simulation setup**, ensuring consistency and completeness before execution
+
+
 ### Non-functional requirements
+- Performance:
+    - The system should simulate at least 50 concurrent customers with <100ms average update latency
+    - Real-time logging must not cause performance degradation
+- Scalability:
+    - The simulation engine should support scaling up to 500+ entities (customers + games) with graceful degradation
+- Portability:
+    - The application should be cross-platform or easily portable across supported OSs
+- Maintainability:
+    - Modular architecture with clear separation between GUI, simulation logic, and data layers
+- Usability:
+    - GUI must allow intuitive drag-and-drop for map and game design
+    - All configurable parameters should be accessible via forms or sliders
+- Reliability:
+    - The simulation must recover gracefully from internal errors without crashing
+    - Consistent logging should allow for post-mortem debugging
 
 ### Implementation requirements
+- Scala 3.3.5
+- Scalatest 3.2.19
+- Scalacheck 3.2.19
+- ScalaJs 2.8.0
+- Laminar 17.0.0
+- SBT as automation tool 1.10.11
+- Scaladoc
+- Scalafmt 3.7.15
+- Scalafix
+- Codecov
+
+### Optional requirements
+- Monitoring of each customer's internal state (e.g., current bankroll, mood level) via GUI
+- A DSL to define custom (including non-Gaussian) curves related to:
+    - Customer flow over time
+    - Initial bankroll distribution of players
+    - Other dynamic simulation parameters
+- A GUI for monitoring real-time and aggregated data regarding the casino's performance
 
 ## Architectural Design
 ### Overall architecture
