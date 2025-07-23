@@ -1,6 +1,24 @@
 # Casimo Documentation
 
 ## Adopted Development Process
+
+### Methodology
+A **SCRUM**-inspired development process was adopted, as suggested, in order to ensure an agile and iterative management of the project activities.
+
+Throughout the entire project lifecycle, the quality of the process improved in parallel with the growth of the development team,
+which successfully tackled the project challenges, gradually strengthening its synergy and cohesion.
+
+### Roles
+- **Product Owner**: Luca Patrignani,  responsible for monitoring the project’s progress, ensuring alignment with business objectives, coordinating the development team, and also serving as a developer.
+- **Team member**: Nicolò Ghignatti, member of the dev team which is repsonsible for the project's progress.
+- **Stakeholder**: Marco Galeri, project sponsor and responsible for the product’s quality and usability. He also serves as a developer.
+
+### YouTrack
+To track all development activities, we used YouTrack as our project management tool:
+- **Task creation** → Each new feature, bug, or refactoring activity was modeled as an issue, with a detailed description and time estimate.
+- **Backlog** → We maintained a well-organized and up-to-date backlog: during Sprint Planning, we selected the most urgent tasks and moved them to the next sprint, while lower-priority requests were deferred to future sprints.
+- **Timesheet** → We logged the time spent on each task, allowing for more accurate estimates of the resources needed for future activities.
+
 ### Task division
 The development process was divided into three main themes:
 - Games logic (assigned to Ghignatti): responsible for implementing the core game logic.
@@ -8,17 +26,27 @@ The development process was divided into three main themes:
 - Customer in-game behaviour (assigned to Galeri): responsible for implementing the customer in-game behaviour.
 
 ### Planned meetings/interactions
-Each week the team holds a sprint start meeting in which the team establishes the tasks to be completed in the next sprint and an effort estimation. Then each task is assigned to a team member according to both the overall effort of each member and the theme of the task.
+Each week the team holds a sprint start meeting in which the team establishes the tasks to be completed in the next sprint and an effort estimation. 
+Then each task is assigned to a team member according to both the overall effort of each member and the theme of the task.
 When a blocker is encountered during the development of a task, the team holds a meeting to discuss the issue and pair programming methodology is applied.
 At the end of the week a retrospective meeting is held to review the progress of the tasks and to discuss any issues that may have arisen during the week.
 
 ### Choice of test/build/continuous integration tools
-The team has chosen to use GitHub Actions for continuous integration and deployment. In particular a pipeline has been set up to build and run tests of the project. If the build is successful the application is deployed to the GitHub Pages of the repository.
+The team has chosen to use GitHub Actions for continuous integration and deployment. In particular a pipeline has been set up to build and run tests of the project. 
+If the build is successful the application is deployed to the GitHub Pages of the repository.
 The documentation is also automatically generated and deployed to the GitHub Pages of the repository.
 
+### Test
+To ensure the quality and correctness of the implemented features, the Test Driven Development (TDD) paradigm was adopted. 
+This approach allows for timely identification and correction of potential bugs at the level of individual components during the development phases, ensuring a continuous feedback cycle.
+The TDD development process consists of three main steps:
+- Red Phase (testing): a test is written to describe the expected behavior of a component or feature. Since the implementation is not yet in place, the test initially fails.
+- Green Phase (implementation): the component or feature is then implemented to ensure that the previously written test passes successfully.
+-Refactor Phase: after the test passes, the code is refactored to improve its quality and readability, ensuring that the test continues to pass.
 ## Requirement Specification
 ### Business requirements
-The application is intended to be used by the manager of a [casino](https://en.wikipedia.org/wiki/Casino) who wants to simulate the behaviour of customers inside a given configuration of the casino in order to predict the revenue of the facility. The manager can configure the spacial organization of the casino (such walls and games) and the behaviour of both games and customers. 
+The application is intended to be used by the manager of a [casino](https://en.wikipedia.org/wiki/Casino) who wants to simulate the behaviour of customers inside a given configuration of the casino in order to predict the revenue of the facility. 
+The manager can configure the spacial organization of the casino (such walls and games) and the behaviour of both games and customers. 
 
 ### Domain model
 - **Customer**: who enters the casino and plays games.
@@ -52,6 +80,7 @@ Game --> GameType : is a
 Customer --> Game : moves towards its favourite
 ```
 ### Functional requirements
+
 #### User requirements
 ##### Customers
 The customers move around the casino according to a [boid](https://en.wikipedia.org/wiki/Boids)-like model. This modeling is taken by the first assigment of PCD course, which is available at [this repo](https://github.com/pcd-2024-2025/assignment-01). Customers are modeled by a `position` and a `velocity` and three rules are applied to them:
@@ -131,11 +160,92 @@ Other parameters that influence the boids' behavior are:
 All of these parameters can be configured by the user in order to simulate different scenarios.
 When a customer is close to a game of its liking, that is the distance between the customer's and game's position is less than `SITTING_RADIUS`, the player sits and plays the game. While a customer is playing it does not move.
 
+##### Games
+The Games module manages the placement, configuration, and behavior of the games within the casino.
+The following functional requirements are designed to ensure a realistic simulation of the interaction between games and customers.
+
+The user must be able to insert and place games on the casino map via the graphical interface. Each game occupies one or more tiles and cannot overlap with walls or other games.
+
+The system must support various types of games, including (but not limited to):
+- Slot Machine
+- Roulette
+- Black Jack
+
+Each type can have different rules that influence the simulation.
+
+The system must allow simulated customers to interact with games based on their strategies:
+- Game selection based on win probability, payout, physical proximity, etc.
+- In-game decisions (e.g., how much to bet, when to stop)
+
+Each game must maintain a consistent internal state, for example:
+- List of active players
+- Number of rounds played
+- Aggregate statistics (win percentages, average bet amounts)
+
 #### System requirements
 
+- The system must be able to display the **casino map**, including walls and games
+- The system must be able to display **information about simulation entities**, such as customers and games
+- The system must support the **creation, modification, and deletion** of:
+    - Walls
+    - Games (e.g., Slot Machine, Roulette)
+    - Simulation parameters
+
+- The system must be able to **execute the simulation**, including:
+    - Simulating customer movement across the casino
+    - Managing game selection strategies and in-game behaviors
+    - Ensuring no physical overlap between customers and walls or other entities
+
+- The system must be able to **log simulation data in real time**, including:
+    - Customers bankrolls
+    - Games bankrolls
+
+- The system must allow **parameter tuning via GUI**, including:
+    - Customer behavior variables
+    - Time-based flow curves
+
+- The system must support **visual monitoring of internal states**, including:
+    - Current bankroll
+
+- The system must be able to **validate the simulation setup**, ensuring consistency and completeness before execution
+
+
 ### Non-functional requirements
+- Performance:
+    - The system should simulate at least 50 concurrent customers with <100ms average update latency
+    - Real-time logging must not cause performance degradation
+- Scalability:
+    - The simulation engine should support scaling up to 500+ entities (customers + games) with graceful degradation
+- Portability:
+    - The application should be cross-platform or easily portable across supported OSs
+- Maintainability:
+    - Modular architecture with clear separation between GUI, simulation logic, and data layers
+- Usability:
+    - GUI must allow intuitive drag-and-drop for map and game design
+    - All configurable parameters should be accessible via forms or sliders
+- Reliability:
+    - The simulation must recover gracefully from internal errors without crashing
+    - Consistent logging should allow for post-mortem debugging
 
 ### Implementation requirements
+- Scala 3.3.5
+- Scalatest 3.2.19
+- Scalacheck 3.2.19
+- ScalaJs 2.8.0
+- Laminar 17.0.0
+- SBT as automation tool 1.10.11
+- Scaladoc
+- Scalafmt 3.7.15
+- Scalafix
+- Codecov
+
+### Optional requirements
+- Monitoring of each customer's internal state (e.g., current bankroll, mood level) via GUI
+- A DSL to define custom (including non-Gaussian) curves related to:
+    - Customer flow over time
+    - Initial bankroll distribution of players
+    - Other dynamic simulation parameters
+- A GUI for monitoring real-time and aggregated data regarding the casino's performance
 
 ## Architectural Design
 ### Overall architecture
@@ -174,6 +284,93 @@ Also, DOM changes are direct without the need of virtual-DOM abstraction, avoidi
 An important design choice in our application is the use of a MVU architecture, which dictates how the application is structured and how data flows through it.
 Cornerstone component is the update function, which has been designed in a way to simulate a loop in order to allow a better management of the simulation state.
 ![MVU Update Function Diagram](resources/update_loop.png)
+
+#### Update
+The Update system represents the core simulation engine responsible for managing the state transitions and event processing 
+in a casino simulation environment. Built using functional programming principles and tail recursion optimization, 
+the system processes discrete simulation events in a deterministic sequence, ensuring consistent state management across 
+all simulation components including customers, games, walls, and spawners.
+
+The Update system follows an event-driven architecture combined with the State pattern, where simulation state transitions 
+are triggered by specific events processed through a central update loop. The design emphasizes immutability and functional 
+composition, using tail recursion to ensure stack safety during extended simulation runs.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Initialized
+
+    Initialized --> Spawning : SimulationTick (with spawner)
+    Initialized --> CustomerUpdate : SimulationTick (no spawner)
+
+    Spawning --> CustomerUpdate : Spawn Complete
+
+    CustomerUpdate --> GameUpdate : Customers Positioned
+
+    GameUpdate --> BankrollUpdate : Games Resolved
+
+    BankrollUpdate --> CustomerStateUpdate : Finances Updated
+
+    CustomerStateUpdate --> WaitingForTick : Cycle Complete
+
+    WaitingForTick --> Spawning : Next SimulationTick (with spawner)
+    WaitingForTick --> CustomerUpdate : Next SimulationTick (no spawner)
+
+    WaitingForTick --> ConfigurationChange : Configuration Events
+    ConfigurationChange --> WaitingForTick : Configuration Applied
+
+    WaitingForTick --> [*] : ResetSimulation
+
+    note right of Spawning
+        Spawner creates new customers
+        based on configured strategy
+    end note
+
+    note right of GameUpdate
+        GameResolver processes customer
+        interactions with games
+    end note
+```
+
+```mermaid
+flowchart TD
+    A[Event Received] --> B{Event Type?}
+
+    B -->|SimulationTick| C{Spawner Exists?}
+    C -->|Yes| D[Execute Spawn Logic]
+    C -->|No| E[Skip Spawn]
+    D --> F[Trigger UpdateCustomersPosition]
+    E --> F
+
+    B -->|UpdateCustomersPosition| G[Apply Customer Manager]
+    G --> H[Trigger UpdateGames]
+
+    B -->|UpdateGames| I[Resolve Game Interactions]
+    I --> J[Update Game States]
+    J --> K[Trigger UpdateSimulationBankrolls]
+
+    B -->|UpdateSimulationBankrolls| L[Process Financial Updates]
+    L --> M[Trigger UpdateCustomersState]
+
+    B -->|UpdateCustomersState| N[Finalize Customer State]
+    N --> O[Return Updated State]
+
+    B -->|AddCustomers| P[Create/Update Spawner]
+    P --> Q[Return State with Spawner]
+
+    B -->|UpdateWalls| R[Replace Wall Configuration]
+    R --> S[Return State with New Walls]
+
+    B -->|UpdateGamesList| T[Replace Game Configuration]
+    T --> U[Return State with New Games]
+
+    B -->|ResetSimulation| V[Create Empty State]
+    V --> W[Return Reset State]
+```
+The system processes all state changes through discrete events, providing clear separation of concerns and making the simulation deterministic and testable.
+Each event type triggers specific state transformation logic.
+The `SimulationState` serves as the context, while different events represent state transition triggers. The `Update` class 
+acts as the state manager, coordinating transitions between different simulation phases.
+
 
 #### Customer Composition
 
@@ -351,6 +548,116 @@ Also keeping track of the gains and loss of our game is important, to avoid to o
 The behaviour of this entity is simple, a `GameHistory` is designed to deal with just one `Game` and the communication with it is limited,
 it is designed to deal with a `DataManager` which is an entity designed for keeping track of important data in the simulation.
 
+`GameHistory` is an Entity which keep tracks of the game history, is composition is quite simple, is a list of `Gain` which
+represent the Tuple composed by the ID of the customer who played the game and the gain in terms of money the game did.
+
+#### Game Strategies
+Every game has a `GameStrategy` which is the component where is stored the strategy part of a game, it is responsible for
+simulate the real-world game behaviours through some predefined strategies and custom ones
+
+The design follows the Strategy pattern combined with the Builder pattern to create a flexible and extensible architecture for different casino games.
+The system supports three main game types: Slot machines, Roulette, and BlackJack, each with customizable betting strategies and conditions.
+
+The system is built around a core trait `GameStrategy` that defines the contract for all gambling strategies. 
+Each game type implements this strategy through a two-phase construction process: a builder phase for configuration and an instance phase for execution.
+
+A dedicated DSL module provides a more natural and readable way to construct strategies, making the API more user-friendly and expressive.
+
+```mermaid
+classDiagram
+    class GameStrategy {
+        <<trait>>
+        +use() BetResult
+    }
+    
+    class SlotStrategyBuilder {
+        -betAmount: Option[Double]
+        -condition: Option[Function0[Boolean]]
+        +bet(amount: Double) SlotStrategyBuilder
+        +when(cond: Boolean) SlotStrategyInstance
+    }
+    
+    class SlotStrategyInstance {
+        -betAmount: Double
+        -condition: Function0[Boolean]
+        +use() BetResult
+    }
+    
+    class RouletteStrategyBuilder {
+        -betAmount: Option[Double]
+        -targets: Option[List[Int]]
+        +bet(amount: Double) RouletteStrategyBuilder
+        +on(targets: List[Int]) RouletteStrategyBuilder
+        +when(cond: Boolean) RouletteStrategyInstance
+    }
+    
+    class RouletteStrategyInstance {
+        -betAmount: Double
+        -targets: List[Int]
+        -condition: Function0[Boolean]
+        +use() BetResult
+    }
+    
+    class BlackJackStrategyBuilder {
+        -betAmount: Option[Double]
+        -minimumVal: Option[Int]
+        -condition: Option[Function0[Boolean]]
+        +bet(amount: Double) BlackJackStrategyBuilder
+        +accept(minimum: Int) BlackJackStrategyBuilder
+        +when(cond: Boolean) BlackJackStrategyInstance
+    }
+    
+    class BlackJackStrategyInstance {
+        -betAmount: Double
+        -minimumValue: Int
+        -condition: Function0[Boolean]
+        -dealCard(cardsValue: Int, stopValue: Int) Int
+        +use() BetResult
+    }
+    
+    GameStrategy <|.. SlotStrategyInstance
+    GameStrategy <|.. RouletteStrategyInstance
+    GameStrategy <|.. BlackJackStrategyInstance
+    
+    SlotStrategyBuilder --> SlotStrategyInstance : creates
+    RouletteStrategyBuilder --> RouletteStrategyInstance : creates
+    BlackJackStrategyBuilder --> BlackJackStrategyInstance : creates
+```
+
+The flow from the creation of the strategies to their use is modelled with the following flowchart:
+
+```mermaid
+flowchart TD
+    A[DSL Entry Point] --> B{Strategy Type Selection}
+    
+    B -->|Slot| C[SlotStrategyBuilder]
+    B -->|Roulette| D[RouletteStrategyBuilder]
+    B -->|BlackJack| E[BlackJackStrategyBuilder]
+    
+    C --> F[Configure Bet Amount]
+    D --> G[Configure Bet Amount & Targets]
+    E --> H[Configure Bet Amount & Minimum Value]
+    
+    F --> I[Set Condition]
+    G --> J[Set Condition]
+    H --> K[Set Condition]
+    
+    I --> L[SlotStrategyInstance]
+    J --> M[RouletteStrategyInstance]
+    K --> N[BlackJackStrategyInstance]
+    
+    L --> O[Execute Strategy]
+    M --> O
+    N --> O
+    
+    O --> P{Condition Met?}
+    P -->|Yes| Q[Run Game Logic]
+    P -->|No| R[Return Failure]
+    
+    Q --> S{Win?}
+    S -->|Yes| T[Return Success with Winnings]
+    S -->|No| U[Return Failure with Loss]
+```
 
 ## Implementation
 ### Student contributions
