@@ -27,25 +27,25 @@ abstract class Game(
   protected def withGameState(newGameState: GameState): Game
   protected def withGameHistory(newGameHistory: GameHistory): Game
 
-  final def lock(id: String): Result[Game, Game] =
+  def lock(id: String): Result[Game, Game] =
     gameState.addPlayer(id) match
       case Success(newGameState) => Success(withGameState(newGameState))
       case Failure(_)            => Failure(this)
 
-  final def unlock(id: String): Result[Game, Game] =
+  def unlock(id: String): Result[Game, Game] =
     gameState.removePlayer(id) match
       case Success(newGameState) => Success(withGameState(newGameState))
       case Failure(_)            => Failure(this)
 
-  final def updateHistory(customerId: String, gain: Double): Game =
+  def updateHistory(customerId: String, gain: Double): Game =
     withGameHistory(gameHistory.update(customerId, gain))
 
-  final def isFull: Boolean = gameState.isFull
-  final def bankroll: Double = gameHistory.overallGains
-  final def getLastRoundResult: List[Gain] =
+  def isFull: Boolean = gameState.isFull
+  def bankroll: Double = gameHistory.overallGains
+  def getLastRoundResult: List[Gain] =
     gameHistory.gains.takeRight(gameState.currentPlayers)
 
-final case class RouletteGame(
+case class RouletteGame(
     override val id: String,
     override val position: Vector2D,
     override val gameState: GameState,
@@ -72,7 +72,7 @@ final case class RouletteGame(
   override val width: Double = 30.0
   override val height: Double = 30.0
 
-final case class SlotMachineGame(
+case class SlotMachineGame(
     override val id: String,
     override val position: Vector2D,
     override val gameState: GameState,
@@ -100,7 +100,7 @@ final case class SlotMachineGame(
   override val width: Double = 20.0
   override val height: Double = 20.0
 
-final case class BlackJackGame(
+case class BlackJackGame(
     override val id: String,
     override val position: Vector2D,
     override val gameState: GameState,
