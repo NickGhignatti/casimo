@@ -17,11 +17,6 @@ object PlayerManagers:
       games: Seq[Game]
   ):
     protected[movements] def bestGameAvailable: Option[Game] =
-      extension [A](result: Result[A, A])
-        private def option(): Option[A] =
-          result match
-            case Result.Success(value) => Some(value)
-            case _                     => None
       games
         .find(_.gameType == player.favouriteGames.head)
         .flatMap(_.lock(player.id).option())
@@ -60,7 +55,7 @@ object PlayerManagers:
             player = slice.player
               .withPosition(game.position)
               .withDirection(Vector2D.zero)
-              .play,
+              .play(game),
             games = slice.games
               .map(g => if g.id == game.id then game else g)
           )

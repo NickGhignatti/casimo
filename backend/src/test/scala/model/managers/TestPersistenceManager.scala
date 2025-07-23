@@ -5,7 +5,8 @@ import model.entities.customers.CustState.Idle
 import model.entities.customers.CustState.Playing
 import model.entities.customers.Customer
 import model.entities.customers.FlatBetting
-import model.entities.customers.RiskProfile.{Regular, VIP}
+import model.entities.customers.RiskProfile.Regular
+import model.entities.customers.RiskProfile.VIP
 import model.entities.games.GameBuilder
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
@@ -106,6 +107,7 @@ class TestPersistenceManager extends AnyFunSuite:
     val testPersistenceManager =
       PersistenceManager[Customer](bThreshold = 80, fThreshold = 60)
 
-    val updatedCustomer = testPersistenceManager.update(List(mockRegularCustomer,mockVipCustomer))
+    val updatedCustomer =
+      testPersistenceManager.update(List(mockRegularCustomer, mockVipCustomer))
 
     assert(updatedCustomer.head.boredom < updatedCustomer.last.boredom)
