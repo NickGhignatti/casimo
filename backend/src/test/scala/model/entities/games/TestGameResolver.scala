@@ -27,3 +27,15 @@ class TestGameResolver extends AnyFunSuite:
     assert(
       mockGame.gameHistory.gains :+ mockGame2.gameHistory.gains != newGame.last.gameHistory.gains
     )
+
+  test("if customers are not playing any game there should not be updates"):
+    val mockGame = GameBuilder.slot(Vector2D.zero)
+    val mockGame2 = GameBuilder.slot(Vector2D.zero)
+    val mockCustomer = Customer()
+    val newGame =
+      GameResolver.update(List(mockCustomer), List(mockGame, mockGame2))
+
+    assert(
+      mockGame.gameHistory.gains ::: mockGame2.gameHistory.gains == newGame.last.gameHistory.gains
+    )
+

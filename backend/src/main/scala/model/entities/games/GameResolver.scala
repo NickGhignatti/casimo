@@ -5,6 +5,7 @@ import model.entities.customers.CustState
 import model.entities.customers.Customer
 import utils.Result
 import utils.Result.Failure
+import utils.Result.Success
 
 object GameResolver:
   private def playGame(game: Game, customers: List[Customer]): Game =
@@ -14,13 +15,12 @@ object GameResolver:
         case CustState.Idle                  => false
     )
     playingCustomers.foldRight(game)((c, g) =>
-      g.play(c.placeBet()) match
-        case Result.Success(value) =>
-          value match
-            case Result.Success(lostValue) => g.updateHistory(c.id, -lostValue)
-            case Result.Failure(winValue) =>
-              game.updateHistory(c.id, winValue)
-        case Result.Failure(error) => game.updateHistory(c.id, 0.0)
+      val result = g.play(c.placeBet())
+      if result.isSuccess then
+        result.getOrElse(Success(0.0)) match
+          case Result.Success(lostValue) => g.updateHistory(c.id, -lostValue)
+          case Result.Failure(winValue)  => g.updateHistory(c.id, winValue)
+      else g
     )
 
   def update(customers: List[Customer], games: List[Game]): List[Game] =
