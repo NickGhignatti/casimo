@@ -47,10 +47,10 @@ case class Update(customerManager: DefaultMovementManager):
         update(state.copy(customers = updatedBankroll), UpdateCustomersState)
 
       case UpdateCustomersState =>
-        val updatedCustomerStrategy =
-          CustomerStrategyManager[Customer](state.games).update(state.customers)
+        /*val updatedCustomerStrategy =
+          CustomerStrategyManager[Customer](state.games).update(state.customers)*/
         val updatedCustomerState =
-          PersistenceManager[Customer]().update(updatedCustomerStrategy)
+          PersistenceManager[Customer]().update(state.customers)
         state.copy(customers = updatedCustomerState)
 
       case AddCustomers(strategy) =>
