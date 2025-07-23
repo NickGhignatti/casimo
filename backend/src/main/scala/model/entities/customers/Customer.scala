@@ -6,8 +6,10 @@ import model.SimulationState
 import model.entities.Entity
 import model.entities.Player
 import model.entities.customers.CustState.Idle
+import model.entities.customers.CustState.Playing
 import model.entities.customers.RiskProfile.Regular
 import model.entities.games.Blackjack
+import model.entities.games.Game
 import model.entities.games.GameType
 import model.entities.games.Roulette
 import model.entities.games.SlotMachine
@@ -32,7 +34,6 @@ case class Customer(
     riskProfile: RiskProfile = Regular,
     customerState: CustState = Idle,
     betStrategy: BettingStrategy[Customer] = FlatBetting(10.0, defaultRedBet),
-    isPlaying: Boolean = false,
     favouriteGames: Seq[GameType] = Seq(Roulette, Blackjack, SlotMachine)
 ) extends Entity,
       Movable[Customer],
@@ -75,12 +76,6 @@ case class Customer(
   def withProfile(profile: RiskProfile): Customer =
     this.copy(riskProfile = profile)
 
-  def play: Customer =
-    this.copy(isPlaying = true)
-
-  def stopPlaying: Customer =
-    this.copy(isPlaying = false)
-
   def randomizePosition(
       xRange: (Double, Double),
       yRange: (Double, Double)
@@ -95,6 +90,14 @@ case class Customer(
       .randomizePosition((-100.0, 100.0), (-100.0, 100.0))
       .withBankroll(Random.between(50.0, 500.0))
 
+  override def play(game: Game): Customer = withCustomerState(Playing(game))
+
+  override def stopPlaying: Customer = withCustomerState(Idle)
+
+  override def isPlaying: Boolean = customerState match
+    case Playing(_) => true
+    case _          => false
+
 case class DefaultMovementManager(
     maxSpeed: Double = 1000,
     perceptionRadius: Double = 200000,
@@ -107,20 +110,21 @@ case class DefaultMovementManager(
 ) extends BaseManager[SimulationState]:
 
   override def update(slice: SimulationState): SimulationState =
-    slice
-      | GamesAttractivenessAdapter(
+    slice | (
+      GamesAttractivenessAdapter(
         gamesAttractivenessWeight * GamesAttractivenessManager()
           | PlayerSitterManager(sittingRadius)
       )
-      | BoidsAdapter(
-        PerceptionLimiterManager(perceptionRadius)
-          | alignmentWeight * AlignmentManager()
-          | cohesionWeight * CohesionManager()
-          | separationWeight * SeparationManager(avoidRadius)
-          | VelocityLimiterManager(maxSpeed)
-      )
-      | WallAvoidingAdapter(AvoidWallsManager())
-      | BoidsAdapter(MoverManager())
+        | BoidsAdapter(
+          PerceptionLimiterManager(perceptionRadius)
+            | alignmentWeight * AlignmentManager()
+            | cohesionWeight * CohesionManager()
+            | separationWeight * SeparationManager(avoidRadius)
+            | VelocityLimiterManager(maxSpeed)
+        )
+        | WallAvoidingAdapter(AvoidWallsManager())
+        | BoidsAdapter(MoverManager())
+    )
 
 case class GamesAttractivenessAdapter(
     manager: BaseManager[PlayerManagers.Context[Customer]]
@@ -149,7 +153,7 @@ case class BoidsAdapter(manager: BaseManager[Boids.State[Customer]])
     slice.copy(
       customers = slice.customers
         .map(Boids.State(_, slice.customers))
-        .map(c => if !c.boid.isPlaying then c | manager else c)
+        .map(_ | manager)
         .map(_.boid)
     )
 
@@ -162,6 +166,22 @@ case class WallAvoidingAdapter(
     slice.copy(
       customers = slice.customers
         .map(c => AvoidWallsManager.Context(c, slice.walls ++ slice.games))
-        .map(c => if !c.movable.isPlaying then c | manager else c)
+        .map(_ | manager)
         .map(_.movable)
+    )
+
+case class FilterManager(manager: BaseManager[SimulationState])
+    extends BaseManager[SimulationState]:
+  override def update(slice: SimulationState): SimulationState =
+    val filteredSlice = slice.copy(
+      customers = slice.customers.filterNot(_.isPlaying),
+      games = slice.games.filterNot(_.isFull)
+    )
+    val updatedState = filteredSlice | manager
+    slice.copy(
+      customers = slice.customers.map(c =>
+        updatedState.customers.find(_.id == c.id).getOrElse(c)
+      ),
+      games =
+        slice.games.map(g => updatedState.games.find(_.id == g.id).getOrElse(g))
     )

@@ -26,7 +26,7 @@ class TestPlayer extends AnyFunSuite:
       favouriteGames: Seq[GameType],
       isPlaying: Boolean = false
   ) extends Player[PlayerImpl]:
-    override def play: PlayerImpl = copy(isPlaying = true)
+    override def play(game: Game): PlayerImpl = copy(isPlaying = true)
 
     override def stopPlaying: PlayerImpl = copy(isPlaying = false)
 
