@@ -10,7 +10,7 @@ which successfully tackled the project challenges, gradually strengthening its s
 
 ### Roles
 - **Product Owner**: Luca Patrignani,  responsible for monitoring the project’s progress, ensuring alignment with business objectives, coordinating the development team, and also serving as a developer.
-- **Team member**: Nicolò Ghignatti, member of the dev team which is repsonsible for the project's progress.
+- **Team member**: Nicolò Ghignatti, member of the dev team which is responsible for the project's progress.
 - **Stakeholder**: Marco Galeri, project sponsor and responsible for the product’s quality and usability. He also serves as a developer.
 
 ### YouTrack
@@ -148,7 +148,7 @@ b.velocity = normalize(b.velocity) * MAX_SPEED
 /* Update position */
 b.position += b.velocity
 ```
-Other parameters that influence the boids' behavior are:
+Other parameters that influence the boids behavior are:
 - `MAX_SPEED`: maximum speed limit for boids
 - `PERCEPTION_RADIUS`: distance within which a boid perceives others
 - `AVOID_RADIUS`: minimum distance to avoid collisions
@@ -767,12 +767,137 @@ sequenceDiagram
     GR-->>Sim: List[Updated Games]
 ```
 
+#### ScalaJs view
+The view system is built around a central reactive architecture where state changes flow through observable signals, triggering automatic UI updates. 
+The design separates concerns between canvas-based visualization, HTML-based controls, and event coordination. 
+The system uses immutable state management with reactive variables (Vars) that automatically propagate changes throughout the UI hierarchy
+
+Laminar's reactive system provides automatic observer pattern implementation through Signals and EventBus, eliminating manual event listener management.
+
+Each UI element is encapsulated as a self-contained component with its own state, rendering logic, and event handling.
+
+All user interactions and state changes flow through a central EventBus, providing decoupled communication between components.
+
+```mermaid
+graph TD
+    subgraph "Main Entry Point"
+        A[Main.scala]
+        B[DOMContentLoaded Event]
+        C[EventBus Creation]
+    end
+    
+    subgraph "Core State Management"
+        D[SimulationState Var]
+        E[DataManager Var]
+        F[Update Var]
+        G[Event Processing Loop]
+    end
+    
+    subgraph "UI Components"
+        H[CanvasManager]
+        I[ButtonBar]
+        J[ConfigForm]
+        K[Modal]
+        L[Sidebar]
+        P[Drag & Drop]
+    end
+    
+    subgraph "Reactive Forms"
+        Q[Movement Parameters]
+        R[Spawning Strategies]
+        S[Strategy Selectors]
+    end
+    
+    A --> B
+    B --> C
+    C --> G
+    
+    A --> D
+    A --> E
+    A --> F
+    
+    D --> H
+    D --> I
+    D --> J
+    D --> K
+    
+    L --> P
+    P --> H
+    
+    J --> Q
+    J --> R
+    J --> S
+    
+    G --> D
+    I --> G
+```
+The component interaction is designed as follows:
+
+```mermaid
+flowchart TD
+    A[🌐 Browser DOM Ready] --> B[📋 Initialize State Variables]
+    
+    B --> C[🔄 Create EventBus]
+    C --> D[⚡ Setup Event Processing Loop]
+    
+    D --> E["🔄 SCAN LOOP<br/>eventBus.events.scanLeft(state, updateFunc)"]
+    
+    E --> F[🎯 Initialize UI Components]
+    
+    F --> G[🖼️ CanvasManager]
+    F --> H[🎛️ ButtonBar]
+    F --> I[📝 ConfigForm]
+    F --> J[📊 Modal]
+    F --> K[📋 Sidebar]
+    
+    G --> L["🖱️ Mouse Events<br/>(mousedown, mousemove, mouseup)"]
+    G --> M["🎨 Canvas Rendering<br/>(customers, walls, games)"]
+    
+    H --> N["🔘 Button Clicks<br/>(Add, Run, Reset, Save, Load, Data)"]
+    
+    I --> O["📊 Parameter Changes<br/>(movement config, spawning config)"]
+    
+    K --> P["🎲 Drag & Drop<br/>(Wall, Slot, Roulette, BlackJack)"]
+    
+    L --> Q{🎯 Event Type?}
+    N --> Q
+    O --> Q
+    P --> Q
+    
+    Q -->|Mouse Events| R[🎮 Canvas State Update]
+    Q -->|Button Events| S[🎯 Simulation Control]
+    Q -->|Config Events| T[⚙️ Parameter Update]
+    Q -->|Drag Events| U[🏗️ Entity Creation]
+    
+    R --> V["🔄 REACTIVE UPDATE<br/>Var.set triggers signal propagation"]
+    S --> V
+    T --> V
+    U --> V
+    
+    V --> W[🎨 UI Re-render]
+    W --> X[♻️ Wait for Next Event]
+    X --> E
+    
+    classDef initialization fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000
+    classDef component fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000
+    classDef event fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
+    classDef reactive fill:#ffebee,stroke:#c62828,stroke-width:3px,color:#000
+    
+    class A,B,C,D,F initialization
+    class G,H,I,J,K component
+    class L,N,O,P,Q,R,S,T,U event
+    class E,V,W reactive
+```
+This kind of design takes advantage from the Laminar reactive system which eliminates the need for manual DOM updates. 
+When simulation state changes, the UI automatically reflects those changes through signal propagation, preventing the common 
+problem of UI-state desynchronization that plagues many web applications.
+
 ## Implementation
 ### Student contributions
-Nicolò Ghignatti
+### Nicolò Ghignatti
 #### Result
 Having to deal with data which can have two states (win or loss for a bet, for example) can be quite annoying so, I've 
-decided to implement a monad which can do it for us. Basically it is a enum which can have 2 states: a 
+decided to implement a monad which can do it for us. Basically it is an enum which can have 2 states: a 
 `Success` or a `Failure`:
 ```scala
 package utils
@@ -941,7 +1066,7 @@ To avoid a non-realistic and chaotic spawn I decided to spawn customers every `t
 representing the number of ticks necessary for a spawn round
 
 #### Spawning Strategy
-The `SpawningStrategy` entity is quite simple, it takes as input the time passed in the simulation and it outputs the number 
+The `SpawningStrategy` entity is quite simple, it takes as input the time passed in the simulation, and it outputs the number 
 of customers that should be spawned according the selected strategy:
 ```scala 3
 trait SpawningStrategy:
@@ -1053,6 +1178,30 @@ case class Wall(
       Entity
 ```
 
+#### Update
+The update implementation try to simulate what a simulation loop looks like in my head. The tail recursive structure is 
+ideated in order to separate all the different phases in order to separate all the various moments in the simulation.
+
+```scala 3
+@tailrec
+final def update(state: SimulationState, event: Event): SimulationState =
+  event match
+    case SimulationTick => 
+      update(newState, UpdateCustomersPosition)
+
+    case UpdateCustomersPosition => 
+      update(state | customerManager, UpdateGames)
+
+    case UpdateGames =>
+      update(state.copy(games = updatedGames), UpdateSimulationBankrolls)
+
+    case UpdateSimulationBankrolls =>
+      update(state.copy(customers = updatedBankroll), UpdateCustomersState)
+
+    case UpdateCustomersState =>
+      state.copy(customers = updatedCustomerState)
+```
+
 ### Patrignani Luca
 #### Customer movements
 The customer movements are modeled according to the previously presented architecture: a trait `Movable` is defined as such
@@ -1068,7 +1217,7 @@ trait Movable[T <: Movable[T]]:
 and all movement managers depend only on this trait, not on the concrete implementation of the `Customer`.
 Two movement managers have been implemented:
 - **Boid-like movement**: this implements the boid-like movement described in the user requirements section. It is obtained by combining three other managers, each one implementing one of the three boid-like rules: **Separation**, **Alignment** and **Cohesion**.
-Since the boids logic for a single customer need not only its position and velocity, but also information about the other customers, the `Boids.State` case class is defined, which contains all the information needed to compute the movement of the boid. Then an adapter manager is defined to adapt the `SimulationState` to the necessary `Boids.State` and vice versa. This allows to keep the movement logic independent from the simulation state. The following class diagram describes the dependencies taking as example the `AlignmentManager`, the `SeparationManager` and the `CohesionManager` are implemented in the same way:
+Since the boids logic for a single customer need not only its position and velocity, but also information about the other customers, the `Boids.State` case class is defined, which contains all the information needed to compute the movement of the boid. Then an adapter manager is defined to adapt the `SimulationState` to the necessary `Boids.State` and vice versa. This allows to keep the movement logic independently from the simulation state. The following class diagram describes the dependencies taking as example the `AlignmentManager`, the `SeparationManager` and the `CohesionManager` are implemented in the same way:
 ```mermaid
 classDiagram
 class Movable {
