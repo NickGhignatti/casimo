@@ -18,7 +18,7 @@ object PlayerManagers:
   ):
     protected[movements] def bestGameAvailable: Option[Game] =
       games
-        .find(_.gameType == player.favouriteGames.head)
+        .find(_.gameType == player.favouriteGame)
         .flatMap(_.lock(player.id).option())
 
   case class GamesAttractivenessManager[C <: Player[C] & Entity & Movable[C]](

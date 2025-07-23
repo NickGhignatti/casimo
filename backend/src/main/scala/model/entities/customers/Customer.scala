@@ -8,11 +8,9 @@ import model.entities.Player
 import model.entities.customers.CustState.Idle
 import model.entities.customers.CustState.Playing
 import model.entities.customers.RiskProfile.Regular
-import model.entities.games.Blackjack
 import model.entities.games.Game
 import model.entities.games.GameType
 import model.entities.games.Roulette
-import model.entities.games.SlotMachine
 import model.managers.BaseManager
 import model.managers.movements.AvoidWallsManager
 import model.managers.movements.Boids
@@ -34,9 +32,11 @@ case class Customer(
     riskProfile: RiskProfile = Regular,
     customerState: CustState = Idle,
     betStrategy: BettingStrategy[Customer] = FlatBetting(10.0, defaultRedBet),
-    favouriteGames: Seq[GameType] = Seq(Roulette, Blackjack, SlotMachine)
+    favouriteGame: GameType = Roulette,
+    previousPosition: Option[Vector2D] = Option.empty
 ) extends Entity,
       Movable[Customer],
+      MovableWithPrevious[Customer],
       Bankroll[Customer],
       BoredomFrustration[Customer],
       StatusProfile,
@@ -48,7 +48,7 @@ case class Customer(
     this.copy(id = newId)
 
   def withPosition(newPosition: Vector2D): Customer =
-    this.copy(position = newPosition)
+    this.copy(position = newPosition, previousPosition = Some(position))
 
   def withBankroll(newRoll: Double): Customer =
     this.copy(bankroll = newRoll, startingBankroll = newRoll)
@@ -70,8 +70,8 @@ case class Customer(
   ): Customer =
     this.copy(betStrategy = newStrat)
 
-  def withFavouriteGames(newFavGame: Seq[GameType]): Customer =
-    this.copy(favouriteGames = newFavGame)
+  def withFavouriteGames(newFavGame: GameType): Customer =
+    this.copy(favouriteGame = newFavGame)
 
   def withProfile(profile: RiskProfile): Customer =
     this.copy(riskProfile = profile)
