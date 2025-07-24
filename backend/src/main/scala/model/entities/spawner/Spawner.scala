@@ -32,9 +32,7 @@ import utils.Vector2D
 case class Spawner(
     id: String,
     position: Vector2D,
-    strategy: SpawningStrategy,
-    currentTime: Double = 0.0,
-    ticksToSpawn: Double = 10.0
+    strategy: SpawningStrategy
 ) extends Entity:
 
   /** Processes a simulation tick, potentially spawning new customers.
@@ -51,10 +49,12 @@ case class Spawner(
   def spawn(
       state: SimulationState
   ): SimulationState =
-    if (currentTime + 1) % ticksToSpawn == 0 then
+    if state.ticker.isReadyToSpawn then
       state.copy(
         customers = state.customers ++ Seq.fill(
-          strategy.customersAt(currentTime / ticksToSpawn)
+          strategy.customersAt(
+            state.ticker.currentTick / state.ticker.spawnTick
+          )
         )(
           Customer(
             id = "cutomer-" + Random.nextInt(),
@@ -71,7 +71,6 @@ case class Spawner(
               )
               .head
           )
-        ),
-        spawner = Some(this.copy(currentTime = currentTime + 1))
+        )
       )
-    else state.copy(spawner = Some(this.copy(currentTime = currentTime + 1)))
+    else state

@@ -1,5 +1,6 @@
 package model.entities.games
 
+import model.Ticker
 import model.entities.customers.Customer
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Result
@@ -9,6 +10,7 @@ import utils.Vector2D
 
 class TestGame extends AnyFunSuite:
   val mockId = "test"
+  val instantTicker: Ticker = Ticker(0, 1, 1, 1)
 
   test("lock should succeed when under capacity"):
     val game = GameBuilder.slot(Vector2D.zero)
@@ -205,7 +207,8 @@ class TestGame extends AnyFunSuite:
     val nc1 = c1.play(game)
     val nc2 = c2.play(game)
 
-    val newGames = GameResolver.update(List(nc1, nc2), List(g2))
+    val newGames =
+      GameResolver.update(List(nc1, nc2), List(g2), instantTicker.update())
 
     assert(newGames.head.getLastRoundResult.size == 2)
 
@@ -214,7 +217,8 @@ class TestGame extends AnyFunSuite:
 
     assert(g3.gameState.currentPlayers == 3)
 
-    val newerGames = GameResolver.update(List(nc1, nc2, nc3), List(g3))
+    val newerGames =
+      GameResolver.update(List(nc1, nc2, nc3), List(g3), instantTicker.update())
 
     assert(newerGames.head.getLastRoundResult.size == 3)
     assert(newerGames.head.gameHistory.gains.size == 5)
