@@ -24,6 +24,7 @@ case class Spawner(
           strategy.customersAt(currentTime / ticksToSpawn)
         )(
           Customer(
+            id = "cutomer-" + Random.nextInt(),
             position = this.position.around(5.0),
             direction = Vector2D(Random.between(0, 5), Random.between(0, 5)),
             bankroll = Random.between(30, 5000),
