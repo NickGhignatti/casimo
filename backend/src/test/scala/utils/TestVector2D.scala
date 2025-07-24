@@ -43,3 +43,8 @@ class TestVector2D extends AnyFunSuite:
     val v1 = Vector2D(1.0, 2.0)
     val v2 = Vector2D(1.0, 2.0)
     assert(v1 === v2)
+
+  test("Vector apply should return Vector.zero"):
+    val v = Vector2D()
+
+    assert(v == Vector2D.zero)
