@@ -14,3 +14,4 @@ enum Event:
   case UpdateWalls(walls: List[Wall])
   case updateGamesList(games: List[Game])
   case ResetSimulation
+  case BorderConfig(x: Double, y: Double, width: Double, height: Double)
