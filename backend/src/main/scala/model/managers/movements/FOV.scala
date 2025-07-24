@@ -5,9 +5,13 @@ import utils.Vector2D
 
 object FOV:
   extension (from: Vector2D)
-    def canSee(obstacles: Seq[Collidable])(Vector2D: Vector2D): Boolean =
+    def canSee(obstacles: Seq[Collidable])(point: Vector2D): Boolean =
       val segments = obstacles.flatMap(_.edges)
-      isVisible(from, Vector2D, segments)
+      isVisible(from, point, segments)
+
+    def canSeeCollidable(obstacles: Seq[Collidable])(collidable: Collidable): Boolean =
+      collidable.vertices.exists(from.canSee(obstacles)(_))
+
 
   private type Segment = (Vector2D, Vector2D)
   extension (collidable: Collidable)
