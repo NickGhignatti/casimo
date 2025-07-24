@@ -13,6 +13,7 @@ import model.entities.spawner.Spawner
 import model.managers.CustomerBankrollManager
 import model.managers.PersistenceManager
 import model.managers.|
+import model.setSpawner
 import update.Event._
 import utils.Vector2D
 
@@ -53,13 +54,11 @@ case class Update(customerManager: DefaultMovementManager):
         state.copy(customers = updatedCustomerState)
 
       case AddCustomers(strategy) =>
-        state.copy(
-          spawner = Some(
-            Spawner(
-              "Spawner",
-              Vector2D(200.0, 200.0),
-              strategy
-            )
+        state.setSpawner(
+          Spawner(
+            "Spawner",
+            Vector2D(200.0, 200.0),
+            strategy
           )
         )
 
