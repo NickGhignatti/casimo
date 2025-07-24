@@ -49,7 +49,7 @@ object PlayerManagers:
             if distance(slice.player.position, game.position) < sittingRadius =>
           slice.copy(
             player = slice.player
-              .withPosition(game.position)
+              .withPosition(game.center)
               .withDirection(Vector2D.zero)
               .play(game),
             games = slice.games

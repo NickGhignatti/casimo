@@ -121,3 +121,6 @@ class TestWall extends AnyFunSuite:
         position.y + sampleWall.height
       ) == vertices.apply(3)
     )
+
+  test("Collidable center should be correct"):
+    assert(sampleWall.center == Vector2D(110, 60))

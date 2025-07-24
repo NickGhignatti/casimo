@@ -56,6 +56,6 @@ class TestPlayer extends AnyFunSuite:
     val updatedContext =
       context | PlayerSitterManager(sittingRadius = 10)
     assert(updatedContext.player.isPlaying)
-    assert(updatedContext.player.position == games.head.position)
+    assert(updatedContext.player.position == games.head.center)
     assert(updatedContext.player.direction == Vector2D.zero)
     assert(updatedContext.games.head.gameState.playersId == Seq(customer.id))

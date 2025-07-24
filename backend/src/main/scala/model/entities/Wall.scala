@@ -42,6 +42,8 @@ trait Collidable extends Sized with Positioned:
 
   def vertices: Seq[Vector2D] = Seq(topLeft, topRight, bottomLeft, bottomRight)
 
+  def center: Vector2D = position + Vector2D(width, height)
+
 trait CollidableEntity extends Collidable with Entity
 
 trait SizeChangingEntity extends Sized:
