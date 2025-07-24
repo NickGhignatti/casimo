@@ -2,12 +2,19 @@ package update
 
 import model.SimulationState
 import model.data.DataManager
+import model.entities.Wall
+import model.setSpawner
 import model.entities.customers.Customer
 import model.entities.customers.DefaultMovementManager
 import model.entities.games.GameBuilder
+import model.entities.spawner.{ConstantStrategy, Spawner}
 import org.scalatest.funsuite.AnyFunSuite
-import update.Event.ResetSimulation
-import update.Event.updateGamesList
+import update.Event.{
+  AddCustomers,
+  ResetSimulation,
+  UpdateWalls,
+  updateGamesList
+}
 import utils.Vector2D
 
 class TestUpdate extends AnyFunSuite:
@@ -18,6 +25,17 @@ class TestUpdate extends AnyFunSuite:
     val update = Update(DefaultMovementManager())
     val endState = update.update(initState, Event.SimulationTick)
     assert(endState === initState)
+
+  test(
+    "update should leave state unchanged except for customers if there is a spawner"
+  ):
+    val update = Update(DefaultMovementManager())
+    val newState = initState.setSpawner(
+      Spawner("spawner", Vector2D.zero, ConstantStrategy(1), 0.0, 1.0)
+    )
+    val endState = update.update(newState, Event.SimulationTick)
+    assert(endState !== newState)
+    assert(endState.customers.size > newState.customers.size)
 
   test("update should update the data manager"):
     val manager = DataManager(initState)
@@ -59,4 +77,24 @@ class TestUpdate extends AnyFunSuite:
     val update = Update(DefaultMovementManager())
     assert(
       SimulationState.empty() == update.update(simulationState, ResetSimulation)
+    )
+
+  test("AddCustomers should set the spawner"):
+    val update = Update(DefaultMovementManager())
+
+    assert(
+      update
+        .update(initState, AddCustomers(ConstantStrategy(1)))
+        .spawner
+        .isDefined
+    )
+
+  test("UpdateWalls should update the walls in the casinò"):
+    val update = Update(DefaultMovementManager())
+
+    assert(
+      update
+        .update(initState, UpdateWalls(List(Wall(Vector2D.zero, 100, 100))))
+        .walls
+        .size == 1
     )
