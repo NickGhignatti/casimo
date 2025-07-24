@@ -28,9 +28,9 @@ case class StepStrategy(
     endTime: Double
 ) extends SpawningStrategy:
   override def customersAt(time: Double): Int =
-    if (startTime > endTime) {
-      if (time <= endTime || time >= startTime) highRate else lowRate
-    } else if (time >= startTime && time <= endTime) highRate
+    if (startTime > endTime) then
+      if (time <= endTime || time >= startTime) then highRate else lowRate
+    else if (time >= startTime && time <= endTime) then highRate
     else lowRate
 
 class SpawningStrategyBuilder private (private val strategy: SpawningStrategy):
