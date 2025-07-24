@@ -18,6 +18,11 @@ trait HasBetStrategy[T <: HasBetStrategy[T] & Bankroll[T] & CustomerState[T]]:
 
   def withBetStrategy(newStrat: BettingStrategy[T]): T
 
+trait BetStratType
+object FlatBet extends BetStratType
+object Martingale extends BetStratType
+object OscarGrind extends BetStratType
+
 trait BettingStrategy[A <: Bankroll[A] & CustomerState[A]]:
   val betAmount: Double
   val option: List[Int]
@@ -25,7 +30,7 @@ trait BettingStrategy[A <: Bankroll[A] & CustomerState[A]]:
     betAmount >= 0,
     s"Bet amount must be positive, instead is $betAmount"
   )
-
+  def betType: BetStratType
   def placeBet(ctx: A): Bet
   def updateAfter(ctx: A, result: Double): BettingStrategy[A]
   protected def checkRequirement(ctx: A): Unit =
@@ -45,6 +50,7 @@ case class FlatBetting[A <: Bankroll[A] & CustomerState[A]](
     betAmount: Double,
     option: List[Int]
 ) extends BettingStrategy[A]:
+  override def betType: BetStratType = FlatBet
   def placeBet(ctx: A): Bet =
     checkRequirement(ctx)
     (ctx.customerState: @unchecked) match
@@ -77,13 +83,13 @@ object FlatBetting:
   ): FlatBetting[A] =
     new FlatBetting[A](betAmount, List.empty)
 
-case class Martingale[A <: Bankroll[A] & CustomerState[A]](
+case class MartingaleStrat[A <: Bankroll[A] & CustomerState[A]](
     baseBet: Double,
     betAmount: Double,
     lossStreak: Int = 0,
     option: List[Int]
 ) extends BettingStrategy[A]:
-
+  override def betType: BetStratType = Martingale
   def placeBet(ctx: A): Bet =
     checkRequirement(ctx)
     (ctx.customerState: @unchecked) match
@@ -94,7 +100,7 @@ case class Martingale[A <: Bankroll[A] & CustomerState[A]](
           case _         => ???
       // case Idle => throw new MatchError("Wrong customer state")
 
-  def updateAfter(ctx: A, result: Double): Martingale[A] =
+  def updateAfter(ctx: A, result: Double): MartingaleStrat[A] =
     if result < 0 then
       this.copy(betAmount = nextBet(), lossStreak = lossStreak + 1)
     else if result == 0 then this
@@ -103,44 +109,44 @@ case class Martingale[A <: Bankroll[A] & CustomerState[A]](
   def nextBet(): Double =
     baseBet * math.pow(2, lossStreak + 1)
 
-object Martingale:
+object MartingaleStrat:
 
   def apply[A <: Bankroll[A] & CustomerState[A]](
       baseBet: Double,
       option: Int
-  ): Martingale[A] =
-    Martingale(baseBet, baseBet, 0, List(option))
+  ): MartingaleStrat[A] =
+    MartingaleStrat(baseBet, baseBet, 0, List(option))
 
   def apply[A <: Bankroll[A] & CustomerState[A]](
       baseBet: Double,
       options: List[Int]
-  ): Martingale[A] =
-    Martingale(baseBet, baseBet, 0, options)
+  ): MartingaleStrat[A] =
+    MartingaleStrat(baseBet, baseBet, 0, options)
 
   def apply[A <: Bankroll[A] & CustomerState[A]](
       baseBet: Double,
       betAmount: Double,
       option: Int,
       lossStreak: Int
-  ): Martingale[A] =
-    new Martingale[A](baseBet, betAmount, lossStreak, List(option))
+  ): MartingaleStrat[A] =
+    new MartingaleStrat[A](baseBet, betAmount, lossStreak, List(option))
 
   def apply[A <: Bankroll[A] & CustomerState[A]](
       baseBet: Double,
       betAmount: Double,
       options: List[Int],
       lossStreak: Int
-  ): Martingale[A] =
-    new Martingale[A](baseBet, betAmount, lossStreak, options)
+  ): MartingaleStrat[A] =
+    new MartingaleStrat[A](baseBet, betAmount, lossStreak, options)
 
-case class OscarGrind[A <: Bankroll[A] & CustomerState[A]](
+case class OscarGrindStrat[A <: Bankroll[A] & CustomerState[A]](
     baseBet: Double,
     betAmount: Double,
     startingBankroll: Double,
     lossStreak: Int = 0,
     option: List[Int]
 ) extends BettingStrategy[A]:
-
+  override def betType: BetStratType = OscarGrind
   def placeBet(ctx: A): Bet =
     checkRequirement(ctx)
     (ctx.customerState: @unchecked) match
@@ -150,7 +156,7 @@ case class OscarGrind[A <: Bankroll[A] & CustomerState[A]](
           case Blackjack => BlackJackBet(betAmount, option.head)
           case _         => ???
 
-  def updateAfter(ctx: A, result: Double): OscarGrind[A] =
+  def updateAfter(ctx: A, result: Double): OscarGrindStrat[A] =
     if ctx.bankroll > startingBankroll then
       this.copy(betAmount = baseBet, startingBankroll = ctx.bankroll)
     else if result > 0 then
@@ -158,37 +164,37 @@ case class OscarGrind[A <: Bankroll[A] & CustomerState[A]](
     else if result == 0 then this
     else this.copy(lossStreak = lossStreak + 1)
 
-object OscarGrind:
+object OscarGrindStrat:
 
   def apply[A <: Bankroll[A] & CustomerState[A]](
       baseBet: Double,
       bankroll: Double,
       option: Int
-  ): OscarGrind[A] =
-    OscarGrind(baseBet, baseBet, bankroll, 0, List(option))
+  ): OscarGrindStrat[A] =
+    OscarGrindStrat(baseBet, baseBet, bankroll, 0, List(option))
 
   def apply[A <: Bankroll[A] & CustomerState[A]](
       baseBet: Double,
       bankroll: Double,
       options: List[Int]
-  ): OscarGrind[A] =
-    OscarGrind(baseBet, baseBet, bankroll, 0, options)
+  ): OscarGrindStrat[A] =
+    OscarGrindStrat(baseBet, baseBet, bankroll, 0, options)
 
   def apply[A <: Bankroll[A] & CustomerState[A]](
       baseBet: Double,
       bankroll: Double,
       option: Int,
       lossStreak: Int
-  ): OscarGrind[A] =
-    OscarGrind(baseBet, baseBet, bankroll, lossStreak, List(option))
+  ): OscarGrindStrat[A] =
+    OscarGrindStrat(baseBet, baseBet, bankroll, lossStreak, List(option))
 
   def apply[A <: Bankroll[A] & CustomerState[A]](
       baseBet: Double,
       bankroll: Double,
       options: List[Int],
       lossStreak: Int
-  ): OscarGrind[A] =
-    OscarGrind(baseBet, baseBet, bankroll, lossStreak, options)
+  ): OscarGrindStrat[A] =
+    OscarGrindStrat(baseBet, baseBet, bankroll, lossStreak, options)
 
 //case class ReactiveRandomStrategy(base: Double, min: Double, max: Double) extends BettingStrategy:
 //
