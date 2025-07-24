@@ -48,6 +48,11 @@ case class ConfigForm(update: Var[Update], model: Var[SimulationState]):
       "Sitting Radius",
       Var(100.0),
       (m, v) => m.copy(sittingRadius = v)
+    ),
+    Parameter(
+      "Boredom increase",
+      Var(0.1),
+      (m, v) => m.copy(boredomIncrease = v)
     )
   )
   // Spawning strategy selection

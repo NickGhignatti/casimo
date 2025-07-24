@@ -123,4 +123,4 @@ class TestWall extends AnyFunSuite:
     )
 
   test("Collidable center should be correct"):
-    assert(sampleWall.center == Vector2D(110, 60))
+    assert(sampleWall.center == Vector2D(60, 35))
