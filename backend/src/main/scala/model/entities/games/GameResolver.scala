@@ -14,13 +14,13 @@ object GameResolver:
         case CustState.Playing(customerGame) => game.id == customerGame.id
         case CustState.Idle                  => false
     )
-    playingCustomers.foldRight(game)((c, g) =>
-      val result = g.play(c.placeBet())
-      if result.isSuccess then
-        result.getOrElse(Success(0.0)) match
-          case Result.Success(lostValue) => g.updateHistory(c.id, -lostValue)
-          case Result.Failure(winValue)  => g.updateHistory(c.id, winValue)
-      else g
+    playingCustomers.foldLeft(game)((g, c) =>
+      g.play(c.placeBet()) match
+        case Result.Success(value) =>
+          value match
+            case Result.Success(lostValue) => g.updateHistory(c.id, -lostValue)
+            case Result.Failure(winValue)  => g.updateHistory(c.id, winValue)
+        case Result.Failure(error) => g.updateHistory(c.id, 0.0)
     )
 
   def update(customers: List[Customer], games: List[Game]): List[Game] =

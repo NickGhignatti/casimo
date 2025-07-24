@@ -14,7 +14,7 @@ object SlotMachine extends GameType
 object Roulette extends GameType
 object Blackjack extends GameType
 
-abstract class Game(
+trait Game(
     val id: String,
     val position: Vector2D,
     val gameState: GameState,
@@ -58,7 +58,7 @@ case class RouletteGame(
     copy(gameState = newGameState)
 
   override protected def withGameHistory(newGameHistory: GameHistory): Game =
-    copy(gameHistory = gameHistory)
+    copy(gameHistory = newGameHistory)
 
   override def play[B <: Bet](bet: B): Result[BetResult, String] =
     bet match

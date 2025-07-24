@@ -1,5 +1,6 @@
 package model.entities.games
 
+import model.entities.customers.Customer
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Result.Failure
 import utils.Result.Success
@@ -188,6 +189,34 @@ class TestGame extends AnyFunSuite:
     val game = GameBuilder.roulette(Vector2D.zero)
     val results = game.getLastRoundResult
     assert(results.isEmpty)
+
+  test("geLastRoundResult should return the correct history gains"):
+    val game = GameBuilder.roulette(Vector2D.zero)
+    val c1 = Customer().withId("c1")
+    val c2 = Customer().withId("c2")
+    val c3 = Customer().withId("c3")
+
+    val g1 = game.lock(c1.id)
+    val g2 = g1.getOrElse(game).lock(c2.id).getOrElse(game)
+
+    assert(g2.gameState.currentPlayers == 2)
+
+    val nc1 = c1.play(game)
+    val nc2 = c2.play(game)
+
+    val newGames = GameResolver.update(List(nc1, nc2), List(g2))
+
+    assert(newGames.head.getLastRoundResult.size == 2)
+
+    val g3 = newGames.head.lock(c3.id).getOrElse(g2)
+    val nc3 = c3.play(game)
+
+    assert(g3.gameState.currentPlayers == 3)
+
+    val newerGames = GameResolver.update(List(nc1, nc2, nc3), List(g3))
+
+    assert(newerGames.head.getLastRoundResult.size == 3)
+    assert(newerGames.head.gameHistory.gains.size == 5)
 
   test("games when builded should have predefined size"):
     val slot = GameBuilder.slot(Vector2D.zero)
