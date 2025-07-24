@@ -4,10 +4,10 @@ import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
 
 class TestWall extends AnyFunSuite:
-  val sampleWall: Wall = Wall("wall1", Vector2D(10, 10), 100, 50)
+  val sampleWall: Wall = Wall(Vector2D(10, 10), 100, 50)
 
   test("A Wall should have correct initial properties"):
-    assert(sampleWall.id == "wall1")
+    assert(sampleWall.id.contains("wall"))
     assert(sampleWall.position == Vector2D(10, 10))
     assert(sampleWall.width == 100)
     assert(sampleWall.height == 50)
@@ -54,6 +54,16 @@ class TestWall extends AnyFunSuite:
     // Original wall unchanged
     assert(sampleWall.height == 50)
 
+  test("withWidth should create a new wall with updated width"):
+    val tallerWall = sampleWall.withWidth(200)
+    assert(tallerWall.height == 50)
+    assert(tallerWall.width == 200)
+    assert(tallerWall.position == sampleWall.position)
+    assert(tallerWall.id == sampleWall.id)
+
+    // Original wall unchanged
+    assert(sampleWall.height == 50)
+
   test("withSize should create a new wall with updated dimensions"):
     val biggerWall = sampleWall.withSize(120, 60)
     assert(biggerWall.width == 120)
@@ -93,3 +103,19 @@ class TestWall extends AnyFunSuite:
     assert(sampleWall.collidesWith(leftEdgeEntity))
     assert(sampleWall.collidesWith(rightEdgeEntity))
     assert(sampleWall.collidesWith(bottomEdgeEntity))
+
+  test("Wall vertices should be correct"):
+    val vertices = sampleWall.vertices
+    val position = sampleWall.position
+
+    assert(position == vertices.head)
+    assert(
+      Vector2D(position.x + sampleWall.width, position.y) == vertices.apply(1)
+    )
+    assert(
+      Vector2D(position.x, position.y + sampleWall.height) == vertices.apply(2)
+    )
+    assert(
+      Vector2D(position.x + sampleWall.width, position.y + sampleWall.height) == vertices.apply(3)
+    )
+
