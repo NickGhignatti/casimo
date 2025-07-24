@@ -1,6 +1,6 @@
 package update
 
-import model.SimulationState
+import model.{SimulationState, Ticker, setSpawner}
 import model.data.DataManager
 import model.entities.Wall
 import model.entities.customers.Customer
@@ -8,7 +8,6 @@ import model.entities.customers.DefaultMovementManager
 import model.entities.games.GameBuilder
 import model.entities.spawner.ConstantStrategy
 import model.entities.spawner.Spawner
-import model.setSpawner
 import org.scalatest.funsuite.AnyFunSuite
 import update.Event.AddCustomers
 import update.Event.ResetSimulation
@@ -18,19 +17,25 @@ import utils.Vector2D
 
 class TestUpdate extends AnyFunSuite:
   val initState: SimulationState =
-    SimulationState(List.empty, List.empty, None, List.empty)
+    SimulationState(
+      List.empty,
+      List.empty,
+      None,
+      List.empty,
+      Ticker(0, spawnTick = 1)
+    )
 
-  test("update should leave state unchanged when no events affect it"):
+  test("update should increase the ticker"):
     val update = Update(DefaultMovementManager())
     val endState = update.update(initState, Event.SimulationTick)
-    assert(endState === initState)
+    assert(endState.ticker.currentTick === initState.ticker.currentTick + 1)
 
   test(
     "update should leave state unchanged except for customers if there is a spawner"
   ):
     val update = Update(DefaultMovementManager())
     val newState = initState.setSpawner(
-      Spawner("spawner", Vector2D.zero, ConstantStrategy(1), 0.0, 1.0)
+      Spawner("spawner", Vector2D.zero, ConstantStrategy(1))
     )
     val endState = update.update(newState, Event.SimulationTick)
     assert(endState !== newState)

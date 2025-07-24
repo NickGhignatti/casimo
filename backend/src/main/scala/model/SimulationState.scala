@@ -10,7 +10,8 @@ case class SimulationState(
     customers: Seq[Customer],
     games: List[Game],
     spawner: Option[Spawner],
-    walls: List[Wall]
+    walls: List[Wall],
+    ticker: Ticker = Ticker(0)
 )
 
 object SimulationState:

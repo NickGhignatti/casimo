@@ -29,18 +29,27 @@ case class Update(customerManager: DefaultMovementManager):
   final def update(state: SimulationState, event: Event): SimulationState =
     event match
       case SimulationTick =>
-        println(state.walls.size)
+        update(state.copy(ticker = state.ticker.update()), SpawnCustomers)
+
+      case SpawnCustomers =>
         state.spawner match
-          case None => update(state, UpdateCustomersPosition)
+          case None =>
+            update(
+              state,
+              UpdateCustomersPosition
+            )
           case Some(value) =>
-            update(value.spawn(state), UpdateCustomersPosition)
+            update(
+              value.spawn(state),
+              UpdateCustomersPosition
+            )
 
       case UpdateCustomersPosition =>
         update(state | customerManager, UpdateGames)
 
       case UpdateGames =>
         val updatedGames =
-          GameResolver.update(state.customers.toList, state.games)
+          GameResolver.update(state.customers.toList, state.games, state.ticker)
         update(state.copy(games = updatedGames), UpdateSimulationBankrolls)
 
       case UpdateSimulationBankrolls =>
@@ -62,9 +71,7 @@ case class Update(customerManager: DefaultMovementManager):
           Spawner(
             "Spawner",
             Vector2D(10.0, 10.0),
-            strategy,
-            0.0,
-            20.0
+            strategy
           )
         )
 

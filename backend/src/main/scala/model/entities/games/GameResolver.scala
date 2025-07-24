@@ -1,5 +1,6 @@
 package model.entities.games
 
+import model.Ticker
 import model.entities.customers
 import model.entities.customers.CustState
 import model.entities.customers.Customer
@@ -43,5 +44,11 @@ object GameResolver:
     *   updated list of games with new history entries from customer
     *   interactions
     */
-  def update(customers: List[Customer], games: List[Game]): List[Game] =
-    games.map(g => playGame(g, customers))
+  def update(
+      customers: List[Customer],
+      games: List[Game],
+      ticker: Ticker
+  ): List[Game] =
+    games.map(g =>
+      if ticker.isGameReady(g.gameType) then playGame(g, customers) else g
+    )

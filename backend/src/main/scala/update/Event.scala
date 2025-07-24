@@ -6,6 +6,7 @@ import model.entities.spawner.SpawningStrategy
 
 enum Event:
   case SimulationTick
+  case SpawnCustomers
   case UpdateCustomersPosition
   case UpdateGames
   case UpdateSimulationBankrolls

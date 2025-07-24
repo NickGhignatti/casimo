@@ -57,7 +57,7 @@ class ButtonBar(
           Some(
             dom.window.setInterval(
               () => eventBus.writer.onNext(Event.SimulationTick),
-              50
+              1000 / 60
             )
           )
         )
