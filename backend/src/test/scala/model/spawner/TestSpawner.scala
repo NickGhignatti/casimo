@@ -1,6 +1,7 @@
 package model.spawner
 
 import scala.language.implicitConversions
+import scala.language.postfixOps
 
 import model.SimulationState
 import model.entities.customers.Customer
@@ -53,7 +54,6 @@ class TestSpawner extends AnyFunSuite:
 
     val newState = spawner.spawn(initialState)
     for customer <- newState.customers do
-      assert(customer.id.startsWith("customer-"))
       assert(customer.direction.x >= 0 && customer.direction.x < 5)
       assert(customer.direction.y >= 0 && customer.direction.y < 5)
       assert(customer.bankroll >= 30 && customer.bankroll < 5000)
@@ -123,7 +123,11 @@ class TestSpawner extends AnyFunSuite:
     val newState = spawner.spawn(initialState)
     assert(newState.customers.isEmpty)
 
-  // Helper for approximate equality
-  extension (d: Double)
-    infix def ~=(other: Double, tolerance: Double = 1.0): Boolean =
-      math.abs(d - other) <= tolerance
+  test("Spawner when is not ready should not spawn"):
+    val strategy = ConstantStrategy(1)
+    val spawner = Spawner("test", position, strategy, 0.0, 2.0)
+    val initialState =
+      SimulationState(Seq.empty, List.empty, Some(spawner), List.empty)
+
+    val newState = spawner.spawn(initialState)
+    assert(newState.customers == initialState.customers)

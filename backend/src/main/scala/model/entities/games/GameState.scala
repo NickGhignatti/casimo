@@ -7,6 +7,8 @@ case class GameState(
     maxAllowedPlayers: Int,
     playersId: List[String]
 ):
+  def isFull: Boolean = currentPlayers == maxAllowedPlayers
+
   def addPlayer(id: String): Result[GameState, GameState] =
     if (currentPlayers < maxAllowedPlayers)
       Result.Success(

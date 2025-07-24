@@ -18,9 +18,3 @@ case class AvoidWallsManager[C <: Movable[C]]() extends BaseManager[Context[C]]:
 
 object AvoidWallsManager:
   case class Context[C <: Movable[C]](movable: C, avoids: Seq[Collidable])
-
-  private case class Square(center: Vector2D, size: Double) extends Collidable:
-    override val width: Double = size
-    override val height: Double = size
-    override val position: Vector2D =
-      Vector2D(center.x - size / 2, center.y - size / 2)

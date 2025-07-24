@@ -51,7 +51,7 @@ class Modal(
         val customersData = customersSeries.map { case (x, y) => (x, y) }
 
         val plot =
-          xyplot(customersData -> line(), gamesData -> line(color = Color.RED))(
+          xyplot(gamesData -> line(color = Color.RED), customersData -> line())(
             par(
               ylab = "Bankroll Value",
               xlab = "Time Step",
@@ -75,7 +75,6 @@ class Modal(
       createFallbackCanvas()
 
   private def createFallbackCanvas(): html.Canvas =
-    println("here")
     val canvas = dom.document.createElement("canvas").asInstanceOf[html.Canvas]
     canvas.width = 800
     canvas.height = 500

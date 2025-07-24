@@ -27,6 +27,12 @@ class TestStrategies extends AnyFunSuite:
       case Failure(_) => // Expected failure
       case Success(_) => fail("Expected Failure when condition is false")
 
+  test("SlotStrategy should have default parameters when instatiace empty"):
+    val bankRoll = 10.0
+    val strategy = use(SlotStrategy) when (bankRoll > 0.0)
+
+    assert(strategy.betAmount == 0.5)
+
   test("RouletteStrategy should throw error when bet is negative"):
     val bankRoll = 10.0
     val error = intercept[IllegalArgumentException](
@@ -47,6 +53,12 @@ class TestStrategies extends AnyFunSuite:
       error.getMessage === "requirement failed: Roulette bet must have at least one target"
     )
 
+  test("RouletteStrategy should have default stuff when instantiated empty"):
+    val bankRoll = 10.0
+    val strategy = use(RouletteStrategy) when (bankRoll > 0.0)
+
+    assert(strategy.targets == List(0) && strategy.betAmount == 0.5)
+
   test("BlackJackStrategy should throw error when bet is negative"):
     val bankRoll = 10.0
     val error = intercept[IllegalArgumentException](
@@ -56,3 +68,11 @@ class TestStrategies extends AnyFunSuite:
     assert(
       error.getMessage === "requirement failed: Bet amount must be positive"
     )
+
+  test(
+    "BlackJackStrategy should have default parameters when instantiated empty"
+  ):
+    val bankRoll = 10.0
+    val strategy = use(BlackJackStrategy) when (bankRoll > 0.0)
+
+    assert(strategy.minimumValue == 17 && strategy.betAmount == 0.5)

@@ -6,11 +6,11 @@ import model.SimulationState
 import model.entities.Entity
 import model.entities.Player
 import model.entities.customers.CustState.Idle
+import model.entities.customers.CustState.Playing
 import model.entities.customers.RiskProfile.Regular
-import model.entities.games.Blackjack
+import model.entities.games.Game
 import model.entities.games.GameType
 import model.entities.games.Roulette
-import model.entities.games.SlotMachine
 import model.managers.BaseManager
 import model.managers.movements.AvoidWallsManager
 import model.managers.movements.Boids
@@ -32,10 +32,11 @@ case class Customer(
     riskProfile: RiskProfile = Regular,
     customerState: CustState = Idle,
     betStrategy: BettingStrategy[Customer] = FlatBetting(10.0, defaultRedBet),
-    isPlaying: Boolean = false,
-    favouriteGames: Seq[GameType] = Seq(Roulette, Blackjack, SlotMachine)
+    favouriteGame: GameType = Roulette,
+    previousPosition: Option[Vector2D] = Option.empty
 ) extends Entity,
       Movable[Customer],
+      MovableWithPrevious[Customer],
       Bankroll[Customer],
       BoredomFrustration[Customer],
       StatusProfile,
@@ -47,7 +48,7 @@ case class Customer(
     this.copy(id = newId)
 
   def withPosition(newPosition: Vector2D): Customer =
-    this.copy(position = newPosition)
+    this.copy(position = newPosition, previousPosition = Some(position))
 
   def withBankroll(newRoll: Double, update: Boolean = false): Customer =
     if update then this.copy(bankroll = newRoll)
@@ -70,17 +71,11 @@ case class Customer(
   ): Customer =
     this.copy(betStrategy = newStrat)
 
-  def withFavouriteGames(newFavGame: Seq[GameType]): Customer =
-    this.copy(favouriteGames = newFavGame)
+  def withFavouriteGames(newFavGame: GameType): Customer =
+    this.copy(favouriteGame = newFavGame)
 
   def withProfile(profile: RiskProfile): Customer =
     this.copy(riskProfile = profile)
-
-  def play: Customer =
-    this.copy(isPlaying = true)
-
-  def stopPlaying: Customer =
-    this.copy(isPlaying = false)
 
   def randomizePosition(
       xRange: (Double, Double),
@@ -96,6 +91,14 @@ case class Customer(
       .randomizePosition((-100.0, 100.0), (-100.0, 100.0))
       .withBankroll(Random.between(50.0, 500.0))
 
+  override def play(game: Game): Customer = withCustomerState(Playing(game))
+
+  override def stopPlaying: Customer = withCustomerState(Idle)
+
+  override def isPlaying: Boolean = customerState match
+    case Playing(_) => true
+    case _          => false
+
 case class DefaultMovementManager(
     maxSpeed: Double = 1000,
     perceptionRadius: Double = 200000,
@@ -104,22 +107,24 @@ case class DefaultMovementManager(
     cohesionWeight: Double = 1.0,
     separationWeight: Double = 1.0,
     gamesAttractivenessWeight: Double = 1.0,
-    sittingRadius: Double = 100
+    sittingRadius: Double = 100,
+    boredomIncrease: Double = 0.1
 ) extends BaseManager[SimulationState]:
 
   override def update(slice: SimulationState): SimulationState =
-    slice
-      | GamesAttractivenessAdapter(
-        gamesAttractivenessWeight * GamesAttractivenessManager()
+    slice | FilterManager(
+      GamesAttractivenessAdapter(
+        gamesAttractivenessWeight * GamesAttractivenessManager(boredomIncrease)
           | PlayerSitterManager(sittingRadius)
       )
-      | BoidsAdapter(
-        PerceptionLimiterManager(perceptionRadius)
-          | alignmentWeight * AlignmentManager()
-          | cohesionWeight * CohesionManager()
-          | separationWeight * SeparationManager(avoidRadius)
-          | VelocityLimiterManager(maxSpeed)
-      )
+        | BoidsAdapter(
+          PerceptionLimiterManager(perceptionRadius)
+            | alignmentWeight * AlignmentManager()
+            | cohesionWeight * CohesionManager()
+            | separationWeight * SeparationManager(avoidRadius)
+            | VelocityLimiterManager(maxSpeed)
+        )
+    )
       | WallAvoidingAdapter(AvoidWallsManager())
       | BoidsAdapter(MoverManager())
 
@@ -150,7 +155,7 @@ case class BoidsAdapter(manager: BaseManager[Boids.State[Customer]])
     slice.copy(
       customers = slice.customers
         .map(Boids.State(_, slice.customers))
-        .map(c => if !c.boid.isPlaying then c | manager else c)
+        .map(_ | manager)
         .map(_.boid)
     )
 
@@ -162,7 +167,23 @@ case class WallAvoidingAdapter(
   ): SimulationState =
     slice.copy(
       customers = slice.customers
-        .map(c => AvoidWallsManager.Context(c, slice.walls))
-        .map(c => if !c.movable.isPlaying then c | manager else c)
+        .map(c => AvoidWallsManager.Context(c, slice.walls ++ slice.games))
+        .map(_ | manager)
         .map(_.movable)
+    )
+
+case class FilterManager(manager: BaseManager[SimulationState])
+    extends BaseManager[SimulationState]:
+  override def update(slice: SimulationState): SimulationState =
+    val filteredSlice = slice.copy(
+      customers = slice.customers.filterNot(_.isPlaying),
+      games = slice.games.filterNot(_.isFull)
+    )
+    val updatedState = filteredSlice | manager
+    slice.copy(
+      customers = slice.customers.map(c =>
+        updatedState.customers.find(_.id == c.id).getOrElse(c)
+      ),
+      games =
+        slice.games.map(g => updatedState.games.find(_.id == g.id).getOrElse(g))
     )

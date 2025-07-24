@@ -26,7 +26,7 @@ case class SlotStrategyBuilder(
     this.copy(betAmount = Some(amount))
 
   def when(cond: => Boolean): SlotStrategyInstance =
-    SlotStrategyInstance(betAmount.getOrElse(0.0), () => cond)
+    SlotStrategyInstance(betAmount.getOrElse(0.5), () => cond)
 
 case class SlotStrategyInstance(betAmount: Double, condition: () => Boolean)
     extends GameStrategy:
@@ -51,8 +51,8 @@ case class RouletteStrategyBuilder(
 
   def when(cond: => Boolean): RouletteStrategyInstance =
     RouletteStrategyInstance(
-      betAmount.getOrElse(0.0),
-      targets.getOrElse(List.empty),
+      betAmount.getOrElse(0.5),
+      targets.getOrElse(List(0)),
       () => cond
     )
 
@@ -83,7 +83,7 @@ case class BlackJackStrategyBuilder(
 
   def when(cond: => Boolean): BlackJackStrategyInstance =
     BlackJackStrategyInstance(
-      betAmount.getOrElse(0.0),
+      betAmount.getOrElse(0.5),
       minimumVal.getOrElse(17),
       () => cond
     )

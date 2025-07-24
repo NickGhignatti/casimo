@@ -138,6 +138,7 @@ lazy val frontend = project
         .withCheckIR(false)
     },
     libraryDependencies ++= Seq(
+      "it.unibo.alice.tuprolog" % "tuprolog" % "3.3.0",
       "org.scala-js" %%% "scalajs-dom" % "2.8.0",
       "com.raquo" %%% "laminar" % "17.0.0",
       "io.github.pityka" %%% "nspl-canvas-js" % "0.9.0"

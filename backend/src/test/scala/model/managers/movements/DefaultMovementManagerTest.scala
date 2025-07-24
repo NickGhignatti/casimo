@@ -45,8 +45,7 @@ class DefaultMovementManagerTest extends AnyFunSuite:
           position = Vector2D(0, 0),
           direction = Vector2D(0, 0),
           bankroll = 100.0,
-          customerState = Playing(GameBuilder.blackjack(Vector2D.zero)),
-          isPlaying = true
+          customerState = Playing(GameBuilder.blackjack(Vector2D.zero))
         ),
         Customer(
           id = "Bob",
