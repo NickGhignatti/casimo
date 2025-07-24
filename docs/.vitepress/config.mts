@@ -11,6 +11,10 @@ export default withMermaid({
       { text: 'Home', link: '/' },
       // { text: 'Examples', link: '/markdown-examples' }
     ],
+      outline: {
+          level: [2, 3],
+          label: 'On this page'
+      },
 
     // sidebar: [
     //   {
