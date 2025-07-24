@@ -8,7 +8,8 @@ class TestPreviousPosition extends AnyFunSuite:
   test("The customer previous position is initially none"):
     assert(customer.previousPosition.isEmpty)
 
-  test("After being moved a customer previous position contains its previous position")
-    val movedCustomer = customer.withPosition(Vector2D(1, 1))
-    assert(movedCustomer.previousPosition.get == customer.position)
-
+  test(
+    "After being moved a customer previous position contains its previous position"
+  )
+  val movedCustomer = customer.withPosition(Vector2D(1, 1))
+  assert(movedCustomer.previousPosition.get == customer.position)

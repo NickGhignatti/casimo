@@ -116,6 +116,8 @@ class TestWall extends AnyFunSuite:
       Vector2D(position.x, position.y + sampleWall.height) == vertices.apply(2)
     )
     assert(
-      Vector2D(position.x + sampleWall.width, position.y + sampleWall.height) == vertices.apply(3)
+      Vector2D(
+        position.x + sampleWall.width,
+        position.y + sampleWall.height
+      ) == vertices.apply(3)
     )
-

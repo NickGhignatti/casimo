@@ -1,8 +1,6 @@
 package model.managers.movements
 
-import model.entities.Entity
 import model.entities.Player
-import model.entities.customers.Movable
 import model.entities.games.Game
 import model.managers.BaseManager
 import model.managers.WeightedManager
@@ -12,7 +10,7 @@ import utils.Vector2D.direction
 import utils.Vector2D.distance
 
 object PlayerManagers:
-  case class Context[P <: Player[P] & Entity & Movable[P]](
+  case class Context[P <: Player[P]](
       player: P,
       games: Seq[Game]
   ):
@@ -21,12 +19,10 @@ object PlayerManagers:
         .find(_.gameType == player.favouriteGame)
         .flatMap(_.lock(player.id).option())
 
-  case class GamesAttractivenessManager[C <: Player[C] & Entity & Movable[C]](
+  case class GamesAttractivenessManager[C <: Player[C]](
       weight: Double = 1.0
   ) extends WeightedManager[Context[C]]:
-    override def update(
-        slice: Context[C]
-    ): Context[C] =
+    override def update(slice: Context[C]): Context[C] =
       slice.copy(
         player =
           val customer = slice.player
@@ -42,7 +38,7 @@ object PlayerManagers:
     override def updatedWeight(weight: Double): WeightedManager[Context[C]] =
       copy(weight = weight)
 
-  case class PlayerSitterManager[C <: Player[C] & Entity & Movable[C]](
+  case class PlayerSitterManager[C <: Player[C]](
       sittingRadius: Double
   ) extends BaseManager[Context[C]]:
 

@@ -1,6 +1,8 @@
 package model.spawner
 
-import scala.language.{implicitConversions, postfixOps}
+import scala.language.implicitConversions
+import scala.language.postfixOps
+
 import model.SimulationState
 import model.entities.customers.Customer
 import model.entities.spawner.ConstantStrategy

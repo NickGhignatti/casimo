@@ -3,18 +3,17 @@ package update
 import model.SimulationState
 import model.data.DataManager
 import model.entities.Wall
-import model.setSpawner
 import model.entities.customers.Customer
 import model.entities.customers.DefaultMovementManager
 import model.entities.games.GameBuilder
-import model.entities.spawner.{ConstantStrategy, Spawner}
+import model.entities.spawner.ConstantStrategy
+import model.entities.spawner.Spawner
+import model.setSpawner
 import org.scalatest.funsuite.AnyFunSuite
-import update.Event.{
-  AddCustomers,
-  ResetSimulation,
-  UpdateWalls,
-  updateGamesList
-}
+import update.Event.AddCustomers
+import update.Event.ResetSimulation
+import update.Event.UpdateWalls
+import update.Event.updateGamesList
 import utils.Vector2D
 
 class TestUpdate extends AnyFunSuite:
