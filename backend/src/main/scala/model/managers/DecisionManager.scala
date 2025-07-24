@@ -22,6 +22,7 @@ import model.entities.customers.RiskProfile.Regular
 import model.entities.customers.RiskProfile.VIP
 import model.entities.customers.StatusProfile
 import model.entities.games.Blackjack
+import model.entities.games.Gain
 import model.entities.games.Game
 import model.entities.games.GameType
 import model.entities.games.Roulette
@@ -30,6 +31,10 @@ import utils.DecisionNode
 import utils.DecisionTree
 import utils.Leaf
 import utils.MultiNode
+import utils.TriggerDSL.BrRatioAbove
+import utils.TriggerDSL.FrustAbove
+import utils.TriggerDSL.Losses
+import utils.TriggerDSL.Trigger
 
 case class DecisionManager[
     A <: Bankroll[A] & BoredomFrustration[A] & CustomerState[A] &
@@ -37,7 +42,7 @@ case class DecisionManager[
 ](games: List[Game])
     extends BaseManager[Seq[A]]:
   private val gameList = games.map(_.gameType).distinct
-  // === Configuration & Helpers ===
+  // Configuration
   private object ProfileModifiers:
     case class Limits(tp: Double, sl: Double)
     val modifiers: Map[RiskProfile, (Limits, Double, Double)] = Map(
@@ -46,78 +51,37 @@ case class DecisionManager[
       RiskProfile.Casual -> (Limits(1.5, 0.5), 1.40, 1.30),
       RiskProfile.Impulsive -> (Limits(5.0, 0.0), 0.70, 1.5)
     )
-  // === Rule & External Config ===
+  // Rule & Future External Config
   case class SwitchRule(
       profile: RiskProfile,
       game: GameType,
       strategy: BetStratType,
-      trigger: Trigger,
+      trigger: Trigger[A],
       nextStrategy: BetStratType,
       betPercentage: Double
   )
+//format: off
   object DefaultConfig:
     val switchRules: List[SwitchRule] = List(
       // VIP
       SwitchRule(VIP, Blackjack, Martingale, Losses(3), OscarGrind, 0.05),
       SwitchRule(VIP, Roulette, Martingale, Losses(4), OscarGrind, 0.05),
-      SwitchRule(
-        VIP,
-        SlotMachine,
-        FlatBet,
-        FrustrationAbove(50),
-        FlatBet,
-        0.015
-      ),
+      SwitchRule(VIP, SlotMachine, FlatBet, FrustAbove(50), FlatBet, 0.015),
       // Regular
-      SwitchRule(
-        Regular,
-        Blackjack,
-        OscarGrind,
-        BankrollRatioAbove(1.3),
-        Martingale,
-        0.015
-      ),
+      SwitchRule(Regular, Blackjack, OscarGrind, BrRatioAbove(1.3), Martingale, 0.015),
       SwitchRule(Regular, Blackjack, Martingale, Losses(3), OscarGrind, 0.02),
-      SwitchRule(
-        Regular,
-        Roulette,
-        OscarGrind,
-        BankrollRatioAbove(1.3),
-        Martingale,
-        0.015
-      ),
+      SwitchRule(Regular, Roulette, OscarGrind, BrRatioAbove(1.3), Martingale, 0.015),
       SwitchRule(Regular, Roulette, Martingale, Losses(3), OscarGrind, 0.02),
-      SwitchRule(
-        Regular,
-        SlotMachine,
-        FlatBet,
-        FrustrationAbove(60),
-        FlatBet,
-        0.01
-      ),
+      SwitchRule(Regular, SlotMachine, FlatBet, FrustAbove(60), FlatBet, 0.01),
       // Casual
 
       // Impulsive
       SwitchRule(Impulsive, Blackjack, Martingale, Losses(3), OscarGrind, 0.10),
       SwitchRule(Impulsive, Roulette, Martingale, Losses(3), FlatBet, 0.07),
-      SwitchRule(
-        Impulsive,
-        Roulette,
-        FlatBet,
-        BankrollRatioAbove(1),
-        Martingale,
-        0.03
-      ),
-      SwitchRule(
-        Impulsive,
-        SlotMachine,
-        FlatBet,
-        FrustrationAbove(50),
-        FlatBet,
-        0.02
-      )
+      SwitchRule(Impulsive, Roulette, FlatBet, BrRatioAbove(1), Martingale, 0.03),
+      SwitchRule(Impulsive, SlotMachine, FlatBet, FrustAbove(50), FlatBet, 0.02)
     )
-
+//format: on
   object ConfigLoader:
     def load(): List[SwitchRule] = DefaultConfig.switchRules
   private lazy val rulesByProfile: Map[RiskProfile, List[SwitchRule]] =
@@ -137,13 +101,12 @@ case class DecisionManager[
     )
     val updated = playing.map(c =>
       val updatedGame = games.find(_.id == c.getGameOrElse.get.id).get
-      val gain = -updatedGame.getLastRoundResult
-        .filter(g => g.getCustomerWhichPlayed == c.id)
-        .head
-        .getMoneyGain
-      c.updateAfter(gain)
+      val lastRound = updatedGame.getLastRoundResult
+      val updatedC = lastRound.find(_.getCustomerWhichPlayed == c.id) match
+        case Some(g) => c.updateAfter(g.getMoneyGain)
+        case _       => c
 
-      val decision = tree.eval(c)
+      val decision = tree.eval(updatedC)
 
       decision match
         case ContinuePlaying(c)   => c
@@ -207,25 +170,3 @@ case class DecisionManager[
           c.bankroll,
           c.betStrategy.option
         )
-
-  // === Trigger DSL ===
-  sealed trait Trigger:
-    def eval(c: A): Boolean
-  case class FrustrationAbove(p: Double) extends Trigger:
-    def eval(c: A) = c.frustration > p
-  case class BoredomAbove(p: Double) extends Trigger:
-    def eval(c: A) = c.boredom > p
-  case class BankrollRatioAbove(r: Double) extends Trigger:
-    def eval(c: A) = c.bankroll / c.startingBankroll > r
-  case class And(a: Trigger, b: Trigger) extends Trigger:
-    def eval(c: A) = a.eval(c) && b.eval(c)
-  case class Or(a: Trigger, b: Trigger) extends Trigger:
-    def eval(c: A) = a.eval(c) || b.eval(c)
-  case object Always extends Trigger:
-    def eval(c: A) = true
-  case class Losses(n: Int) extends Trigger:
-    def eval(c: A) =
-      c.betStrategy match
-        case martingale: MartingaleStrat[A] => martingale.lossStreak >= n
-        case oscarGrind: OscarGrindStrat[A] => oscarGrind.lossStreak >= n
-        case _                              => 0 >= n
