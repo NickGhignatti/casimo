@@ -38,4 +38,3 @@ class TestGameResolver extends AnyFunSuite:
     assert(
       mockGame.gameHistory.gains ::: mockGame2.gameHistory.gains == newGame.last.gameHistory.gains
     )
-

@@ -106,13 +106,14 @@ case class DefaultMovementManager(
     cohesionWeight: Double = 1.0,
     separationWeight: Double = 1.0,
     gamesAttractivenessWeight: Double = 1.0,
-    sittingRadius: Double = 100
+    sittingRadius: Double = 100,
+    boredomIncrease: Double = 0.1
 ) extends BaseManager[SimulationState]:
 
   override def update(slice: SimulationState): SimulationState =
-    slice | (
+    slice | FilterManager(
       GamesAttractivenessAdapter(
-        gamesAttractivenessWeight * GamesAttractivenessManager()
+        gamesAttractivenessWeight * GamesAttractivenessManager(boredomIncrease)
           | PlayerSitterManager(sittingRadius)
       )
         | BoidsAdapter(
@@ -122,9 +123,9 @@ case class DefaultMovementManager(
             | separationWeight * SeparationManager(avoidRadius)
             | VelocityLimiterManager(maxSpeed)
         )
-        | WallAvoidingAdapter(AvoidWallsManager())
-        | BoidsAdapter(MoverManager())
     )
+      | WallAvoidingAdapter(AvoidWallsManager())
+      | BoidsAdapter(MoverManager())
 
 case class GamesAttractivenessAdapter(
     manager: BaseManager[PlayerManagers.Context[Customer]]

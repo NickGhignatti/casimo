@@ -2,9 +2,10 @@ package model.entities.games
 
 import model.entities.customers.Customer
 import org.scalatest.funsuite.AnyFunSuite
+import utils.Result
 import utils.Result.Failure
 import utils.Result.Success
-import utils.{Result, Vector2D}
+import utils.Vector2D
 
 class TestGame extends AnyFunSuite:
   val mockId = "test"
