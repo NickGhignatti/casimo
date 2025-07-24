@@ -9,6 +9,7 @@ import org.scalajs.dom
 import org.scalajs.dom.MouseEvent
 import org.scalajs.dom.html
 import update.Event
+import update.Event.BorderConfig
 import update.Event.UpdateWalls
 import update.Event.updateGamesList
 import update.Update
@@ -59,8 +60,8 @@ class CanvasManager(
       "load",
       { _ =>
         resizeCanvas()
-        model.set(
-          SimulationState.base(
+        eventBus.writer.onNext(
+          BorderConfig(
             canvas.offsetLeft,
             canvas.offsetTop,
             canvas.width,

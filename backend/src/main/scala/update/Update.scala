@@ -28,6 +28,7 @@ case class Update(customerManager: DefaultMovementManager):
   final def update(state: SimulationState, event: Event): SimulationState =
     event match
       case SimulationTick =>
+        println(state.walls.size)
         state.spawner match
           case None => update(state, UpdateCustomersPosition)
           case Some(value) =>
@@ -57,12 +58,15 @@ case class Update(customerManager: DefaultMovementManager):
         state.setSpawner(
           Spawner(
             "Spawner",
-            Vector2D(200.0, 200.0),
+            Vector2D(10.0, 10.0),
             strategy,
             0.0,
             20.0
           )
         )
+
+      case BorderConfig(x: Double, y: Double, width: Double, height: Double) =>
+        SimulationState.base(x, y, width, height)
 
       case UpdateWalls(walls: List[Wall]) =>
         state.copy(walls = walls)

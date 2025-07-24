@@ -1,9 +1,9 @@
-import com.raquo.laminar.api.L.*
+import com.raquo.laminar.api.L._
 import model.SimulationState
 import model.data.DataManager
 import model.entities.customers.DefaultMovementManager
 import org.scalajs.dom
-import org.scalajs.dom.{document, html}
+import org.scalajs.dom.document
 import update.Event
 import update.Update
 import view.ButtonBar

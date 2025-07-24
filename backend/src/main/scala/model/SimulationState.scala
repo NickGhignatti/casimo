@@ -6,8 +6,6 @@ import model.entities.games.Game
 import model.entities.spawner.Spawner
 import utils.Vector2D
 
-import scala.compiletime.ops.string.Length
-
 case class SimulationState(
     customers: Seq[Customer],
     games: List[Game],
