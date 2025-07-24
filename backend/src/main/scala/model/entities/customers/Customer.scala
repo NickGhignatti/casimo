@@ -35,7 +35,6 @@ case class Customer(
     favouriteGame: GameType = Roulette,
     previousPosition: Option[Vector2D] = Option.empty
 ) extends Entity,
-      Movable[Customer],
       MovableWithPrevious[Customer],
       Bankroll[Customer],
       BoredomFrustration[Customer],

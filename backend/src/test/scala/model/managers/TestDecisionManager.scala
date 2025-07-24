@@ -44,3 +44,11 @@ class TestDecisionManager extends AnyFunSuite with Matchers:
     val manager = DecisionManager[Customer](List(mockGamePlayed))
     val changeStrat = manager.update(List(customer))
     changeStrat.head.betStrategy shouldBe OscarGrindStrat(customer.bankroll*0.05,customer.bankroll,defaultRedBet)
+
+  test("updatePosition should change position if state was changed"):
+    val spawnCustomer = Customer().withPosition(Vector2D(10.0,10.0)).withCustomerState(Playing(GameBuilder.slot(Vector2D.zero)))
+    val oldCustomer = spawnCustomer.withPosition(Vector2D(20.0,20.0))
+    val newCustomer = oldCustomer.withPosition(Vector2D.zero).changeState(Idle)
+    val updatedCustomer = PostDecisionUpdater.updatePosition(List(oldCustomer),List(newCustomer))
+    updatedCustomer.head.customerState shouldBe Idle
+    updatedCustomer.head.position shouldBe oldCustomer.position

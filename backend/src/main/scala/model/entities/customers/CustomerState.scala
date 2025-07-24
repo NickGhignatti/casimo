@@ -16,6 +16,10 @@ trait CustomerState[T <: CustomerState[T]]:
       case Playing(game) => Some(game)
       case _             => Option.empty
 
+  def isPlaying: Boolean = customerState match
+    case Playing(_) => true
+    case _          => false
+
 enum CustState:
   case Playing(game: Game)
   case Idle

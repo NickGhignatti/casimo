@@ -14,6 +14,7 @@ import model.entities.customers.FlatBetting
 import model.entities.customers.HasBetStrategy
 import model.entities.customers.Martingale
 import model.entities.customers.MartingaleStrat
+import model.entities.customers.MovableWithPrevious
 import model.entities.customers.OscarGrind
 import model.entities.customers.OscarGrindStrat
 import model.entities.customers.RiskProfile
@@ -170,3 +171,27 @@ case class DecisionManager[
           c.bankroll,
           c.betStrategy.option
         )
+
+object PostDecisionUpdater:
+  def updatePosition[P <: MovableWithPrevious[P] & CustomerState[P] & Entity](
+      before: Seq[P],
+      post: Seq[P]
+  ): List[P] =
+    val beforeMap = before.map(p => p.id -> p).toMap
+    val postMap = post.map(p => p.id -> p).toMap
+
+    val remained = beforeMap.keySet.intersect(postMap.keySet)
+
+    val (hasStopPlaying, unchangedState) = remained.toList
+      .map(id => (beforeMap(id), postMap(id)))
+      .partition { case (oldState, newState) =>
+        oldState.isPlaying != newState.isPlaying
+      }
+
+    val changePosition = hasStopPlaying.map { case (_, newP) =>
+      newP
+        .withPosition(newP.previousPosition.getOrElse(newP.position))
+        .withDirection(-newP.direction)
+    }
+    val unchanged = unchangedState.map(_._2)
+    changePosition ++ unchanged

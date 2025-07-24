@@ -12,6 +12,7 @@ import model.entities.games.GameResolver
 import model.entities.spawner.Spawner
 import model.managers.CustomerBankrollManager
 import model.managers.DecisionManager
+import model.managers.PostDecisionUpdater
 import model.managers.|
 import model.setSpawner
 import update.Event._
@@ -49,7 +50,11 @@ case class Update(customerManager: DefaultMovementManager):
       case UpdateCustomersState =>
         val updatedCustomerState =
           DecisionManager[Customer](state.games).update(state.customers)
-        state.copy(customers = updatedCustomerState)
+        val postDecisionUpdate = PostDecisionUpdater.updatePosition(
+          state.customers,
+          updatedCustomerState
+        )
+        state.copy(customers = postDecisionUpdate)
 
       case AddCustomers(strategy) =>
         state.setSpawner(
