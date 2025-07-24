@@ -7,6 +7,28 @@ import model.entities.Entity
 import model.entities.customers.Customer
 import utils.Vector2D
 
+/** Entity responsible for spawning new customers into the simulation.
+  *
+  * The Spawner periodically creates new Customer instances based on its
+  * configured spawning strategy and timing parameters. It maintains its own
+  * simulation time counter and determines when to spawn customers based on the
+  * ticksToSpawn interval.
+  *
+  * Spawned customers are created with randomized attributes including position,
+  * movement direction, bankroll, and preferred game type to simulate realistic
+  * diversity in the casino environment.
+  *
+  * @param id
+  *   unique identifier for this spawner instance
+  * @param position
+  *   2D coordinates where customers will be spawned (with random variation)
+  * @param strategy
+  *   the spawning strategy that determines how many customers to create
+  * @param currentTime
+  *   internal simulation time counter for this spawner
+  * @param ticksToSpawn
+  *   interval in simulation ticks between spawning events
+  */
 case class Spawner(
     id: String,
     position: Vector2D,
@@ -15,6 +37,17 @@ case class Spawner(
     ticksToSpawn: Double = 10.0
 ) extends Entity:
 
+  /** Processes a simulation tick, potentially spawning new customers.
+    *
+    * Checks if the current time interval matches the spawning schedule and, if
+    * so, creates new customers according to the spawning strategy.
+    *
+    * @param state
+    *   the current simulation state containing customers and spawner
+    * @return
+    *   updated simulation state with potentially new customers and updated
+    *   spawner time
+    */
   def spawn(
       state: SimulationState
   ): SimulationState =
