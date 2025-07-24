@@ -10,6 +10,7 @@ case class Vector2D(x: Double, y: Double):
   def *(scalar: Double): Vector2D = Vector2D(this.x * scalar, this.y * scalar)
   def /(scalar: Double): Vector2D = Vector2D(this.x / scalar, this.y / scalar)
   def dot(other: Vector2D): Double = this.x * other.x + this.y * other.y
+  def unary_- : Vector2D = Vector2D(-this.x, -this.y)
 
   def magnitude: Double = Math.sqrt(x * x + y * y)
   def normalize: Vector2D = if (magnitude == 0.0) this else this / magnitude

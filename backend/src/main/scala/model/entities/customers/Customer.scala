@@ -35,7 +35,6 @@ case class Customer(
     favouriteGame: GameType = Roulette,
     previousPosition: Option[Vector2D] = Option.empty
 ) extends Entity,
-      Movable[Customer],
       MovableWithPrevious[Customer],
       Bankroll[Customer],
       BoredomFrustration[Customer],
@@ -50,8 +49,9 @@ case class Customer(
   def withPosition(newPosition: Vector2D): Customer =
     this.copy(position = newPosition, previousPosition = Some(position))
 
-  def withBankroll(newRoll: Double): Customer =
-    this.copy(bankroll = newRoll, startingBankroll = newRoll)
+  def withBankroll(newRoll: Double, update: Boolean = false): Customer =
+    if update then this.copy(bankroll = newRoll)
+    else this.copy(bankroll = newRoll, startingBankroll = newRoll)
 
   def withBoredom(newBoredom: Double): Customer =
     this.copy(boredom = newBoredom)

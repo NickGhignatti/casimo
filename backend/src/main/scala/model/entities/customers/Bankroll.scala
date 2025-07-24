@@ -14,6 +14,6 @@ trait Bankroll[T <: Bankroll[T]]:
       newBankroll >= 0,
       s"Bankroll amount must be positive, instead is $newBankroll"
     )
-    withBankroll(newBankroll)
+    withBankroll(newBankroll, true)
 
-  def withBankroll(newBankroll: Double): T
+  def withBankroll(newBankroll: Double, update: Boolean = false): T

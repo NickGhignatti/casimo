@@ -107,7 +107,7 @@ class TestBettingStrategy extends AnyFunSuite with Matchers:
     val mock = Customer(
       customerState = Playing(GameBuilder.roulette(Vector2D.zero)),
       bankroll = 1000.0,
-      betStrategy = Martingale[Customer](10.0, targetList)
+      betStrategy = MartingaleStrat[Customer](10.0, targetList)
     )
     val firstBet = mock.placeBet()
     val newBettingStrat =
@@ -127,8 +127,8 @@ class TestBettingStrategy extends AnyFunSuite with Matchers:
 
     val mock = Customer(
       customerState = Playing(GameBuilder.blackjack(Vector2D.zero)),
-      bankroll = 1000.0,
-      betStrategy = Martingale[Customer](10.0, targetList)
+  bankroll = 1000.0,
+      betStrategy = MartingaleStrat[Customer](10.0, targetList)
     )
     val firstBet = mock.placeBet()
     val newBettingStrat =
@@ -147,7 +147,7 @@ class TestBettingStrategy extends AnyFunSuite with Matchers:
     val mock = Customer(
       customerState = Playing(GameBuilder.blackjack(Vector2D.zero)),
       bankroll = bankroll,
-      betStrategy = OscarGrind[Customer](5.0, bankroll, 17)
+      betStrategy = OscarGrindStrat[Customer](5.0, bankroll, 17)
     )
     val bet = mock.placeBet()
     val mockLose = mock.updateBankroll(-bet.amount)
@@ -168,13 +168,13 @@ class TestBettingStrategy extends AnyFunSuite with Matchers:
     val bankroll = 100.0
     val mock = Customer(
       customerState = Playing(GameBuilder.blackjack(Vector2D.zero)),
-      bankroll = bankroll,
-      betStrategy = OscarGrind[Customer](5.0, bankroll, 17)
+  bankroll = bankroll,
+      betStrategy = OscarGrindStrat[Customer](5.0, bankroll, 17)
     )
     val bet = mock.placeBet()
     val mock2 = mock.updateBankroll(bet.amount)
     val afterWin = mock2.updateAfter(mock.betStrategy.betAmount)
-    val stratAfterWin = afterWin.betStrategy.asInstanceOf[OscarGrind[Customer]]
+    val stratAfterWin = afterWin.betStrategy.asInstanceOf[OscarGrindStrat[Customer]]
 
     stratAfterWin.betAmount shouldEqual 5.0
     stratAfterWin.startingBankroll shouldEqual 105.0
@@ -186,7 +186,7 @@ class TestBettingStrategy extends AnyFunSuite with Matchers:
     val mock = Customer(
       customerState = Playing(GameBuilder.blackjack(Vector2D.zero)),
       bankroll = bankroll,
-      betStrategy = OscarGrind[Customer](5.0, bankroll, 17)
+      betStrategy = OscarGrindStrat[Customer](5.0, bankroll, 17)
     )
     val bet = mock.placeBet()
     val mockLose = mock.updateBankroll(-bet.amount)
@@ -195,7 +195,7 @@ class TestBettingStrategy extends AnyFunSuite with Matchers:
     val stratAfterWin = mockWin
       .updateAfter(mock.betStrategy.betAmount)
       .betStrategy
-      .asInstanceOf[OscarGrind[Customer]]
+      .asInstanceOf[OscarGrindStrat[Customer]]
 
     stratAfterWin.betAmount shouldEqual 10.0
     stratAfterWin.startingBankroll shouldEqual 100.0
