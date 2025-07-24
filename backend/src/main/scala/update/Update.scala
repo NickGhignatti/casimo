@@ -58,7 +58,9 @@ case class Update(customerManager: DefaultMovementManager):
           Spawner(
             "Spawner",
             Vector2D(200.0, 200.0),
-            strategy
+            strategy,
+            0.0,
+            20.0
           )
         )
 

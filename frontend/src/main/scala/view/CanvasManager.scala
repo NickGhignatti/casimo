@@ -55,7 +55,27 @@ class CanvasManager(
         redrawAllComponents()
       }
     )
-    dom.window.addEventListener("load", { _ => resizeCanvas() })
+    dom.window.addEventListener(
+      "load",
+      { _ =>
+        resizeCanvas()
+        model.set(
+          SimulationState.base(
+            canvas.offsetLeft,
+            canvas.offsetTop,
+            canvas.width,
+            canvas.height
+          )
+        )
+        wallComponents.set(
+          model
+            .now()
+            .walls
+            .map(wall => WallComponent(wall))
+        )
+        redrawAllComponents()
+      }
+    )
     clearCanvas()
 
   def reset(): Unit =
