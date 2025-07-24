@@ -85,8 +85,6 @@ case class ConfigForm(update: Var[Update], model: Var[SimulationState]):
 
   def init(): ReactiveHtmlElement[HTMLDivElement] =
     div(
-      h3("Movement Manager Form"),
-      hr(),
       div(
         className := "config-container",
         // Column 1: Movement Manager
