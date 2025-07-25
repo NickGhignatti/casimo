@@ -7,7 +7,6 @@ import model.entities.customers.BetStratType
 import model.entities.customers.BettingStrategy
 import model.entities.customers.BoredomFrustration
 import model.entities.customers.CustState.Idle
-import model.entities.customers.CustState.Playing
 import model.entities.customers.CustomerState
 import model.entities.customers.FlatBet
 import model.entities.customers.FlatBetting
@@ -32,7 +31,9 @@ import utils.DecisionNode
 import utils.DecisionTree
 import utils.Leaf
 import utils.MultiNode
+import utils.TriggerDSL.BoredomAbove
 import utils.TriggerDSL.BrRatioAbove
+import utils.TriggerDSL.BrRatioBelow
 import utils.TriggerDSL.FrustAbove
 import utils.TriggerDSL.Losses
 import utils.TriggerDSL.Trigger
@@ -46,11 +47,12 @@ case class DecisionManager[
   // Configuration
   private object ProfileModifiers:
     case class Limits(tp: Double, sl: Double)
-    val modifiers: Map[RiskProfile, (Limits, Double, Double)] = Map(
-      RiskProfile.VIP -> (Limits(tp = 3.0, sl = 0.3), 1.30, 0.80),
-      RiskProfile.Regular -> (Limits(2.5, 0.3), 1.0, 1.0),
-      RiskProfile.Casual -> (Limits(1.5, 0.5), 1.40, 1.30),
-      RiskProfile.Impulsive -> (Limits(5.0, 0.0), 0.70, 1.5)
+    case class Modifiers(limits: Limits, bMod: Double, fMod: Double)
+    val modifiers: Map[RiskProfile, Modifiers] = Map(
+      RiskProfile.VIP -> Modifiers(Limits(tp = 3.0, sl = 0.3), 1.30, 0.80),
+      RiskProfile.Regular -> Modifiers(Limits(2.5, 0.3), 1.0, 1.0),
+      RiskProfile.Casual -> Modifiers(Limits(1.5, 0.5), 1.40, 1.30),
+      RiskProfile.Impulsive -> Modifiers(Limits(5.0, 0.0), 0.70, 1.5)
     )
   // Rule & Future External Config
   case class SwitchRule(
@@ -85,65 +87,106 @@ case class DecisionManager[
 //format: on
   object ConfigLoader:
     def load(): List[SwitchRule] = DefaultConfig.switchRules
-  private lazy val rulesByProfile: Map[RiskProfile, List[SwitchRule]] =
+  lazy val rulesByProfile: Map[RiskProfile, List[SwitchRule]] =
     ConfigLoader.load().groupBy(_.profile)
 
   sealed trait CustomerDecision
-  case class ContinuePlaying(customer: A) extends CustomerDecision
-  case class StopPlaying(customer: A) extends CustomerDecision
-  case class ChangeStrategy(customer: A, newStrategy: BettingStrategy[A])
+  case class ContinuePlaying() extends CustomerDecision
+  case class StopPlaying() extends CustomerDecision
+  case class ChangeStrategy(newStrategy: BettingStrategy[A])
       extends CustomerDecision
+  case class Stay() extends CustomerDecision
+  case class LeaveCasino() extends CustomerDecision
+  case class WaitForGame() extends CustomerDecision
 
   def update(customers: Seq[A]): Seq[A] =
     val tree = buildDecisionTree
-    val (playing, idle) = customers.partition(_.customerState match
-      case Playing(_) => true
-      case _          => false
-    )
-    val updated = playing.map(c =>
-      val updatedGame = games.find(_.id == c.getGameOrElse.get.id).get
-      val lastRound = updatedGame.getLastRoundResult
-      val updatedC = lastRound.find(_.getCustomerWhichPlayed == c.id) match
-        case Some(g) => c.updateAfter(g.getMoneyGain)
-        case _       => c
 
-      val decision = tree.eval(updatedC)
+    customers.flatMap { c =>
+      val mod = ProfileModifiers.modifiers(c.riskProfile)
+      val decision = tree.eval(c)
 
       decision match
-        case ContinuePlaying(c)   => c
-        case StopPlaying(c)       => c.changeState(Idle)
-        case ChangeStrategy(c, s) => c.changeBetStrategy(s)
-    )
+        case ContinuePlaying() =>
+          Some(updateInGameBehaviours(c).updateBoredom(3.0 * mod.bMod))
+        case StopPlaying() =>
+          Some(c.changeState(Idle).updateFrustration(-15.0 * (2 - mod.fMod)))
+        case ChangeStrategy(s) =>
+          Some(c.changeBetStrategy(s).updateBoredom(-15.0 * (2 - mod.bMod)))
+        case WaitForGame() => Some(c)
+        case Stay()        => Some(c)
+        case LeaveCasino() => None
+    }
 
-    idle ++ updated
+  private def updateInGameBehaviours(c: A): A =
+    val updatedGame = games.find(_.id == c.getGameOrElse.get.id).get
+    val lastRound = updatedGame.getLastRoundResult
+    lastRound.find(_.getCustomerWhichPlayed == c.id) match
+      case Some(g) => c.updateAfter(-g.getMoneyGain)
+      case _       => c
 
   // === Tree Builders ===
   private def buildDecisionTree: DecisionTree[A, CustomerDecision] =
+    DecisionNode[A, CustomerDecision](
+      predicate = _.isPlaying,
+      trueBranch = gameNode,
+      falseBranch = leaveStayNode
+    )
+
+  private def gameNode: DecisionTree[A, CustomerDecision] =
+    def checkIfPlaying(c: A): Boolean =
+      val updatedGame = games.find(_.id == c.getGameOrElse.get.id).get
+      val lastRound = updatedGame.getLastRoundResult
+      lastRound.nonEmpty
+
+    DecisionNode[A, CustomerDecision](
+      predicate = c => checkIfPlaying(c),
+      trueBranch = profileNode,
+      falseBranch = Leaf[A, CustomerDecision](c => WaitForGame())
+    )
+
+  private def profileNode: DecisionTree[A, CustomerDecision] =
     MultiNode[A, RiskProfile, CustomerDecision](
       keyOf = _.riskProfile,
       branches = RiskProfile.values.map(p => p -> stopContinueNode(p)).toMap,
-      default = Leaf[A, CustomerDecision](c => StopPlaying(c))
+      default = Leaf[A, CustomerDecision](c => StopPlaying())
     )
 
-  // 1) Stop/Continue logic
+  private def leaveStayNode: DecisionTree[A, CustomerDecision] =
+    def leaveRequirements(c: A): Boolean =
+      val mod = ProfileModifiers.modifiers(c.riskProfile)
+      val r = c.bankroll / c.startingBankroll
+      val trigger: Trigger[A] = BoredomAbove(
+        (80 * mod.bMod).max(100.0)
+      ) || FrustAbove((80 * mod.fMod).max(100.0))
+        || BrRatioAbove(mod.limits.tp) || BrRatioBelow(mod.limits.sl)
+      trigger.eval(c)
+    DecisionNode[A, CustomerDecision](
+      predicate = c => leaveRequirements(c),
+      trueBranch = Leaf[A, CustomerDecision](c => LeaveCasino()),
+      falseBranch = Leaf[A, CustomerDecision](c => Stay())
+    )
+
   private def stopContinueNode(
       profile: RiskProfile,
-      bThreshold: Double = 80,
+      bThreshold: Double = 70,
       fThreshold: Double = 60
   ): DecisionTree[A, CustomerDecision] =
     def stopPlayingRequirements(c: A): Boolean =
-      val (limits, bMod, fMod) = ProfileModifiers.modifiers(profile)
+      val mod = ProfileModifiers.modifiers(profile)
       val r = c.bankroll / c.startingBankroll
-      c.boredom > bThreshold * bMod || c.frustration > fThreshold * fMod ||
-      c.betStrategy.betAmount > c.bankroll || r > limits.tp || r < limits.sl
+      val trigger: Trigger[A] =
+        BoredomAbove(bThreshold * mod.bMod) || FrustAbove(fThreshold * mod.fMod)
+          || BrRatioAbove(mod.limits.tp) || BrRatioBelow(mod.limits.sl)
+      updateInGameBehaviours(c).betStrategy.betAmount > c.bankroll || trigger
+        .eval(c)
 
     DecisionNode[A, CustomerDecision](
       predicate = c => stopPlayingRequirements(c),
-      trueBranch = Leaf[A, CustomerDecision](c => StopPlaying(c)),
+      trueBranch = Leaf[A, CustomerDecision](c => StopPlaying()),
       falseBranch = strategySwitchNode(profile)
     )
 
-  // 2) BetStratType switch logic with priority & fallback
   private def strategySwitchNode(
       profile: RiskProfile
   ): DecisionTree[A, CustomerDecision] =
@@ -154,12 +197,12 @@ case class DecisionManager[
           case rule
               if rule.game == c.getGameOrElse.get.gameType && rule.strategy == c.betStrategy.betType && rule.trigger
                 .eval(c) =>
-            ChangeStrategy(c, betDefiner(rule, c))
+            ChangeStrategy(betDefiner(rule, c))
         }
-        .getOrElse(ContinuePlaying(c))
+        .getOrElse(ContinuePlaying())
     }
 
-  private def betDefiner(rule: SwitchRule, c: A): BettingStrategy[A] =
+  def betDefiner(rule: SwitchRule, c: A): BettingStrategy[A] =
     rule.nextStrategy match
       case FlatBet =>
         FlatBetting(c.bankroll * rule.betPercentage, c.betStrategy.option)
