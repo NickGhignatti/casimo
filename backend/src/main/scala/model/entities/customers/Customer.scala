@@ -12,7 +12,7 @@ import model.entities.games.Game
 import model.entities.games.GameType
 import model.entities.games.Roulette
 import model.managers.BaseManager
-import model.managers.movements.AvoidWallsManager
+import model.managers.movements.AvoidObstaclesManager
 import model.managers.movements.Boids
 import model.managers.movements.Boids._
 import model.managers.movements.PlayerManagers
@@ -21,6 +21,8 @@ import model.managers.movements.PlayerManagers.PlayerSitterManager
 import model.managers.|
 import utils.Vector2D
 
+/** The `Customer` is an entity which moves around the casino and plays games.
+  */
 case class Customer(
     id: String = "customer-" + Random.nextInt(),
     position: Vector2D = Vector2D.zero,
@@ -98,6 +100,10 @@ case class Customer(
     case Playing(_) => true
     case _          => false
 
+/** This manager implements the default behaviour for the customer. It combines
+  * the boid-like behaviours, the games' attractiveness and avoids the
+  * collisions of customers with walls and games
+  */
 case class DefaultMovementManager(
     maxSpeed: Double = 1000,
     perceptionRadius: Double = 200000,
@@ -124,10 +130,17 @@ case class DefaultMovementManager(
             | VelocityLimiterManager(maxSpeed)
         )
     )
-      | WallAvoidingAdapter(AvoidWallsManager())
+      | WallAvoidingAdapter(AvoidObstaclesManager())
       | BoidsAdapter(MoverManager())
 
-case class GamesAttractivenessAdapter(
+/** This manager adapts the `manager` which updates players contexts to one
+  * which manipulates `SimulationState`. The contexts are updated one-by-one,
+  * that is the changes done by the previous update are seen by the next
+  * updates.
+  * @param manager
+  *   the adapted manager
+  */
+private case class GamesAttractivenessAdapter(
     manager: BaseManager[PlayerManagers.Context[Customer]]
 ) extends BaseManager[SimulationState]:
   override def update(
@@ -146,32 +159,49 @@ case class GamesAttractivenessAdapter(
       )
     )
 
-case class BoidsAdapter(manager: BaseManager[Boids.State[Customer]])
+/** This manager adapts the `manager` which updates boids contexts to one which
+  * manipulates `SimulationState`
+  * @param manager
+  *   the adapted manager
+  */
+private case class BoidsAdapter(manager: BaseManager[Boids.Context[Customer]])
     extends BaseManager[SimulationState]:
   override def update(
       slice: SimulationState
   ): SimulationState =
     slice.copy(
       customers = slice.customers
-        .map(Boids.State(_, slice.customers))
+        .map(Boids.Context(_, slice.customers))
         .map(_ | manager)
         .map(_.boid)
     )
 
-case class WallAvoidingAdapter(
-    manager: BaseManager[AvoidWallsManager.Context[Customer]]
+/** This manager adapts the `manager` which updates avoid obstacles contexts to
+  * one which manipulates `SimulationState`
+  *
+  * @param manager
+  *   the adapted manager
+  */
+private case class WallAvoidingAdapter(
+    manager: BaseManager[AvoidObstaclesManager.Context[Customer]]
 ) extends BaseManager[SimulationState]:
   override def update(
       slice: SimulationState
   ): SimulationState =
     slice.copy(
       customers = slice.customers
-        .map(c => AvoidWallsManager.Context(c, slice.walls ++ slice.games))
+        .map(c => AvoidObstaclesManager.Context(c, slice.walls ++ slice.games))
         .map(_ | manager)
         .map(_.movable)
     )
 
-case class FilterManager(manager: BaseManager[SimulationState])
+/** This manager filters out customers which are currently playing and games
+  * fully occupied and updates only the remaining customers
+  *
+  * @param manager
+  *   the manager used to update the filtered `SimulationState`
+  */
+private case class FilterManager(manager: BaseManager[SimulationState])
     extends BaseManager[SimulationState]:
   override def update(slice: SimulationState): SimulationState =
     val filteredSlice = slice.copy(

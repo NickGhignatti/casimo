@@ -10,7 +10,7 @@ which successfully tackled the project challenges, gradually strengthening its s
 
 ### Roles
 - **Product Owner**: Luca Patrignani,  responsible for monitoring the project’s progress, ensuring alignment with business objectives, coordinating the development team, and also serving as a developer.
-- **Team member**: Nicolò Ghignatti, member of the dev team which is repsonsible for the project's progress.
+- **Team member**: Nicolò Ghignatti, member of the dev team which is responsible for the project's progress.
 - **Stakeholder**: Marco Galeri, project sponsor and responsible for the product’s quality and usability. He also serves as a developer.
 
 ### YouTrack
@@ -51,7 +51,7 @@ The manager can configure the spacial organization of the casino (such walls and
 ### Domain model
 - **Customer**: who enters the casino and plays games.
 - **Game**: a game that can be played by customers, such as roulette, blackjack and slot machine.
-- **Door**: a door that allows customers to enter the casino. It is where the customers enter the casino.
+- **Door**: a door that allows customers to enter the casino. It is where the customers enter the casino. It will be called **Spawner** from now on
 ```mermaid
 classDiagram
 class Customer {
@@ -159,7 +159,7 @@ if b.canSee(b.position + b.velocity) {
 }
     
 ```
-Other parameters that influence the boids' behavior are:
+Other parameters that influence the boids behavior are:
 - `MAX_SPEED`: maximum speed limit for boids
 - `PERCEPTION_RADIUS`: distance within which a boid perceives others
 - `AVOID_RADIUS`: minimum distance to avoid collisions
@@ -670,9 +670,242 @@ flowchart TD
     S -->|No| U[Return Failure with Loss]
 ```
 
+#### Game resolver
+The GameResolver system serves as the central orchestrator for managing interactions between customers and games during each simulation tick. 
+Implemented as a singleton object using functional programming principles, it processes all active gaming sessions simultaneously, 
+handling bet placement, game execution, and result processing. The system maintains complete separation between game logic 
+and customer management while ensuring consistent state updates across all gaming interactions.
+
+The GameResolver follows a functional processing pipeline architecture, where each simulation tick triggers a complete evaluation of all customer-game interactions.
+
+GameResolver acts as a mediator between customers and games, preventing direct coupling and centralizing interaction logic, according to the **Mediator pattern**. 
+This allows for complex interaction rules without modifying individual customer or game implementations.
+
+The system integrates with the GameStrategy pattern by processing the results of strategy executions and translating them into game state updates.
+
+```mermaid
+graph TD
+    subgraph "GameResolver Object"
+        A[update method]
+        B[games.map]
+        C[playGame function]
+    end
+
+    subgraph "Customer Filtering"
+        D[customers.filter]
+        G{CustState.Playing?}
+        H[Include Customer]
+        I[Skip Customer]
+    end
+
+    subgraph "Processing Pipeline"
+        E[playingCustomers.foldRight]
+    end
+
+    subgraph "Result Handling"
+        F[Result Pattern Matching]
+        J{Result.Success?}
+        K{Inner Result?}
+        L[updateHistory 0.0]
+        M[updateHistory -lostValue]
+        N[updateHistory +winValue]
+    end
+
+    A --> B
+    B --> C
+    C --> D
+
+    D --> G
+    G -->|Yes| H
+    G -->|No| I
+
+    D --> E
+    E --> F
+
+    F --> J
+    J -->|Yes| K
+    J -->|No| L
+
+    K -->|Success| M
+    K -->|Failure| N
+
+    M --> E
+    N --> E
+    L --> E
+```
+
+```mermaid
+sequenceDiagram
+    participant Sim as Simulation Engine
+    participant GR as GameResolver
+    participant Game as Game Instance
+    participant Cust as Customer
+    participant Hist as Game History
+
+    Note over Sim, Hist: Single Simulation Tick Processing
+
+    Sim->>GR: update(customers, games)
+
+    loop For Each Game
+        GR->>GR: playGame(game, customers)
+
+        Note over GR: Filter customers playing this game
+        GR->>GR: filter customers by game.id
+
+        loop For Each Playing Customer (foldRight)
+            GR->>Cust: placeBet()
+            Cust-->>GR: bet amount
+
+            GR->>Game: play(bet)
+            Game-->>GR: Result[BetResult]
+
+            alt Game Success
+                alt Customer Lost (Success)
+                    GR->>Hist: updateHistory(customerId, -lostValue)
+                else Customer Won (Failure)
+                    GR->>Hist: updateHistory(customerId, +winValue)
+                end
+            else Game Failure
+                GR->>Hist: updateHistory(customerId, 0.0)
+            end
+
+            Note over GR: Customer processed, continue fold
+        end
+
+        Note over GR: Game processing complete
+    end
+
+    GR-->>Sim: List[Updated Games]
+```
+
+#### ScalaJs view
+The view system is built around a central reactive architecture where state changes flow through observable signals, triggering automatic UI updates. 
+The design separates concerns between canvas-based visualization, HTML-based controls, and event coordination. 
+The system uses immutable state management with reactive variables (Vars) that automatically propagate changes throughout the UI hierarchy
+
+Laminar's reactive system provides automatic observer pattern implementation through Signals and EventBus, eliminating manual event listener management.
+
+Each UI element is encapsulated as a self-contained component with its own state, rendering logic, and event handling.
+
+All user interactions and state changes flow through a central EventBus, providing decoupled communication between components.
+
+```mermaid
+graph TD
+    subgraph "Main Entry Point"
+        A[Main.scala]
+        B[DOMContentLoaded Event]
+        C[EventBus Creation]
+    end
+    
+    subgraph "Core State Management"
+        D[SimulationState Var]
+        E[DataManager Var]
+        F[Update Var]
+        G[Event Processing Loop]
+    end
+    
+    subgraph "UI Components"
+        H[CanvasManager]
+        I[ButtonBar]
+        J[ConfigForm]
+        K[Modal]
+        L[Sidebar]
+        P[Drag & Drop]
+    end
+    
+    subgraph "Reactive Forms"
+        Q[Movement Parameters]
+        R[Spawning Strategies]
+        S[Strategy Selectors]
+    end
+    
+    A --> B
+    B --> C
+    C --> G
+    
+    A --> D
+    A --> E
+    A --> F
+    
+    D --> H
+    D --> I
+    D --> J
+    D --> K
+    
+    L --> P
+    P --> H
+    
+    J --> Q
+    J --> R
+    J --> S
+    
+    G --> D
+    I --> G
+```
+The component interaction is designed as follows:
+
+```mermaid
+flowchart TD
+    A[🌐 Browser DOM Ready] --> B[📋 Initialize State Variables]
+    
+    B --> C[🔄 Create EventBus]
+    C --> D[⚡ Setup Event Processing Loop]
+    
+    D --> E["🔄 SCAN LOOP<br/>eventBus.events.scanLeft(state, updateFunc)"]
+    
+    E --> F[🎯 Initialize UI Components]
+    
+    F --> G[🖼️ CanvasManager]
+    F --> H[🎛️ ButtonBar]
+    F --> I[📝 ConfigForm]
+    F --> J[📊 Modal]
+    F --> K[📋 Sidebar]
+    
+    G --> L["🖱️ Mouse Events<br/>(mousedown, mousemove, mouseup)"]
+    G --> M["🎨 Canvas Rendering<br/>(customers, walls, games)"]
+    
+    H --> N["🔘 Button Clicks<br/>(Add, Run, Reset, Save, Load, Data)"]
+    
+    I --> O["📊 Parameter Changes<br/>(movement config, spawning config)"]
+    
+    K --> P["🎲 Drag & Drop<br/>(Wall, Slot, Roulette, BlackJack)"]
+    
+    L --> Q{🎯 Event Type?}
+    N --> Q
+    O --> Q
+    P --> Q
+    
+    Q -->|Mouse Events| R[🎮 Canvas State Update]
+    Q -->|Button Events| S[🎯 Simulation Control]
+    Q -->|Config Events| T[⚙️ Parameter Update]
+    Q -->|Drag Events| U[🏗️ Entity Creation]
+    
+    R --> V["🔄 REACTIVE UPDATE<br/>Var.set triggers signal propagation"]
+    S --> V
+    T --> V
+    U --> V
+    
+    V --> W[🎨 UI Re-render]
+    W --> X[♻️ Wait for Next Event]
+    X --> E
+    
+    classDef initialization fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000
+    classDef component fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000
+    classDef event fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
+    classDef reactive fill:#ffebee,stroke:#c62828,stroke-width:3px,color:#000
+    
+    class A,B,C,D,F initialization
+    class G,H,I,J,K component
+    class L,N,O,P,Q,R,S,T,U event
+    class E,V,W reactive
+```
+This kind of design takes advantage from the Laminar reactive system which eliminates the need for manual DOM updates. 
+When simulation state changes, the UI automatically reflects those changes through signal propagation, preventing the common 
+problem of UI-state desynchronization that plagues many web applications.
+
 ## Implementation
 ### Student contributions
-Nicolò Ghignatti
+### Nicolò Ghignatti
 #### Result
 Having to deal with data which can have two states (win or loss for a bet, for example) can be quite annoying so, I've
 decided to implement a monad which can do it for us. Basically it is a enum which can have 2 states: a
@@ -727,12 +960,12 @@ object SlotStrategy:
   def apply: SlotStrategyBuilder = SlotStrategyBuilder()
 
 case class SlotStrategyBuilder( betAmount, condition):
-  def bet(amount: Double): SlotStrategyBuilder =
-    require(amount > 0.0, "Bet amount must be positive")
-  this.copy(betAmount = Some(amount))
+    def bet(amount: Double): SlotStrategyBuilder =
+      require(amount > 0.0, "Bet amount must be positive")
+      this.copy(betAmount = Some(amount))
 
-def when(cond: => Boolean): SlotStrategyInstance =
-  SlotStrategyInstance(betAmount.getOrElse(0.0), () => cond)
+    def when(cond: => Boolean): SlotStrategyInstance =
+      SlotStrategyInstance(betAmount.getOrElse(0.0), () => cond)
 
 case class SlotStrategyInstance(betAmount, condition) extends GameStrategy:
   override def use(): Result[Double, Double] =
@@ -746,6 +979,238 @@ Allowing an easy creation like the following:
 ```scala 3
 val bankroll = 10.0
 use(SlotStrategy) bet 5.0 when (bankRoll > 0.0)
+```
+In order to keep track of the customer playing a game I decided to subordinate the functions to a state, which is called `GameState`
+
+```scala 3
+case class GameState(
+    currentPlayers: Int,
+    maxAllowedPlayers: Int,
+    playersId: List[String]
+):
+  def isFull: Boolean = currentPlayers == maxAllowedPlayers
+
+  def addPlayer(id: String): Result[GameState, GameState] =
+    if (currentPlayers < maxAllowedPlayers)
+      Result.Success(
+        GameState(currentPlayers + 1, maxAllowedPlayers, playersId :+ id)
+      )
+    else
+      Result.Failure(this)
+
+  def removePlayer(id: String): Result[GameState, GameState] =
+    if (currentPlayers > 0)
+      Result.Success(
+        GameState(
+          currentPlayers - 1,
+          maxAllowedPlayers,
+          playersId.filterNot(s => s != id)
+        )
+      )
+    else
+      Result.Failure(this)
+```
+#### Game Resolver
+
+To deal with the interactions between customers and games I decided to use the **mediator pattern** which use a third entity
+in order to manage the communication between games and customers
+
+```scala 3
+object GameResolver:
+  private def playGame(game: Game, customers: List[Customer]): Game =
+    val playingCustomers = customers.filter(c =>
+      c.customerState match
+        case CustState.Playing(customerGame) => game.id == customerGame.id
+        case CustState.Idle                  => false
+    )
+    playingCustomers.foldRight(game)((c, g) =>
+      g.play(c.placeBet()) match
+        case Result.Success(value) =>
+          value match
+            case Result.Success(lostValue) => g.updateHistory(c.id, -lostValue)
+            case Result.Failure(winValue) =>
+              game.updateHistory(c.id, winValue)
+        case Result.Failure(error) => game.updateHistory(c.id, 0.0)
+    )
+
+  def update(customers: List[Customer], games: List[Game]): List[Game] =
+    games.map(g => playGame(g, customers))
+```
+
+Where updates the games according to the result of the last round of play by adding a new item in the history of the game
+
+#### Spawner (Door)
+
+The `Spawner` is the entity designed to spawn the customers according to a logic, every tick is called the spawn method which 
+decide to spawn a certain number of customers, according to the spawn strategy:
+
+```scala 3
+def spawn(state: SimulationState): SimulationState =
+  if currentTime % ticksToSpawn == 0 then
+    state.copy(
+      customers = state.customers ++ Seq.fill(
+        strategy.customersAt(currentTime / ticksToSpawn)
+      )(
+        Customer(
+          s"customer-${Random.nextInt()}",
+          this.position.around(5.0),
+          Vector2D(Random.between(0, 5), Random.between(0, 5)),
+          bankroll = Random.between(30, 5000),
+          favouriteGames = Seq(
+            Random
+              .shuffle(
+                Seq(
+                  model.entities.games.Roulette,
+                  model.entities.games.Blackjack,
+                  model.entities.games.SlotMachine
+                )
+              )
+              .head
+          )
+        )
+      ),
+      spawner = Some(this.copy(currentTime = currentTime + 1))
+    )
+  else state.copy(spawner = Some(this.copy(currentTime = currentTime + 1)))
+```
+To avoid a non-realistic and chaotic spawn I decided to spawn customers every `ticksToSpawn` ticks which is an integer 
+representing the number of ticks necessary for a spawn round
+
+#### Spawning Strategy
+The `SpawningStrategy` entity is quite simple, it takes as input the time passed in the simulation, and it outputs the number 
+of customers that should be spawned according the selected strategy:
+```scala 3
+trait SpawningStrategy:
+  def customersAt(time: Double): Int
+```
+An example is the famous Gaussian curve to model a bell spawning strategy:
+```scala 3
+case class GaussianStrategy(
+    peak: Double,
+    mean: Double,
+    stdDev: Double,
+    base: Int = 0
+) extends SpawningStrategy:
+  override def customersAt(time: Double): Int =
+    if (stdDev <= 0) {
+      if (math.abs(time - mean) < 1e-9) (base + peak).toInt else base
+    } else {
+      val exponent = -0.5 * math.pow((time - mean) / stdDev, 2)
+      val value = base + peak * math.exp(exponent)
+      math.round(value).toInt.max(0)
+    }
+```
+In order to allow to other to define custom spawning strategy, I decided to design a DSL by allowing to create a custom strategy, possible to create through the builder:
+```scala 3
+class SpawningStrategyBuilder private (private val strategy: SpawningStrategy):
+    def gaussian(
+          peak: Double,
+          mean: Double,
+          stdDev: Double
+    ): SpawningStrategyBuilder =
+      new SpawningStrategyBuilder(GaussianStrategy(peak, mean, stdDev))
+    
+    def custom(f: Double => Int): SpawningStrategyBuilder =
+      new SpawningStrategyBuilder((time: Double) => f(time))
+```
+Or customizing predefined/custom strategy while building the strategy:
+```scala 3
+class SpawningStrategyBuilder private (private val strategy: SpawningStrategy):
+  // DSL operations
+  def offset(amount: Int): SpawningStrategyBuilder =
+    require(amount >= 0)
+    val newStrategy = new SpawningStrategy:
+      override def customersAt(time: Double): Int =
+        strategy.customersAt(time) + amount
+    new SpawningStrategyBuilder(newStrategy)
+
+  def scale(factor: Double): SpawningStrategyBuilder =
+    require(factor >= 0, "scale factor should be >= 0")
+    val newStrategy = new SpawningStrategy:
+      override def customersAt(time: Double): Int =
+        math.round(strategy.customersAt(time) * factor).toInt
+    new SpawningStrategyBuilder(newStrategy)
+
+  def clamp(min: Int, max: Int): SpawningStrategyBuilder =
+    require(min >= 0, "minimum value should be >= 0")
+    require(min <= max, "maximum value should be greater than minimum")
+    val newStrategy = new SpawningStrategy:
+      override def customersAt(time: Double): Int =
+        val value = strategy.customersAt(time)
+        value.max(min).min(max)
+    new SpawningStrategyBuilder(newStrategy)
+```
+In order to make easier strategies to be created I simplified the offset and scale operations through operators:
+```scala 3
+object SpawningStrategyBuilder:
+  implicit class StrategyWrapper(strategy: SpawningStrategy):
+    def +(offset: Int): SpawningStrategy =
+      (time: Double) => strategy.customersAt(time) + offset
+
+    def *(factor: Double): SpawningStrategy =
+      (time: Double) => math.round(strategy.customersAt(time) * factor).toInt
+```
+
+#### Walls
+To introduce this kind of entities, which has a position, a size and the possibility to be resized, I decided to structure it
+like a mixin, first I decided to implement the following traits:
+
+```scala 3
+trait Positioned:
+  val position: Vector2D
+
+trait Sized:
+  val width: Double
+  val height: Double
+
+trait Collidable extends Sized with Positioned:
+  // several operations  
+
+trait CollidableEntity extends Collidable with Entity
+
+trait SizeChangingEntity extends Sized:
+  def withWidth(newWidth: Double): this.type
+  def withHeight(newHeight: Double): this.type
+  def withSize(newWidth: Double, newHeight: Double): this.type
+```
+
+Once introduced these traits, which resulted useful for other entities which has common behaviours with the walls, like customers,
+write the mixin is quite simple:
+```scala 3
+case class Wall(
+    id: String,
+    position: Vector2D,
+    width: Double,
+    height: Double
+) extends Positioned,
+      Sized,
+      Collidable,
+      SizeChangingEntity,
+      Entity
+```
+
+#### Update
+The update implementation try to simulate what a simulation loop looks like in my head. The tail recursive structure is 
+ideated in order to separate all the different phases in order to separate all the various moments in the simulation.
+
+```scala 3
+@tailrec
+final def update(state: SimulationState, event: Event): SimulationState =
+  event match
+    case SimulationTick => 
+      update(newState, UpdateCustomersPosition)
+
+    case UpdateCustomersPosition => 
+      update(state | customerManager, UpdateGames)
+
+    case UpdateGames =>
+      update(state.copy(games = updatedGames), UpdateSimulationBankrolls)
+
+    case UpdateSimulationBankrolls =>
+      update(state.copy(customers = updatedBankroll), UpdateCustomersState)
+
+    case UpdateCustomersState =>
+      state.copy(customers = updatedCustomerState)
 ```
 
 ### Patrignani Luca
@@ -763,7 +1228,7 @@ trait Movable[T <: Movable[T]]:
 and all movement managers depend only on this trait, not on the concrete implementation of the `Customer`.
 Two movement managers have been implemented:
 - **Boid-like movement**: this implements the boid-like movement described in the user requirements section. It is obtained by combining three other managers, each one implementing one of the three boid-like rules: **Separation**, **Alignment** and **Cohesion**.
-  Since the boids logic for a single customer need not only its position and velocity, but also information about the other customers, the `Boids.State` case class is defined, which contains all the information needed to compute the movement of the boid. Then an adapter manager is defined to adapt the `SimulationState` to the necessary `Boids.State` and vice versa. This allows to keep the movement logic independent from the simulation state. The following class diagram describes the dependencies taking as example the `AlignmentManager`, the `SeparationManager` and the `CohesionManager` are implemented in the same way:
+Since the boids logic for a single customer need not only its position and velocity, but also information about the other customers, the `Boids.State` case class is defined, which contains all the information needed to compute the movement of the boid. Then an adapter manager is defined to adapt the `SimulationState` to the necessary `Boids.State` and vice versa. This allows to keep the movement logic independently from the simulation state. The following class diagram describes the dependencies taking as example the `AlignmentManager`, the `SeparationManager` and the `CohesionManager` are implemented in the same way:
 ```mermaid
 classDiagram
 class Movable {
