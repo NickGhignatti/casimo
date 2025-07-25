@@ -7,6 +7,11 @@ import model.managers.movements.AvoidObstaclesManager.Context
 import model.managers.movements.FOV.canSee
 import utils.Vector2D
 
+/** This manager will zero the movable direction if it is going to collide with
+  * an obstacle
+  * @tparam C
+  *   the customer concrete type
+  */
 case class AvoidObstaclesManager[C <: Movable[C]]()
     extends BaseManager[Context[C]]:
   override def update(slice: Context[C]): Context[C] =
