@@ -20,8 +20,16 @@ object PlayerManagers:
         .find(_.gameType == player.favouriteGame)
         .flatMap(_.lock(player.id).option())
 
+  /** This manager will make the player go towards its favourite type of game.
+    * If the game is not present, its direction is unaltered and its frustration
+    * is increased by `frustration`
+    * @param frustrationIncrease
+    *   the increase in frustration when the favourite game is not found
+    * @tparam C
+    *   the customer concrete type
+    */
   case class GamesAttractivenessManager[C <: Player[C] & BoredomFrustration[C]](
-      frustration: Double,
+      frustrationIncrease: Double,
       weight: Double = 1.0
   ) extends WeightedManager[Context[C]]:
     override def update(slice: Context[C]): Context[C] =
@@ -34,12 +42,19 @@ object PlayerManagers:
               customer.addedDirection(
                 direction(customer.position, game.position) * weight
               )
-            case _ => customer.updateFrustration(frustration)
+            case _ => customer.updateFrustration(frustrationIncrease)
       )
 
     override def updatedWeight(weight: Double): WeightedManager[Context[C]] =
       copy(weight = weight)
 
+  /** This manager make the player sits to its favourite game is it is within
+    * the `sittingRadius`
+    * @param sittingRadius
+    *   the radius within the player will sit to a game
+    * @tparam C
+    *   the concrete type the player
+    */
   case class PlayerSitterManager[C <: Player[C]](
       sittingRadius: Double
   ) extends BaseManager[Context[C]]:
