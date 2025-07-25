@@ -8,12 +8,15 @@ import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
 
 class TestGameResolver extends AnyFunSuite:
-  val instantTicker: Ticker = Ticker(0, 1, 1, 1)
-  val normalTicker: Ticker = Ticker(0) // 12, 60, 42
+  val instantTicker: Ticker =
+    Ticker.apply(60.0, 1.0 / 60, 1.0 / 60, 1.0 / 60, 1.0 / 60)
+  val normalTicker: Ticker = Ticker(60) // 12, 60, 42
 
   test("game resolver should return a list of updated games with 1 element"):
-    val mockGame = GameBuilder.slot(Vector2D.zero)
-    val mockCustomer = Customer().withCustomerState(Playing(mockGame))
+    val mockGame = GameBuilder
+      .slot(Vector2D.zero)
+    val mockCustomer =
+      Customer().withCustomerState(Playing(mockGame))
 
     val newGame = GameResolver.update(
       List(mockCustomer),
@@ -79,3 +82,33 @@ class TestGameResolver extends AnyFunSuite:
     )
 
     assert(newGames.contains(mockRoulette) && !newGames.contains(mockSlotGame))
+
+  test(
+    "After that a game is played the flag should stay true for an update loop"
+  ):
+    val ticked =
+      (0 until normalTicker.slotTick.toInt).foldLeft(normalTicker)((t, _) =>
+        t.update()
+      )
+
+    val mockGame = GameBuilder
+      .slot(Vector2D.zero)
+      .lock("c1")
+      .getOrElse(GameBuilder.slot(Vector2D.zero))
+    val mockCustomer =
+      Customer().withId("c1").withCustomerState(Playing(mockGame))
+
+    val newGame = GameResolver.update(
+      List(mockCustomer),
+      List(mockGame),
+      ticked
+    )
+
+    assert(newGame.head.lastRoundHasPlayed)
+    assert(newGame.head.getLastRoundResult.nonEmpty)
+
+    val newTick = ticked.update()
+    val lastGame = GameResolver.update(List(mockCustomer), newGame, newTick)
+
+    assert(!lastGame.head.lastRoundHasPlayed)
+    assert(lastGame.head.getLastRoundResult.isEmpty)

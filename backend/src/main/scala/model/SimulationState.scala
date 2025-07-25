@@ -11,7 +11,7 @@ case class SimulationState(
     games: List[Game],
     spawner: Option[Spawner],
     walls: List[Wall],
-    ticker: Ticker = Ticker(0)
+    ticker: Ticker = Ticker(60.0)
 )
 
 object SimulationState:
