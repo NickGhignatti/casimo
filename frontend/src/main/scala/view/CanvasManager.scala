@@ -5,6 +5,7 @@ import com.raquo.laminar.api.L.Var
 import com.raquo.laminar.api.L.unsafeWindowOwner
 import model.SimulationState
 import model.entities.Entity
+import model.entities.customers.CustState
 import org.scalajs.dom
 import org.scalajs.dom.MouseEvent
 import org.scalajs.dom.html
@@ -146,7 +147,9 @@ class CanvasManager(
     state.customers.foreach { customer =>
       ctx.beginPath()
       ctx.arc(customer.position.x, customer.position.y, 3, 0, Math.PI * 2)
-      ctx.fillStyle = "green"
+      ctx.fillStyle = customer.customerState match
+        case CustState.Playing(_) => "red"
+        case CustState.Idle       => "blue"
       ctx.fill()
       ctx.stroke()
     }
