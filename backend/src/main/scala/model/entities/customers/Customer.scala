@@ -146,14 +146,14 @@ case class GamesAttractivenessAdapter(
       )
     )
 
-case class BoidsAdapter(manager: BaseManager[Boids.State[Customer]])
+case class BoidsAdapter(manager: BaseManager[Boids.Context[Customer]])
     extends BaseManager[SimulationState]:
   override def update(
       slice: SimulationState
   ): SimulationState =
     slice.copy(
       customers = slice.customers
-        .map(Boids.State(_, slice.customers))
+        .map(Boids.Context(_, slice.customers))
         .map(_ | manager)
         .map(_.boid)
     )

@@ -1,6 +1,7 @@
 package update
 
-import model.{SimulationState, Ticker, setSpawner}
+import model.SimulationState
+import model.Ticker
 import model.data.DataManager
 import model.entities.Wall
 import model.entities.customers.Customer
@@ -8,6 +9,7 @@ import model.entities.customers.DefaultMovementManager
 import model.entities.games.GameBuilder
 import model.entities.spawner.ConstantStrategy
 import model.entities.spawner.Spawner
+import model.setSpawner
 import org.scalatest.funsuite.AnyFunSuite
 import update.Event.AddCustomers
 import update.Event.ResetSimulation
