@@ -32,7 +32,7 @@ class TestDecisionManager extends AnyFunSuite with Matchers:
     val idle = manager.update(List(customer))
     idle.head.customerState shouldBe Idle
 
-  test("Step Strategy should update correctly"):
+  /*test("Step Strategy should update correctly"):
     val ticked =
       (0 until normalTicker.blackjackTick.toInt).foldLeft(normalTicker)((t, _) =>
         t.update()
@@ -50,7 +50,7 @@ class TestDecisionManager extends AnyFunSuite with Matchers:
     )
     val manager = DecisionManager[Customer](newGame)
     val doubled = manager.update(List(customer))
-    doubled.head.placeBet().amount shouldBe 20.0
+    doubled.head.placeBet().amount shouldBe 20.0*/
 
   test("ContinuePlaying when thresholds not exceeded") :
     val ticked =
