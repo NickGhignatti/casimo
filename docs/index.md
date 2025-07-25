@@ -13,6 +13,9 @@ hero:
     - theme: brand
       text: ScalaDoc
       link: /scaladoc/index.html
+    - theme: brand
+      text: Codecov
+      link: "https://app.codecov.io/gh/NickGhignatti/casimo"
 
 #features:
 #  - title: Feature A
