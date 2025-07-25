@@ -67,3 +67,4 @@ class TestDecisionManager extends AnyFunSuite with Matchers:
       PostDecisionUpdater.updatePosition(List(oldCustomer), List(newCustomer))
     updatedCustomer.head.customerState shouldBe Idle
     updatedCustomer.head.position shouldBe oldCustomer.position
+    updatedCustomer.head.favouriteGame should not be oldCustomer.favouriteGame

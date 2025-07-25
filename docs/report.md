@@ -127,7 +127,7 @@ function calculate_cohesion(boid, nearby_boids){
   }
 }
 ```
-- **Games attraction**: Customers are attracted by their favourite game, in particular the customer looks around for the nearest game of its favourite type and moves towards it. If no game of its liking is found, this behaviour won't affect its movements and the frustration index of the customer will increase of `INCREASE_FRUSTRATION`.
+- **Games attraction**: Customers are attracted by their favourite game, in particular the customer looks around for the nearest game of its favourite type and moves towards it. If no game of its liking is found, this behaviour won't affect its movements and the frustration index of the customer will increase of `INCREASE_FRUSTRATION`. When a customer stands up from a game, it picks randomly a new favourite game, excluding its previous favourite game.
 
 - **Collisions with walls and games**: Customers can't collide with obstacles, which are games and walls. When the resulting velocity would make the customer collide with obstacles, its velocity is set to zero and the movement canceled.
 
