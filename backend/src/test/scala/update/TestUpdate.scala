@@ -22,7 +22,7 @@ class TestUpdate extends AnyFunSuite:
       List.empty,
       None,
       List.empty,
-      Ticker(0, spawnTick = 1)
+      Ticker(60).withSpawnTick(1)
     )
 
   test("update should increase the ticker"):

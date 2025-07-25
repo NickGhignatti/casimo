@@ -8,12 +8,15 @@ import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
 
 class TestGameResolver extends AnyFunSuite:
-  val instantTicker: Ticker = Ticker(0, 1, 1, 1)
-  val normalTicker: Ticker = Ticker(0) // 12, 60, 42
+  val instantTicker: Ticker =
+    Ticker.apply(60.0, 1.0 / 60, 1.0 / 60, 1.0 / 60, 1.0 / 60)
+  val normalTicker: Ticker = Ticker(60) // 12, 60, 42
 
   test("game resolver should return a list of updated games with 1 element"):
-    val mockGame = GameBuilder.slot(Vector2D.zero)
-    val mockCustomer = Customer().withCustomerState(Playing(mockGame))
+    val mockGame = GameBuilder
+      .slot(Vector2D.zero)
+    val mockCustomer =
+      Customer().withCustomerState(Playing(mockGame))
 
     val newGame = GameResolver.update(
       List(mockCustomer),

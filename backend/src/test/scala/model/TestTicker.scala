@@ -1,10 +1,10 @@
-package model.entities.games
+package model
 
-import model.Ticker
+import model.entities.games.{Blackjack, Roulette, SlotMachine}
 import org.scalatest.funsuite.AnyFunSuite
 
 class TestTicker extends AnyFunSuite:
-  val baseTicker: Ticker = Ticker(0)
+  val baseTicker: Ticker = Ticker(60)
 
   test("SlotTick should work"):
     val ticked =
