@@ -10,6 +10,9 @@ hero:
     - theme: brand
       text: Report
       link: /report
+    - theme: brand
+      text: ScalaDoc
+      link: /scaladoc
 
 #features:
 #  - title: Feature A
