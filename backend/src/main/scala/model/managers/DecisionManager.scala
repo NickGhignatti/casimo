@@ -108,7 +108,7 @@ case class DecisionManager[
 
       decision match
         case ContinuePlaying() =>
-          Some(updateInGameBehaviours(c.updateBoredom(3.0 * mod.bMod)))
+          Some(updateInGameBehaviours(c).updateBoredom(3.0 * mod.bMod))
         case StopPlaying() =>
           Some(c.changeState(Idle).updateFrustration(-15.0 * (2 - mod.fMod)))
         case ChangeStrategy(s) =>
@@ -122,7 +122,7 @@ case class DecisionManager[
     val updatedGame = games.find(_.id == c.getGameOrElse.get.id).get
     val lastRound = updatedGame.getLastRoundResult
     lastRound.find(_.getCustomerWhichPlayed == c.id) match
-      case Some(g) => c.updateAfter(g.getMoneyGain)
+      case Some(g) => c.updateAfter(-g.getMoneyGain)
       case _       => c
 
   // === Tree Builders ===
@@ -142,7 +142,7 @@ case class DecisionManager[
     DecisionNode[A, CustomerDecision](
       predicate = c => checkIfPlaying(c),
       trueBranch = profileNode,
-      falseBranch = Leaf[A, CustomerDecision](c => StopPlaying())
+      falseBranch = Leaf[A, CustomerDecision](c => WaitForGame())
     )
 
   private def profileNode: DecisionTree[A, CustomerDecision] =

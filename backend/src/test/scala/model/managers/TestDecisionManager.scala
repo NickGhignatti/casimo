@@ -11,24 +11,30 @@ import utils.*
 import utils.TriggerDSL.*
 
 class TestDecisionManager extends AnyFunSuite with Matchers:
-  
-  
+
   test("StopPlaying when boredom/frustration exceed thresholds") :
     val mockGame = GameBuilder.blackjack(Vector2D.zero)
-
     val customer = Customer().withBoredom(99).withFrustration(99).withCustomerState(Playing(mockGame))
-    val losingGame = Gain(customer.id,customer.betStrategy.betAmount)
-    val mockGamePlayed = mockGame.copy(gameHistory = GameHistory(List(losingGame,losingGame,losingGame,losingGame))).lock(customer.id).getOrElse(null)
+    val mockGamePlayed = mockGame.lock(customer.id).getOrElse(null)
     val manager = DecisionManager[Customer](List(mockGamePlayed))
 
     val idle = manager.update(List(customer))
     idle.head.customerState shouldBe Idle
 
+  test("Step Strategy should update correctly"):
+    val mockGame = GameBuilder.blackjack(Vector2D.zero)
+
+    val customer = Customer().withCustomerState(Playing(mockGame)).withBetStrategy(MartingaleStrat(10.0,defaultRedBet))
+    val losingGame = Gain(customer.id,customer.betStrategy.betAmount)
+    val mockGamePlayed = mockGame.copy(gameHistory = GameHistory(List(losingGame,losingGame,losingGame,losingGame))).lock(customer.id).getOrElse(null)
+    val manager = DecisionManager[Customer](List(mockGamePlayed))
+    val doubled = manager.update(List(customer))
+    doubled.head.placeBet().amount shouldBe 20.0
+
   test("ContinuePlaying when thresholds not exceeded") :
     val mockGame = GameBuilder.blackjack(Vector2D.zero)
     val customer = Customer().withCustomerState(Playing(mockGame))
     val mockGamePlayed = mockGame.lock(customer.id).getOrElse(null)
-
     val manager = DecisionManager[Customer](List(mockGamePlayed))
 
     val playing = manager.update(List(customer))
