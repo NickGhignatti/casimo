@@ -50,5 +50,7 @@ object GameResolver:
       ticker: Ticker
   ): List[Game] =
     games.map(g =>
-      if ticker.isGameReady(g.gameType) then playGame(g, customers) else g
+      if ticker.isGameReady(g.gameType) then
+        playGame(g.setPlaying(true), customers)
+      else g.setPlaying(false)
     )

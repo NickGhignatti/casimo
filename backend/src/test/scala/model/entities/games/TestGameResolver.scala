@@ -79,3 +79,33 @@ class TestGameResolver extends AnyFunSuite:
     )
 
     assert(newGames.contains(mockRoulette) && !newGames.contains(mockSlotGame))
+
+  test(
+    "After that a game is played the flag should stay true for an update loop"
+  ):
+    val ticked =
+      (0 until normalTicker.slotTick.toInt).foldLeft(normalTicker)((t, _) =>
+        t.update()
+      )
+
+    val mockGame = GameBuilder
+      .slot(Vector2D.zero)
+      .lock("c1")
+      .getOrElse(GameBuilder.slot(Vector2D.zero))
+    val mockCustomer =
+      Customer().withId("c1").withCustomerState(Playing(mockGame))
+
+    val newGame = GameResolver.update(
+      List(mockCustomer),
+      List(mockGame),
+      ticked
+    )
+
+    assert(newGame.head.lastRoundHasPlayed)
+    assert(newGame.head.getLastRoundResult.nonEmpty)
+
+    val newTick = ticked.update()
+    val lastGame = GameResolver.update(List(mockCustomer), newGame, newTick)
+
+    assert(!lastGame.head.lastRoundHasPlayed)
+    assert(lastGame.head.getLastRoundResult.isEmpty)
