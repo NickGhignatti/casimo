@@ -5,6 +5,16 @@ import scala.util.Random
 import model.SimulationState
 import model.entities.Entity
 import model.entities.customers.Customer
+import model.entities.customers.FlatBetting
+import model.entities.customers.MartingaleStrat
+import model.entities.customers.RiskProfile.Casual
+import model.entities.customers.RiskProfile.Impulsive
+import model.entities.customers.RiskProfile.Regular
+import model.entities.customers.RiskProfile.VIP
+import model.entities.customers.defaultRedBet
+import model.entities.games.Blackjack
+import model.entities.games.Roulette
+import model.entities.games.SlotMachine
 import utils.Vector2D
 
 /** Entity responsible for spawning new customers into the simulation.
@@ -55,22 +65,35 @@ case class Spawner(
           strategy.customersAt(
             state.ticker.currentTick / state.ticker.spawnTick
           )
-        )(
-          Customer(
-            id = "cutomer-" + Random.nextInt(),
-            position = this.position.around(5.0),
-            direction = Vector2D(Random.between(0, 5), Random.between(0, 5)),
-            bankroll = Random.between(30, 5000),
-            favouriteGame = Random
-              .shuffle(
-                Seq(
-                  model.entities.games.Roulette,
-                  model.entities.games.Blackjack,
-                  model.entities.games.SlotMachine
-                )
-              )
-              .head
-          )
-        )
+        )(defaultCustomerCreation())
       )
     else state
+
+  def defaultCustomerCreation(): Customer =
+    val br = Random.between(50, 10000)
+    val p = br match
+      case b if b < 100   => Casual
+      case b if b < 1500  => Regular
+      case b if b < 5000  => Impulsive
+      case b if b < 10000 => VIP
+    val fg = Random
+      .shuffle(
+        Seq(
+          Roulette,
+          Blackjack,
+          SlotMachine
+        )
+      )
+      .head
+    val bs = fg match
+      case Roulette    => MartingaleStrat[Customer](br * 0.02, defaultRedBet)
+      case Blackjack   => MartingaleStrat[Customer](br * 0.02, defaultRedBet)
+      case SlotMachine => FlatBetting[Customer](br * 0.04)
+
+    Customer()
+      .withPosition(this.position.around(5.0))
+      .withDirection(Vector2D(Random.between(0, 5), Random.between(0, 5)))
+      .withBankroll(br)
+      .withFavouriteGames(fg)
+      .withProfile(p)
+      .withBetStrategy(bs)

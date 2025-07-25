@@ -87,7 +87,7 @@ case class DecisionManager[
 //format: on
   object ConfigLoader:
     def load(): List[SwitchRule] = DefaultConfig.switchRules
-  private lazy val rulesByProfile: Map[RiskProfile, List[SwitchRule]] =
+  lazy val rulesByProfile: Map[RiskProfile, List[SwitchRule]] =
     ConfigLoader.load().groupBy(_.profile)
 
   sealed trait CustomerDecision
@@ -202,7 +202,7 @@ case class DecisionManager[
         .getOrElse(ContinuePlaying())
     }
 
-  private def betDefiner(rule: SwitchRule, c: A): BettingStrategy[A] =
+  def betDefiner(rule: SwitchRule, c: A): BettingStrategy[A] =
     rule.nextStrategy match
       case FlatBet =>
         FlatBetting(c.bankroll * rule.betPercentage, c.betStrategy.option)
