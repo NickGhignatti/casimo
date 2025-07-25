@@ -60,7 +60,7 @@ jobs:
         run: |
           sbt doc
           mkdir -p ./dist/scaladoc
-          cp -r ./backend/jvm/target/scala-*/api/* ./dist/scaladoc
+          cp -r ./backend/jvm/target/scala-*/api/* ./dist/docs/scaladoc
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
