@@ -101,7 +101,7 @@ class TestSimulationState extends AnyFunSuite:
       .addGame(game1)
       .addGame(game2)
       .withSpawner(spawner)
-      .addWall(wall1)
+      .withWalls(List(wall1))
       .build()
 
     assert(
@@ -110,3 +110,21 @@ class TestSimulationState extends AnyFunSuite:
     assert(state.games.contains(game1) && state.games.contains(game2))
     assert(state.spawner.contains(spawner))
     assert(state.walls.contains(wall1))
+
+  test("simulation state should allow to add entites after"):
+    val state = SimulationState
+      .empty()
+      .addCustomer(customer1)
+      .addGame(game1)
+      .addWall(wall1)
+
+    assert(state.customers == List(customer1))
+    assert(state.games == List(game1))
+    assert(state.walls == List(wall1))
+
+  test("empty simulation state should have spawner if setted"):
+    val state = SimulationState
+      .empty()
+      .setSpawner(spawner)
+
+    assert(state.spawner.contains(spawner))

@@ -2,12 +2,12 @@ package model.managers.movements
 
 import model.entities.Collidable
 import model.entities.customers.Movable
-import model.managers.movements.AvoidWallsManager.Context
+import model.managers.movements.AvoidObstaclesManager.Context
 import model.managers.|
 import org.scalatest.funsuite.AnyFunSuite
 import utils.Vector2D
 
-class TestAvoidWallsManager extends AnyFunSuite:
+class TestAvoidObstaclesManager extends AnyFunSuite:
   private case class MockMovable(direction: Vector2D, position: Vector2D)
       extends Movable[MockMovable]:
 
@@ -30,5 +30,5 @@ class TestAvoidWallsManager extends AnyFunSuite:
     val wall = Wall(Vector2D(0, 10), 1, 5)
     val walls = Seq(wall)
     val context = Context(movable, walls)
-    val updatedContext = context | AvoidWallsManager()
+    val updatedContext = context | AvoidObstaclesManager()
     assert(updatedContext.movable.position.x > wall.position.x + 1)

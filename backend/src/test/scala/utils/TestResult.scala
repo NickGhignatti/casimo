@@ -51,3 +51,11 @@ class TestResult extends AnyFunSuite:
   test("getOrElse should return default for Failure"):
     val failureResult = Failure("Something went wrong")
     assert(failureResult.getOrElse(42) == 42)
+
+  test("option should return None for Failure"):
+    val failureResult = Failure("Something went wrong")
+    assert(failureResult.option().isEmpty)
+
+  test("option should return Some for Success"):
+    val failureResult = Success("All right")
+    assert(failureResult.option().isDefined)

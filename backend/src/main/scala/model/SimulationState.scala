@@ -4,17 +4,43 @@ import model.entities.Wall
 import model.entities.customers.Customer
 import model.entities.games.Game
 import model.entities.spawner.Spawner
+import utils.Vector2D
 
 case class SimulationState(
     customers: Seq[Customer],
     games: List[Game],
     spawner: Option[Spawner],
-    walls: List[Wall]
+    walls: List[Wall],
+    ticker: Ticker = Ticker(60.0)
 )
 
 object SimulationState:
   def empty(): SimulationState =
     SimulationState(Seq.empty, List.empty, None, List.empty)
+
+  def base(
+      x: Double,
+      y: Double,
+      length: Double,
+      height: Double
+  ): SimulationState =
+    val width = 5.0
+
+    val topWall = Wall(Vector2D(x, y), length, width)
+    val leftWall = Wall(Vector2D(x, y + width), width, height - width)
+    val rightWall =
+      Wall(
+        Vector2D(x + length - width, y + width),
+        width,
+        height - width
+      )
+    val bottomWall =
+      Wall(Vector2D(x + width, y + height - width), length - 2 * width, width)
+
+    SimulationState
+      .builder()
+      .withWalls(List(topWall, leftWall, rightWall, bottomWall))
+      .build()
 
   case class Builder(
       customers: Seq[Customer],

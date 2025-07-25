@@ -6,31 +6,41 @@ import model.managers.WeightedManager
 import utils.Vector2D
 import utils.Vector2D.distance
 
+/** This objects contains the various managers which implements a boid-like
+  * behaviour
+  */
 object Boids:
-  case class State[M <: Movable[M]](boid: M, others: Seq[M])
-      extends Movable[State[M]]:
-    override def withPosition(newPosition: Vector2D): State[M] =
+  case class Context[M <: Movable[M]](boid: M, others: Seq[M])
+      extends Movable[Context[M]]:
+    override def withPosition(newPosition: Vector2D): Context[M] =
       this.copy(boid = boid.withPosition(newPosition))
 
-    override def withDirection(newDirection: Vector2D): State[M] =
+    override def withDirection(newDirection: Vector2D): Context[M] =
       this.copy(boid = boid.withDirection(newDirection))
 
-    def directionAdded(addingDirection: Vector2D): State[M] =
+    def directionAdded(addingDirection: Vector2D): Context[M] =
       this.copy(boid = boid.withDirection(boid.direction + addingDirection))
 
     export boid.{position, direction}
 
+  /** This manager actually change the Movable position by adding to it its
+    * direction
+    */
   case class MoverManager[M <: Movable[M]]() extends BaseManager[M]:
 
     override def update(slice: M): M =
       slice.withPosition(slice.position + slice.direction)
 
+  /** This manager implements the boid separation logic
+    * @param avoidRadius
+    *   the distance that each boid try to keep from the other boids
+    */
   case class SeparationManager[M <: Movable[M]](
       avoidRadius: Double,
       weight: Double = 1
-  ) extends WeightedManager[State[M]]:
+  ) extends WeightedManager[Context[M]]:
 
-    override def update(slice: State[M]): State[M] =
+    override def update(slice: Context[M]): Context[M] =
       slice.directionAdded(
         separation(slice.boid, slice.others.map(_.position)) * weight
       )
@@ -42,12 +52,14 @@ object Boids:
         .reduceOption(_ + _)
         .getOrElse(Vector2D.zero)
 
-    override def updatedWeight(weight: Double): WeightedManager[State[M]] =
+    override def updatedWeight(weight: Double): WeightedManager[Context[M]] =
       this.copy(weight = weight)
 
+  /** This manager implement the boid cohesion logic
+    */
   case class CohesionManager[M <: Movable[M]](weight: Double = 1)
-      extends WeightedManager[State[M]]:
-    override def update(slice: State[M]): State[M] =
+      extends WeightedManager[Context[M]]:
+    override def update(slice: Context[M]): Context[M] =
       slice.directionAdded(
         cohesion(
           slice.boid,
@@ -61,12 +73,14 @@ object Boids:
         val center = positions.reduce(_ + _) / positions.size
         (center - boid.position).normalize
 
-    override def updatedWeight(weight: Double): WeightedManager[State[M]] =
+    override def updatedWeight(weight: Double): WeightedManager[Context[M]] =
       this.copy(weight = weight)
 
+  /** This manager implement the boid alignment logic
+    */
   case class AlignmentManager[M <: Movable[M]](weight: Double = 1)
-      extends WeightedManager[State[M]]:
-    override def update(slice: State[M]): State[M] =
+      extends WeightedManager[Context[M]]:
+    override def update(slice: Context[M]): Context[M] =
       slice.directionAdded(
         alignment(
           slice.boid,
@@ -80,9 +94,13 @@ object Boids:
         val average = velocities.reduce(_ + _) / velocities.size
         (average - boid.direction).normalize
 
-    override def updatedWeight(weight: Double): WeightedManager[State[M]] =
+    override def updatedWeight(weight: Double): WeightedManager[Context[M]] =
       this.copy(weight = weight)
 
+  /** This manager limits the velocity of the given boid
+    * @param maxSpeed
+    *   the maximum velocity that a boid can have
+    */
   case class VelocityLimiterManager[M <: Movable[M]](maxSpeed: Double)
       extends BaseManager[M]:
     extension (v: Vector2D)
@@ -92,9 +110,14 @@ object Boids:
     override def update(slice: M): M =
       slice.withDirection(slice.direction.capped(maxSpeed))
 
+  /** This manager limits the number of surrounding boids the boid is influenced
+    * by
+    * @param perceptionRadius
+    *   the radius within other boids influences this boid
+    */
   case class PerceptionLimiterManager[M <: Movable[M]](perceptionRadius: Double)
-      extends BaseManager[State[M]]:
-    override def update(slice: State[M]): State[M] =
+      extends BaseManager[Context[M]]:
+    override def update(slice: Context[M]): Context[M] =
       slice.copy(others =
         slice.others.filter(other =>
           distance(slice.boid.position, other.position) <= perceptionRadius

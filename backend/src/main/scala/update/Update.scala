@@ -11,8 +11,10 @@ import model.entities.games.Game
 import model.entities.games.GameResolver
 import model.entities.spawner.Spawner
 import model.managers.CustomerBankrollManager
-import model.managers.PersistenceManager
+import model.managers.DecisionManager
+import model.managers.PostDecisionUpdater
 import model.managers.|
+import model.setSpawner
 import update.Event._
 import utils.Vector2D
 
@@ -27,17 +29,27 @@ case class Update(customerManager: DefaultMovementManager):
   final def update(state: SimulationState, event: Event): SimulationState =
     event match
       case SimulationTick =>
+        update(state.copy(ticker = state.ticker.update()), SpawnCustomers)
+
+      case SpawnCustomers =>
         state.spawner match
-          case None => update(state, UpdateCustomersPosition)
+          case None =>
+            update(
+              state,
+              UpdateCustomersPosition
+            )
           case Some(value) =>
-            update(value.spawn(state), UpdateCustomersPosition)
+            update(
+              value.spawn(state),
+              UpdateCustomersPosition
+            )
 
       case UpdateCustomersPosition =>
         update(state | customerManager, UpdateGames)
 
       case UpdateGames =>
         val updatedGames =
-          GameResolver.update(state.customers.toList, state.games)
+          GameResolver.update(state.customers.toList, state.games, state.ticker)
         update(state.copy(games = updatedGames), UpdateSimulationBankrolls)
 
       case UpdateSimulationBankrolls =>
@@ -46,22 +58,25 @@ case class Update(customerManager: DefaultMovementManager):
         update(state.copy(customers = updatedBankroll), UpdateCustomersState)
 
       case UpdateCustomersState =>
-        /*val updatedCustomerStrategy =
-          CustomerStrategyManager[Customer](state.games).update(state.customers)*/
         val updatedCustomerState =
-          PersistenceManager[Customer]().update(state.customers)
-        state.copy(customers = updatedCustomerState)
+          DecisionManager[Customer](state.games).update(state.customers)
+        val postDecisionUpdate = PostDecisionUpdater.updatePosition(
+          state.customers,
+          updatedCustomerState
+        )
+        state.copy(customers = postDecisionUpdate)
 
       case AddCustomers(strategy) =>
-        state.copy(
-          spawner = Some(
-            Spawner(
-              "Spawner",
-              Vector2D(200.0, 200.0),
-              strategy
-            )
+        state.setSpawner(
+          Spawner(
+            "Spawner",
+            Vector2D(10.0, 10.0),
+            strategy
           )
         )
+
+      case BorderConfig(x: Double, y: Double, width: Double, height: Double) =>
+        SimulationState.base(x, y, width, height)
 
       case UpdateWalls(walls: List[Wall]) =>
         state.copy(walls = walls)

@@ -20,12 +20,12 @@ class TestBoids extends AnyFunSuite:
     override def withDirection(newDirection: Vector2D): Boid =
       copy(direction = newDirection)
 
-  case class AdapterManager[M <: Movable[M]](manager: BaseManager[State[M]])
+  case class AdapterManager[M <: Movable[M]](manager: BaseManager[Context[M]])
       extends BaseManager[Seq[M]]:
 
     override def update(slice: Seq[M]): Seq[M] =
       slice
-        .map(boid => State(boid, slice))
+        .map(boid => Context(boid, slice))
         .map(_ | manager)
         .map(_.boid)
 
@@ -67,7 +67,7 @@ class TestBoids extends AnyFunSuite:
 
   private val boids =
     Seq(Boid(Vector2D(0, 0)), Boid(Vector2D(50, 0)), Boid(Vector2D(100, 0)))
-  private val states = boids.map(State(_, boids))
+  private val states = boids.map(Context(_, boids))
 
   test("A boid can only see itself when its perception radius is 0"):
     states.foreach: state =>

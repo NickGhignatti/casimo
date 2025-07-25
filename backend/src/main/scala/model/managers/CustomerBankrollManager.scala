@@ -20,11 +20,10 @@ case class CustomerBankrollManager[
       c.customerState match
         case Playing(game) =>
           val updatedGame = games.find(_.id == game.id).get
-          val gain = updatedGame.getLastRoundResult
+          val gains = updatedGame.getLastRoundResult
             .filter(g => g.getCustomerWhichPlayed == c.id)
-            .head
-            .getMoneyGain
-          c.updateBankroll(-gain)
+          if gains.nonEmpty then c.updateBankroll(-gains.head.getMoneyGain)
+          else c
 
         case Idle => c
     }

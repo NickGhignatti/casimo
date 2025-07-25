@@ -48,18 +48,23 @@ case class ConfigForm(update: Var[Update], model: Var[SimulationState]):
       "Sitting Radius",
       Var(100.0),
       (m, v) => m.copy(sittingRadius = v)
+    ),
+    Parameter(
+      "Boredom increase",
+      Var(0.1),
+      (m, v) => m.copy(boredomIncrease = v)
     )
   )
   // Spawning strategy selection
-  private val strategyTypeVar = Var("constant")
-  private val constantRateVar = Var(5)
+  private val strategyTypeVar = Var("step")
+  private val constantRateVar = Var(1)
   private val gaussianPeakVar = Var(100.0)
   private val gaussianMeanVar = Var(10.0)
   private val gaussianStdDevVar = Var(2.0)
-  private val stepLowRateVar = Var(2)
-  private val stepHighRateVar = Var(10)
-  private val stepStartVar = Var(9.0)
-  private val stepEndVar = Var(17.0)
+  private val stepLowRateVar = Var(1)
+  private val stepHighRateVar = Var(5)
+  private val stepStartVar = Var(21.0)
+  private val stepEndVar = Var(24.0)
 
   def currentStrategyType: String = strategyTypeVar.now()
   def constantStrategyConfigInfo: Int = constantRateVar.now()
@@ -85,8 +90,6 @@ case class ConfigForm(update: Var[Update], model: Var[SimulationState]):
 
   def init(): ReactiveHtmlElement[HTMLDivElement] =
     div(
-      h3("Movement Manager Form"),
-      hr(),
       div(
         className := "config-container",
         // Column 1: Movement Manager

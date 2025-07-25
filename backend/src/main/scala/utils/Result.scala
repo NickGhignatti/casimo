@@ -21,3 +21,10 @@ enum Result[+T, +E]:
     case Failure(_) => false
 
   def isFailure: Boolean = !isSuccess
+
+object Result:
+  extension [A](result: Result[A, A])
+    def option(): Option[A] =
+      result match
+        case Result.Success(value) => Some(value)
+        case _                     => None
