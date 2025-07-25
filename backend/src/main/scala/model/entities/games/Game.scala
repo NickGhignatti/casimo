@@ -45,7 +45,8 @@ trait Game(
     val id: String,
     val position: Vector2D,
     val gameState: GameState,
-    val gameHistory: GameHistory
+    val gameHistory: GameHistory,
+    val lastRoundHasPlayed: Boolean
 ) extends CollidableEntity:
 
   /** Returns the specific type of this game */
@@ -63,6 +64,9 @@ trait Game(
 
   protected def withGameState(newGameState: GameState): Game
   protected def withGameHistory(newGameHistory: GameHistory): Game
+  protected def withUpdatedPlayedFlag(newFlag: Boolean): Game
+
+  def setPlaying(isPlaying: Boolean): Game = withUpdatedPlayedFlag(isPlaying)
 
   /** Attempts to lock the game for a specific player.
     *
@@ -110,7 +114,9 @@ trait Game(
 
   /** Returns the gains from the most recent round for current players */
   def getLastRoundResult: List[Gain] =
-    gameHistory.gains.takeRight(gameState.currentPlayers)
+    if lastRoundHasPlayed then
+      gameHistory.gains.takeRight(gameState.currentPlayers)
+    else List.empty
 
 /** Implementation of a roulette game.
   *
@@ -130,8 +136,9 @@ case class RouletteGame(
     override val id: String,
     override val position: Vector2D,
     override val gameState: GameState,
-    override val gameHistory: GameHistory
-) extends Game(id, position, gameState, gameHistory):
+    override val gameHistory: GameHistory,
+    override val lastRoundHasPlayed: Boolean = false
+) extends Game(id, position, gameState, gameHistory, lastRoundHasPlayed):
 
   override def gameType: GameType = Roulette
 
@@ -140,6 +147,9 @@ case class RouletteGame(
 
   override protected def withGameHistory(newGameHistory: GameHistory): Game =
     copy(gameHistory = newGameHistory)
+
+  override protected def withUpdatedPlayedFlag(newFlag: Boolean): Game =
+    copy(lastRoundHasPlayed = newFlag)
 
   override def play[B <: Bet](bet: B): Result[BetResult, String] =
     bet match
@@ -171,8 +181,9 @@ case class SlotMachineGame(
     override val id: String,
     override val position: Vector2D,
     override val gameState: GameState,
-    override val gameHistory: GameHistory
-) extends Game(id, position, gameState, gameHistory):
+    override val gameHistory: GameHistory,
+    override val lastRoundHasPlayed: Boolean = false
+) extends Game(id, position, gameState, gameHistory, lastRoundHasPlayed):
 
   override def gameType: GameType = SlotMachine
 
@@ -181,6 +192,9 @@ case class SlotMachineGame(
 
   override protected def withGameHistory(newGameHistory: GameHistory): Game =
     copy(gameHistory = newGameHistory)
+
+  override protected def withUpdatedPlayedFlag(newFlag: Boolean): Game =
+    copy(lastRoundHasPlayed = newFlag)
 
   override def play[B <: Bet](bet: B): Result[BetResult, String] =
     bet match
@@ -213,8 +227,9 @@ case class BlackJackGame(
     override val id: String,
     override val position: Vector2D,
     override val gameState: GameState,
-    override val gameHistory: GameHistory
-) extends Game(id, position, gameState, gameHistory):
+    override val gameHistory: GameHistory,
+    override val lastRoundHasPlayed: Boolean = false
+) extends Game(id, position, gameState, gameHistory, lastRoundHasPlayed):
 
   override def gameType: GameType = Blackjack
 
@@ -223,6 +238,9 @@ case class BlackJackGame(
 
   override protected def withGameHistory(newGameHistory: GameHistory): Game =
     copy(gameHistory = newGameHistory)
+
+  override protected def withUpdatedPlayedFlag(newFlag: Boolean): Game =
+    copy(lastRoundHasPlayed = newFlag)
 
   override def play[B <: Bet](bet: B): Result[BetResult, String] =
     bet match

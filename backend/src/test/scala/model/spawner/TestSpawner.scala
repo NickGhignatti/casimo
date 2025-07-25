@@ -18,7 +18,8 @@ class TestSpawner extends AnyFunSuite:
   val constantStrategy: ConstantStrategy = ConstantStrategy(3)
   val gaussianStrategy: GaussianStrategy = GaussianStrategy(100, 10, 2)
   val stepStrategy: StepStrategy = StepStrategy(2, 5, 9, 17)
-  val instantTicker: Ticker = Ticker(currentTick = 1, spawnTick = 1)
+  val instantTicker: Ticker =
+    Ticker(60).withCurrentTick(1).withSpawnTick(1)
 
   test("Spawner should spawn correct number of customers based on strategy"):
     val spawner = Spawner("test-spawner", position, constantStrategy)
@@ -91,7 +92,7 @@ class TestSpawner extends AnyFunSuite:
         List.empty,
         Some(spawner),
         List.empty,
-        Ticker(10, spawnTick = 1)
+        Ticker(60).withCurrentTick(10).withSpawnTick(1)
       )
 
     val newState = spawner.spawn(initialState)
@@ -106,7 +107,7 @@ class TestSpawner extends AnyFunSuite:
         List.empty,
         Some(spawner),
         List.empty,
-        Ticker(10, spawnTick = 1)
+        Ticker(60).withCurrentTick(10).withSpawnTick(1)
       )
 
     val newState = spawner.spawn(initialState)
@@ -121,7 +122,7 @@ class TestSpawner extends AnyFunSuite:
         List.empty,
         Some(spawner),
         List.empty,
-        Ticker(5, spawnTick = 1)
+        Ticker(5).withSpawnTick(1)
       )
 
     val newState = spawner.spawn(initialState)
@@ -153,7 +154,7 @@ class TestSpawner extends AnyFunSuite:
         List.empty,
         Some(spawner),
         List.empty,
-        Ticker(7, spawnTick = 1)
+        Ticker(7).withSpawnTick(1)
       )
 
     val newState = spawner.spawn(initialState)
@@ -186,7 +187,7 @@ class TestSpawner extends AnyFunSuite:
         List.empty,
         Some(spawner),
         List.empty,
-        Ticker(0, spawnTick = 2).update()
+        Ticker(0).withSpawnTick(2).update()
       )
 
     val newState = spawner.spawn(initialState)
