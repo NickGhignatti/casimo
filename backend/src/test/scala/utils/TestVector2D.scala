@@ -35,8 +35,8 @@ class TestVector2D extends AnyFunSuite:
     assert(Math.abs((v1 dot v2) - 11.0) < tolerance)
 
   test("inversion of direction"):
-    val v = Vector2D(5.0,-8.0)
-    assert(-v === Vector2D(-5.0,8.0))
+    val v = Vector2D(5.0, -8.0)
+    assert(-v === Vector2D(-5.0, 8.0))
 
   test("normalization of a vector"):
     val v = Vector2D(3.0, 4.0)

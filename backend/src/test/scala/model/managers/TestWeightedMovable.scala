@@ -18,7 +18,10 @@ class TestWeightedMovable extends AnyFunSuite:
   test("Weighting should work with cohesion, alignment and separation"):
     val boid = TestMovable(Vector2D(0, 0), Vector2D(0, 0))
     val state =
-      Boids.State(boid, Seq(boid, TestMovable(Vector2D(1, 0), Vector2D(0, 1))))
+      Boids.Context(
+        boid,
+        Seq(boid, TestMovable(Vector2D(1, 0), Vector2D(0, 1)))
+      )
     Seq(
       CohesionManager[TestMovable](),
       AlignmentManager[TestMovable](),
