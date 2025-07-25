@@ -157,8 +157,8 @@ case class DecisionManager[
       val mod = ProfileModifiers.modifiers(c.riskProfile)
       val r = c.bankroll / c.startingBankroll
       val trigger: Trigger[A] = BoredomAbove(
-        (80 * mod.bMod).max(100.0)
-      ) || FrustAbove((80 * mod.fMod).max(100.0))
+        (80 * mod.bMod).min(95.0)
+      ) || FrustAbove((80 * mod.fMod).min(95.0))
         || BrRatioAbove(mod.limits.tp) || BrRatioBelow(mod.limits.sl)
       trigger.eval(c)
     DecisionNode[A, CustomerDecision](

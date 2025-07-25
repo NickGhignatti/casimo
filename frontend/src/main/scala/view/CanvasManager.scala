@@ -5,6 +5,10 @@ import com.raquo.laminar.api.L.Var
 import com.raquo.laminar.api.L.unsafeWindowOwner
 import model.SimulationState
 import model.entities.Entity
+import model.entities.customers.RiskProfile.Casual
+import model.entities.customers.RiskProfile.Impulsive
+import model.entities.customers.RiskProfile.Regular
+import model.entities.customers.RiskProfile.VIP
 import org.scalajs.dom
 import org.scalajs.dom.MouseEvent
 import org.scalajs.dom.html
@@ -146,7 +150,12 @@ class CanvasManager(
     state.customers.foreach { customer =>
       ctx.beginPath()
       ctx.arc(customer.position.x, customer.position.y, 3, 0, Math.PI * 2)
-      ctx.fillStyle = "green"
+      ctx.fillStyle = customer.riskProfile match
+        case Casual    => "blue"
+        case Regular   => "green"
+        case VIP       => "red"
+        case Impulsive => "magenta"
+      ctx.strokeStyle = ctx.fillStyle
       ctx.fill()
       ctx.stroke()
     }
