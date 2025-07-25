@@ -24,7 +24,7 @@ import utils.Vector2D
 /** The `Customer` is an entity which moves around the casino and plays games.
   */
 case class Customer(
-    id: String = java.util.UUID.randomUUID().toString,
+    id: String = "customer-" + Random.nextInt(),
     position: Vector2D = Vector2D.zero,
     direction: Vector2D = Vector2D.zero,
     bankroll: Double = 1000.0,

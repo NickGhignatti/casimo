@@ -47,6 +47,22 @@ class CanvasManager(
     drawCustomers(state)
   }(using unsafeWindowOwner)
 
+  private def lateralWalls(): Unit =
+    eventBus.writer.onNext(
+      BorderConfig(
+        canvas.offsetLeft,
+        canvas.offsetTop,
+        canvas.width,
+        canvas.height
+      )
+    )
+    wallComponents.set(
+      model
+        .now()
+        .walls
+        .map(wall => WallComponent(wall))
+    )
+
   def init(): Unit =
     resizeCanvas()
     dom.window.addEventListener(
@@ -60,20 +76,7 @@ class CanvasManager(
       "load",
       { _ =>
         resizeCanvas()
-        eventBus.writer.onNext(
-          BorderConfig(
-            canvas.offsetLeft,
-            canvas.offsetTop,
-            canvas.width,
-            canvas.height
-          )
-        )
-        wallComponents.set(
-          model
-            .now()
-            .walls
-            .map(wall => WallComponent(wall))
-        )
+        lateralWalls()
         redrawAllComponents()
       }
     )
@@ -84,6 +87,9 @@ class CanvasManager(
     slotComponents.set(List.empty)
     rouletteComponents.set(List.empty)
     blackjackComponents.set(List.empty)
+
+    lateralWalls()
+    redrawAllComponents()
 
   def entityIsAlreadyPresent(point: Vector2D): Boolean =
     !wallComponents.now().exists(_.contains(point)) &&
