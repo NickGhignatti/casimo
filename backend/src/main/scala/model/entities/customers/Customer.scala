@@ -128,19 +128,21 @@ case class DefaultMovementManager(
 
   override def update(slice: SimulationState): SimulationState =
     slice | FilterManager(
-      GamesAttractivenessAdapter(
-        gamesAttractivenessWeight * GamesAttractivenessManager(boredomIncrease)
-          | PlayerSitterManager(sittingRadius)
+      BoidsAdapter(
+        PerceptionLimiterManager(perceptionRadius)
+          | alignmentWeight * AlignmentManager()
+          | cohesionWeight * CohesionManager()
+          | separationWeight * SeparationManager(avoidRadius)
+          | VelocityLimiterManager(maxSpeed)
       )
-        | BoidsAdapter(
-          PerceptionLimiterManager(perceptionRadius)
-            | alignmentWeight * AlignmentManager()
-            | cohesionWeight * CohesionManager()
-            | separationWeight * SeparationManager(avoidRadius)
-            | VelocityLimiterManager(maxSpeed)
+        | SingleCustomerAdapter(randomMovementWeight * RandomMovementManager())
+        | GamesAttractivenessAdapter(
+          gamesAttractivenessWeight * GamesAttractivenessManager(
+            boredomIncrease
+          )
+            | PlayerSitterManager(sittingRadius)
         )
     )
-      | SingleCustomerAdapter(randomMovementWeight * RandomMovementManager())
       | WallAvoidingAdapter(AvoidObstaclesManager())
       | SingleCustomerAdapter(MoverManager())
 
