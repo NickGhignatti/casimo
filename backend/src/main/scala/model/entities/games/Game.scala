@@ -159,7 +159,7 @@ case class RouletteGame(
       case b: RouletteBet =>
         val strategy =
           use(RouletteStrategy).bet(b.amount).on(b.targets).when(true)
-        Success(strategy.use())
+        Success(strategy.use(gameHistory))
       case _ =>
         Failure("Applied a bet different from the RouletteBet to the Roulette!")
 
@@ -205,7 +205,7 @@ case class SlotMachineGame(
         val strategy = use(SlotStrategy)
           .bet(b.amount)
           .when(true)
-        Success(strategy.use())
+        Success(strategy.use(gameHistory))
       case _ =>
         Failure("Applied a bet different from the SlotBet to the Slot machine!")
 
@@ -250,7 +250,7 @@ case class BlackJackGame(
       case b: BlackJackBet =>
         val strategy =
           use(BlackJackStrategy).bet(b.amount).accept(b.minimumValue).when(true)
-        Success(strategy.use())
+        Success(strategy.use(gameHistory))
       case _ =>
         Failure(
           "Applied a bet different from the BlackJackBet to the blackjack!"
