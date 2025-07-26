@@ -131,7 +131,7 @@ case class DefaultMovementManager(
         )
     )
       | WallAvoidingAdapter(AvoidObstaclesManager())
-      | BoidsAdapter(MoverManager())
+      | SingleCustomerAdapter(MoverManager())
 
 /** This manager adapts the `manager` which updates players contexts to one
   * which manipulates `SimulationState`. The contexts are updated one-by-one,
@@ -215,4 +215,16 @@ private case class FilterManager(manager: BaseManager[SimulationState])
       ),
       games =
         slice.games.map(g => updatedState.games.find(_.id == g.id).getOrElse(g))
+    )
+
+/** This manager adapts a base manager that handles a single customer to accept
+  * a simulation state
+  * @param manager
+  *   the adapted manager
+  */
+private case class SingleCustomerAdapter(manager: BaseManager[Customer])
+    extends BaseManager[SimulationState]:
+  override def update(slice: SimulationState): SimulationState =
+    slice.copy(
+      customers = slice.customers.map(_ | manager)
     )
