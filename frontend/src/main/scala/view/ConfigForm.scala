@@ -53,6 +53,11 @@ case class ConfigForm(update: Var[Update], model: Var[SimulationState]):
       "Boredom increase",
       Var(1),
       (m, v) => m.copy(boredomIncrease = v)
+    ),
+    Parameter(
+      "Random movement weight",
+      Var(0.2),
+      (m, v) => m.copy(randomMovementWeight = v)
     )
   )
   // Spawning strategy selection

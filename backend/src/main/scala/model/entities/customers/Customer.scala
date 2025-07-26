@@ -18,6 +18,7 @@ import model.managers.movements.Boids._
 import model.managers.movements.PlayerManagers
 import model.managers.movements.PlayerManagers.GamesAttractivenessManager
 import model.managers.movements.PlayerManagers.PlayerSitterManager
+import model.managers.movements.RandomMovementManager
 import model.managers.|
 import utils.Vector2D
 
@@ -113,7 +114,8 @@ case class DefaultMovementManager(
     separationWeight: Double = 1.0,
     gamesAttractivenessWeight: Double = 1.0,
     sittingRadius: Double = 100,
-    boredomIncrease: Double = 0.1
+    boredomIncrease: Double = 0.1,
+    randomMovementWeight: Double = 0
 ) extends BaseManager[SimulationState]:
 
   override def update(slice: SimulationState): SimulationState =
@@ -130,8 +132,9 @@ case class DefaultMovementManager(
             | VelocityLimiterManager(maxSpeed)
         )
     )
+      | SingleCustomerAdapter(randomMovementWeight * RandomMovementManager())
       | WallAvoidingAdapter(AvoidObstaclesManager())
-      | BoidsAdapter(MoverManager())
+      | SingleCustomerAdapter(MoverManager())
 
 /** This manager adapts the `manager` which updates players contexts to one
   * which manipulates `SimulationState`. The contexts are updated one-by-one,
@@ -215,4 +218,16 @@ private case class FilterManager(manager: BaseManager[SimulationState])
       ),
       games =
         slice.games.map(g => updatedState.games.find(_.id == g.id).getOrElse(g))
+    )
+
+/** This manager adapts a base manager that handles a single customer to accept
+  * a simulation state
+  * @param manager
+  *   the adapted manager
+  */
+private case class SingleCustomerAdapter(manager: BaseManager[Customer])
+    extends BaseManager[SimulationState]:
+  override def update(slice: SimulationState): SimulationState =
+    slice.copy(
+      customers = slice.customers.map(_ | manager)
     )
