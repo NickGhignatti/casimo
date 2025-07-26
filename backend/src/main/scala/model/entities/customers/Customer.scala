@@ -3,8 +3,8 @@ package model.entities.customers
 import scala.util.Random
 
 import model.SimulationState
+import model.entities.ChangingFavouriteGamePlayer
 import model.entities.Entity
-import model.entities.Player
 import model.entities.customers.CustState.Idle
 import model.entities.customers.CustState.Playing
 import model.entities.customers.RiskProfile.Regular
@@ -44,13 +44,13 @@ case class Customer(
       StatusProfile,
       CustomerState[Customer],
       HasBetStrategy[Customer],
-      Player[Customer]:
+      ChangingFavouriteGamePlayer[Customer]:
 
   def withId(newId: String): Customer =
     this.copy(id = newId)
 
   def withPosition(newPosition: Vector2D): Customer =
-    this.copy(position = newPosition, previousPosition = Some(position))
+    this.copy(position = newPosition)
 
   def withBankroll(newRoll: Double, update: Boolean = false): Customer =
     if update then this.copy(bankroll = newRoll)
@@ -63,7 +63,12 @@ case class Customer(
     this.copy(frustration = newFrustration)
 
   def withCustomerState(newState: CustState): Customer =
-    this.copy(customerState = newState)
+    this.copy(
+      customerState = newState,
+      previousPosition = newState match
+        case Playing(_) => Some(position)
+        case _          => None
+    )
 
   def withDirection(newDirection: Vector2D): Customer =
     this.copy(direction = newDirection)
@@ -100,6 +105,9 @@ case class Customer(
   override def isPlaying: Boolean = customerState match
     case Playing(_) => true
     case _          => false
+
+  override def withFavouriteGame(gameType: GameType): Customer =
+    copy(favouriteGame = gameType)
 
 /** This manager implements the default behaviour for the customer. It combines
   * the boid-like behaviours, the games' attractiveness and avoids the

@@ -118,7 +118,8 @@ class TestDecisionManager extends AnyFunSuite with Matchers:
     val updatedCustomer =
       PostDecisionUpdater.updatePosition(List(oldCustomer), List(newCustomer))
     updatedCustomer.head.customerState shouldBe Idle
-    updatedCustomer.head.position shouldBe oldCustomer.position
+    updatedCustomer.head.position shouldBe spawnCustomer.position
+    updatedCustomer.head.favouriteGame should not be oldCustomer.favouriteGame
 
   test("Leave the casino when condition triggered"):
     val customer = Customer()

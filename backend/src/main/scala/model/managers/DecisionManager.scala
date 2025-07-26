@@ -1,5 +1,8 @@
 package model.managers
 
+import scala.util.Random
+
+import model.entities.ChangingFavouriteGamePlayer
 import model.entities.Entity
 import model.entities.Player
 import model.entities.customers.Bankroll
@@ -27,6 +30,7 @@ import model.entities.games.Game
 import model.entities.games.GameType
 import model.entities.games.Roulette
 import model.entities.games.SlotMachine
+import model.entities.games.gameTypesPresent
 import utils.DecisionNode
 import utils.DecisionTree
 import utils.Leaf
@@ -223,17 +227,23 @@ case class DecisionManager[
         )
 
 object PostDecisionUpdater:
-  def updatePosition[P <: MovableWithPrevious[P] & CustomerState[P] & Entity](
+  def updatePosition[
+      P <: MovableWithPrevious[P] & CustomerState[P] &
+        ChangingFavouriteGamePlayer[P] & Entity
+  ](
       before: Seq[P],
       post: Seq[P]
   ): List[P] =
     val (hasStopPlaying, unchangedState, remained) =
       groupForChangeOfState[P](before, post)
 
-    val changePosition = hasStopPlaying.map { case (_, newP) =>
+    val changePosition = hasStopPlaying.map { case (oldP, newP) =>
       newP
-        .withPosition(newP.previousPosition.getOrElse(newP.position))
+        .withPosition(oldP.previousPosition.get)
         .withDirection(-newP.direction)
+        .withFavouriteGame(
+          Random.shuffle(gameTypesPresent.filter(_ != newP.favouriteGame)).head
+        )
     }
     val unchanged = unchangedState.map(_._2)
     changePosition ++ unchanged
