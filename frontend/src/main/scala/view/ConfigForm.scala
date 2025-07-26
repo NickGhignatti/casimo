@@ -17,7 +17,7 @@ case class ConfigForm(update: Var[Update], model: Var[SimulationState]):
       updater: (DefaultMovementManager, Double) => DefaultMovementManager
   )
   private val parameters = List(
-    Parameter("Max Speed", Var(20.0), (m, v) => m.copy(maxSpeed = v)),
+    Parameter("Max Speed", Var(2.0), (m, v) => m.copy(maxSpeed = v)),
     Parameter(
       "Perception Radius",
       Var(100.0),
@@ -51,7 +51,7 @@ case class ConfigForm(update: Var[Update], model: Var[SimulationState]):
     ),
     Parameter(
       "Boredom increase",
-      Var(1),
+      Var(0.2),
       (m, v) => m.copy(boredomIncrease = v)
     ),
     Parameter(
