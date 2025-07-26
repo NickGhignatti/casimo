@@ -131,6 +131,8 @@ function calculate_cohesion(boid, nearby_boids){
 
 - **Collisions with walls and games**: Customers can't collide with obstacles, which are games and walls. When the resulting velocity would make the customer collide with obstacles, its velocity is set to zero and the movement canceled.
 
+- **Random movement**: Customers change their directions randomly, as they are touring the casino.
+
 Each customer is affected only by the boids within a certain distance, defined by the `PERCEPTION_RADIUS`. If a boid is outside this radius, it is not considered in the calculations.
 Each customer updates its position and velocity according to the following algorithm:
 ```
@@ -146,10 +148,11 @@ b.velocity += SEPARATION_WEIGHT * separation
 b.velocity += ALIGNMENT_WEIGHT * alignment
 b.velocity += COHESION_WEIGHT * cohesion
 b.velocity += GAME_ATTRACTION_WEIGHT * game_attraction
+b.velocity += RANDOM_DIRECTION_WEIGHT * random_direction()
 
 /* Limit speed to MAX_SPEED */
 if magnitude(b.velocity) > MAX_SPEED
-b.velocity = normalize(b.velocity) * MAX_SPEED      
+b.velocity = normalize(b.velocity) * MAX_SPEED
 
 if b.canSee(b.position + b.velocity) {
     /* Update position */
@@ -166,7 +169,8 @@ Other parameters that influence the boids behavior are:
 - `SEPARATION_WEIGHT`: weight for separation force
 - `ALIGNMENT_WEIGHT`: weight for alignment force
 - `COHESION_WEIGHT`: weight for cohesion force
-- `GAME_ATTRACTION_WEIGHT`: weight for game attraction force.
+- `GAME_ATTRACTION_WEIGHT`: weight for game attraction force
+- `RANDOM_DIRECTION_WEIGHT`: weight for the random movements.
 
 All of these parameters can be configured by the user in order to simulate different scenarios.
 When a customer is close to a game of its liking, that is the distance between the customer's and game's position is less than `SITTING_RADIUS`, the player sits and plays the game. While a customer is playing it does not move.
