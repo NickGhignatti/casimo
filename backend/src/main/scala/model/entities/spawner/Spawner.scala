@@ -34,10 +34,6 @@ import utils.Vector2D
   *   2D coordinates where customers will be spawned (with random variation)
   * @param strategy
   *   the spawning strategy that determines how many customers to create
-  * @param currentTime
-  *   internal simulation time counter for this spawner
-  * @param ticksToSpawn
-  *   interval in simulation ticks between spawning events
   */
 case class Spawner(
     id: String,
@@ -81,7 +77,6 @@ case class Spawner(
       case Regular   => Random.between(200, 1501)
       case VIP       => Random.between(3000, 8001)
       case Impulsive => Random.between(1500, 5001)
-
     val fg = Random
       .shuffle(
         Seq(
