@@ -3,8 +3,8 @@ package model.entities.customers
 import scala.util.Random
 
 import model.SimulationState
+import model.entities.ChangingFavouriteGamePlayer
 import model.entities.Entity
-import model.entities.Player
 import model.entities.customers.CustState.Idle
 import model.entities.customers.CustState.Playing
 import model.entities.customers.RiskProfile.Regular
@@ -18,6 +18,7 @@ import model.managers.movements.Boids._
 import model.managers.movements.PlayerManagers
 import model.managers.movements.PlayerManagers.GamesAttractivenessManager
 import model.managers.movements.PlayerManagers.PlayerSitterManager
+import model.managers.movements.RandomMovementManager
 import model.managers.|
 import utils.Vector2D
 
@@ -43,13 +44,13 @@ case class Customer(
       StatusProfile,
       CustomerState[Customer],
       HasBetStrategy[Customer],
-      Player[Customer]:
+      ChangingFavouriteGamePlayer[Customer]:
 
   def withId(newId: String): Customer =
     this.copy(id = newId)
 
   def withPosition(newPosition: Vector2D): Customer =
-    this.copy(position = newPosition, previousPosition = Some(position))
+    this.copy(position = newPosition)
 
   def withBankroll(newRoll: Double, update: Boolean = false): Customer =
     if update then this.copy(bankroll = newRoll)
@@ -62,7 +63,12 @@ case class Customer(
     this.copy(frustration = newFrustration)
 
   def withCustomerState(newState: CustState): Customer =
-    this.copy(customerState = newState)
+    this.copy(
+      customerState = newState,
+      previousPosition = newState match
+        case Playing(_) => Some(position)
+        case _          => None
+    )
 
   def withDirection(newDirection: Vector2D): Customer =
     this.copy(direction = newDirection)
@@ -100,6 +106,9 @@ case class Customer(
     case Playing(_) => true
     case _          => false
 
+  override def withFavouriteGame(gameType: GameType): Customer =
+    copy(favouriteGame = gameType)
+
 /** This manager implements the default behaviour for the customer. It combines
   * the boid-like behaviours, the games' attractiveness and avoids the
   * collisions of customers with walls and games
@@ -113,25 +122,29 @@ case class DefaultMovementManager(
     separationWeight: Double = 1.0,
     gamesAttractivenessWeight: Double = 1.0,
     sittingRadius: Double = 100,
-    boredomIncrease: Double = 0.1
+    boredomIncrease: Double = 0.1,
+    randomMovementWeight: Double = 0
 ) extends BaseManager[SimulationState]:
 
   override def update(slice: SimulationState): SimulationState =
     slice | FilterManager(
-      GamesAttractivenessAdapter(
-        gamesAttractivenessWeight * GamesAttractivenessManager(boredomIncrease)
-          | PlayerSitterManager(sittingRadius)
+      BoidsAdapter(
+        PerceptionLimiterManager(perceptionRadius)
+          | alignmentWeight * AlignmentManager()
+          | cohesionWeight * CohesionManager()
+          | separationWeight * SeparationManager(avoidRadius)
+          | VelocityLimiterManager(maxSpeed)
       )
-        | BoidsAdapter(
-          PerceptionLimiterManager(perceptionRadius)
-            | alignmentWeight * AlignmentManager()
-            | cohesionWeight * CohesionManager()
-            | separationWeight * SeparationManager(avoidRadius)
-            | VelocityLimiterManager(maxSpeed)
+        | SingleCustomerAdapter(randomMovementWeight * RandomMovementManager())
+        | GamesAttractivenessAdapter(
+          gamesAttractivenessWeight * GamesAttractivenessManager(
+            boredomIncrease
+          )
+            | PlayerSitterManager(sittingRadius)
         )
     )
       | WallAvoidingAdapter(AvoidObstaclesManager())
-      | BoidsAdapter(MoverManager())
+      | SingleCustomerAdapter(MoverManager())
 
 /** This manager adapts the `manager` which updates players contexts to one
   * which manipulates `SimulationState`. The contexts are updated one-by-one,
@@ -215,4 +228,16 @@ private case class FilterManager(manager: BaseManager[SimulationState])
       ),
       games =
         slice.games.map(g => updatedState.games.find(_.id == g.id).getOrElse(g))
+    )
+
+/** This manager adapts a base manager that handles a single customer to accept
+  * a simulation state
+  * @param manager
+  *   the adapted manager
+  */
+private case class SingleCustomerAdapter(manager: BaseManager[Customer])
+    extends BaseManager[SimulationState]:
+  override def update(slice: SimulationState): SimulationState =
+    slice.copy(
+      customers = slice.customers.map(_ | manager)
     )

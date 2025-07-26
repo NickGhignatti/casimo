@@ -39,3 +39,7 @@ class TestBankroll extends AnyFunSuite:
     assert(
       ex.getMessage === s"requirement failed: Bankroll amount must be positive, instead is ${startValue + netLoss}"
     )
+
+  test("bankroll ratio should work as expected"):
+    val c = Customer().withBankroll(1000.0).updateBankroll(500.0)
+    assert(c.bankrollRatio == 1.5)

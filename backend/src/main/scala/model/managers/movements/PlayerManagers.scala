@@ -66,9 +66,9 @@ object PlayerManagers:
             if distance(slice.player.position, game.position) < sittingRadius =>
           slice.copy(
             player = slice.player
+              .play(game)
               .withPosition(game.center)
-              .withDirection(Vector2D.zero)
-              .play(game),
+              .withDirection(Vector2D.zero),
             games = slice.games
               .map(g => if g.id == game.id then game else g)
           )

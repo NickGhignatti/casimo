@@ -57,13 +57,13 @@ class ButtonBar(
           Some(
             dom.window.setInterval(
               () => eventBus.writer.onNext(Event.SimulationTick),
-              1000 / 60
+              1000 / model.now().frameRate
             )
           )
         )
       case "Reset" =>
-        canvasManager.reset()
         eventBus.writer.onNext(Event.ResetSimulation)
+        canvasManager.reset()
         if (timerId.now().isDefined) {
           dom.window.clearInterval(timerId.now().get)
         }

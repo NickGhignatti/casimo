@@ -128,3 +128,11 @@ class TestSimulationState extends AnyFunSuite:
       .setSpawner(spawner)
 
     assert(state.spawner.contains(spawner))
+
+  test("update framerate should update both framerate and ticker"):
+    val initialState = SimulationState.empty()
+    val updatedState = initialState.updateFrameRate(120.0)
+
+    assert(initialState.frameRate != updatedState.frameRate)
+    assert(updatedState.frameRate == 120)
+    assert(initialState.ticker != updatedState.ticker)

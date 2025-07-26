@@ -35,7 +35,8 @@ case class SimulationState(
     games: List[Game],
     spawner: Option[Spawner],
     walls: List[Wall],
-    ticker: Ticker = Ticker(60.0)
+    ticker: Ticker = Ticker(60.0),
+    frameRate: Double = 60.0
 )
 
 /** Factory and utility object for creating SimulationState instances.
@@ -275,3 +276,15 @@ extension (state: SimulationState)
     */
   def addWall(wall: Wall): SimulationState =
     state.copy(walls = wall :: state.walls)
+
+  /** Creates a new SimulationState with an updated framerate.
+    *
+    * Ticker is updated according to framerate
+    *
+    * @param frameRate
+    *   the new framerate
+    * @return
+    *   new SimulationState with the new framerate
+    */
+  def updateFrameRate(frameRate: Double): SimulationState =
+    state.copy(frameRate = frameRate, ticker = Ticker(frameRate))
