@@ -89,7 +89,7 @@ case class Spawner(
     val bs = fg match
       case Roulette    => MartingaleStrat[Customer](br * 0.02, defaultRedBet)
       case Blackjack   => MartingaleStrat[Customer](br * 0.02, defaultRedBet)
-      case SlotMachine => FlatBetting[Customer](br * 0.05)
+      case SlotMachine => FlatBetting[Customer](br * 0.05, defaultRedBet)
 
     Customer()
       .withPosition(this.position.around(5.0))

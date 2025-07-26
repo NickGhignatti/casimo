@@ -57,7 +57,7 @@ class SlotComponent(initialModel: SlotMachineGame)
     )
 
     // Draw border
-    ctx.strokeStyle = "#910909"
+    ctx.strokeStyle = "#470505"
     ctx.lineWidth = 2
     ctx.strokeRect(
       modelComponent.position.x,
@@ -84,7 +84,7 @@ class RouletteComponent(initialModel: RouletteGame)
     )
 
     // Draw border
-    ctx.strokeStyle = "#aa16ba"
+    ctx.strokeStyle = "#590c61"
     ctx.lineWidth = 2
     ctx.strokeRect(
       modelComponent.position.x,
@@ -111,7 +111,7 @@ class BlackJackComponent(initialModel: BlackJackGame)
     )
 
     // Draw border
-    ctx.strokeStyle = "#24ba16"
+    ctx.strokeStyle = "#125c0b"
     ctx.lineWidth = 2
     ctx.strokeRect(
       modelComponent.position.x,
