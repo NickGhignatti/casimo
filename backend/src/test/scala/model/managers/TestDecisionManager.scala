@@ -107,3 +107,25 @@ class TestDecisionManager extends AnyFunSuite with Matchers:
     val manager = DecisionManager[Customer](Nil)
     val nobody = manager.update(List(customer))
     nobody.isEmpty shouldBe true
+
+  test("Unlock the game when stop playing"):
+    val ticked =
+      (0 until normalTicker.blackjackTick.toInt).foldLeft(normalTicker)((t, _) =>
+        t.update()
+      )
+    val mockGame = GameBuilder.blackjack(Vector2D.zero)
+    val secondGame = GameBuilder.slot(Vector2D.zero)
+    val customer = Customer().withBoredom(99).withFrustration(99).withCustomerState(Playing(mockGame))
+    val mockGamePlayed = mockGame.lock(customer.id).getOrElse(null)
+    val newGame = GameResolver.update(
+      List(customer),
+      List(mockGamePlayed,secondGame),
+      ticked
+    )
+    val manager = DecisionManager[Customer](newGame)
+    val idle = manager.update(List(customer))
+    val updatedGames = PostDecisionUpdater.updateGames(List(customer),idle,newGame)
+    
+    updatedGames.size shouldBe 2
+    newGame.head.gameState.currentPlayers shouldBe 1
+    updatedGames.head.gameState.currentPlayers shouldBe 0

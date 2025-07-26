@@ -26,11 +26,11 @@ object TriggerDSL:
 
   def BrRatioAbove[A <: Bankroll[A]](r: Double): Trigger[A] =
     new Trigger[A]:
-      def eval(c: A): Boolean = (c.bankroll / c.startingBankroll) >= r
+      def eval(c: A): Boolean = c.bankrollRatio >= r
 
   def BrRatioBelow[A <: Bankroll[A]](r: Double): Trigger[A] =
     new Trigger[A]:
-      def eval(c: A): Boolean = (c.bankroll / c.startingBankroll) <= r
+      def eval(c: A): Boolean = c.bankrollRatio <= r
 
   def Always[A]: Trigger[A] = new Trigger[A]:
     def eval(c: A): Boolean = true
