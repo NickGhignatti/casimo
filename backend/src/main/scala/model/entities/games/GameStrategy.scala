@@ -286,17 +286,17 @@ case class RouletteStrategyInstance(
 
           case BetType.RedBlack | BetType.OddEven | BetType.HighLow =>
             // Even money bets: 1:1 but lose on 0 (green)
-            if (winningNumber == 0) Result.Failure(betAmount)
+            if winningNumber == 0 then Result.Failure(betAmount)
             else Result.Success(betAmount * betType.payout)
 
           case BetType.Column | BetType.Dozen =>
             // 2:1 bets but lose on 0
-            if (winningNumber == 0) Result.Failure(betAmount)
+            if winningNumber == 0 then Result.Failure(betAmount)
             else Result.Success(betAmount * betType.payout)
 
           case _ =>
             val adjustedPayout =
-              (betAmount * betType.payout * houseEdgeMultiplier)
+              betAmount * betType.payout * houseEdgeMultiplier
             Result.Success(adjustedPayout)
       else Result.Failure(betAmount)
 
@@ -377,23 +377,24 @@ case class BlackJackStrategyInstance(
   private def dealHand(): Int =
     val card1 = Random.nextInt(10) + 1
     val card2 = Random.nextInt(10) + 1
-    var total = card1 + card2
+    val total = card1 + card2
 
     // Handle Aces (simplified - count as 11 if beneficial, 1 otherwise)
-    if (card1 == 1 && total + 10 <= 21) total += 10
-    if (card2 == 1 && total + 10 <= 21) total += 10
+    val newTotal =
+      if (card1 == 1 && total + 10 <= 21) then total + 10 else total
+    val lastTotal =
+      if (card2 == 1 && total + 10 <= 21) then newTotal + 10 else newTotal
 
-    total
+    lastTotal
 
   private def hitUntilStand(initialValue: Int, standValue: Int): Int =
     @tailrec
     def hit(current: Int): Int =
-      if (current >= standValue || current > 21) current
-      else {
+      if current >= standValue || current > 21 then current
+      else
         val newCard = Random.nextInt(10) + 1
         val newTotal = current + newCard
         hit(newTotal)
-      }
 
     hit(initialValue)
 
@@ -403,19 +404,18 @@ case class BlackJackStrategyInstance(
     val playerInitial = dealHand()
 
     // Player plays first (hits until reaching minimumValue or busting)
-    val playerFinal = if (playerInitial < minimumValue) {
-      hitUntilStand(playerInitial, minimumValue)
-    } else playerInitial
+    val playerFinal =
+      if playerInitial < minimumValue then
+        hitUntilStand(playerInitial, minimumValue)
+      else playerInitial
 
     // Player busts - automatic loss
-    if (playerFinal > 21) {
-      return Result.Failure(betAmount)
-    }
+    if playerFinal > 21 then Result.Failure(betAmount)
 
     // Dealer plays (must hit on 16, stand on 17)
-    val dealerFinal = if (dealerInitial < 17) {
-      hitUntilStand(dealerInitial, 17)
-    } else dealerInitial
+    val dealerFinal =
+      if dealerInitial < 17 then hitUntilStand(dealerInitial, 17)
+      else dealerInitial
 
     // Determine winner
     val result: BetResult = (playerFinal, dealerFinal) match
@@ -433,15 +433,15 @@ case class BlackJackStrategyInstance(
 
       // Both under 21 - higher wins
       case (p, d) if p <= 21 && d <= 21 =>
-        if (p > d) Result.Success(betAmount)
-        else if (p == d) Result.Success(0) // Push
+        if p > d then Result.Success(betAmount)
+        else if p == d then Result.Success(0) // Push
         else Result.Failure(betAmount)
 
       // Player busts (already handled above, but for completeness)
       case _ => Result.Failure(betAmount)
 
     // Apply the condition check
-    if (condition()) result else Result.Failure(betAmount)
+    if condition() then result else Result.Failure(betAmount)
 
 /** Domain Specific Language (DSL) for game strategy creation.
   *
