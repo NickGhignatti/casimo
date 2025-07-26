@@ -5,7 +5,10 @@ import com.raquo.laminar.api.L.Var
 import com.raquo.laminar.api.L.unsafeWindowOwner
 import model.SimulationState
 import model.entities.Entity
-import model.entities.customers.CustState
+import model.entities.customers.RiskProfile.Casual
+import model.entities.customers.RiskProfile.Impulsive
+import model.entities.customers.RiskProfile.Regular
+import model.entities.customers.RiskProfile.VIP
 import org.scalajs.dom
 import org.scalajs.dom.MouseEvent
 import org.scalajs.dom.html
@@ -48,6 +51,22 @@ class CanvasManager(
     drawCustomers(state)
   }(using unsafeWindowOwner)
 
+  private def lateralWalls(): Unit =
+    eventBus.writer.onNext(
+      BorderConfig(
+        canvas.offsetLeft,
+        canvas.offsetTop,
+        canvas.width,
+        canvas.height
+      )
+    )
+    wallComponents.set(
+      model
+        .now()
+        .walls
+        .map(wall => WallComponent(wall))
+    )
+
   def init(): Unit =
     resizeCanvas()
     dom.window.addEventListener(
@@ -61,20 +80,7 @@ class CanvasManager(
       "load",
       { _ =>
         resizeCanvas()
-        eventBus.writer.onNext(
-          BorderConfig(
-            canvas.offsetLeft,
-            canvas.offsetTop,
-            canvas.width,
-            canvas.height
-          )
-        )
-        wallComponents.set(
-          model
-            .now()
-            .walls
-            .map(wall => WallComponent(wall))
-        )
+        lateralWalls()
         redrawAllComponents()
       }
     )
@@ -85,6 +91,9 @@ class CanvasManager(
     slotComponents.set(List.empty)
     rouletteComponents.set(List.empty)
     blackjackComponents.set(List.empty)
+
+    lateralWalls()
+    redrawAllComponents()
 
   def entityIsAlreadyPresent(point: Vector2D): Boolean =
     !wallComponents.now().exists(_.contains(point)) &&
@@ -147,9 +156,12 @@ class CanvasManager(
     state.customers.foreach { customer =>
       ctx.beginPath()
       ctx.arc(customer.position.x, customer.position.y, 3, 0, Math.PI * 2)
-      ctx.fillStyle = customer.customerState match
-        case CustState.Playing(_) => "red"
-        case CustState.Idle       => "blue"
+      ctx.fillStyle = customer.riskProfile match
+        case Casual    => "blue"
+        case Regular   => "green"
+        case VIP       => "red"
+        case Impulsive => "magenta"
+      ctx.strokeStyle = ctx.fillStyle
       ctx.fill()
       ctx.stroke()
     }

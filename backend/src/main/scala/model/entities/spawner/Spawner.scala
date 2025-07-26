@@ -5,6 +5,16 @@ import scala.util.Random
 import model.SimulationState
 import model.entities.Entity
 import model.entities.customers.Customer
+import model.entities.customers.FlatBetting
+import model.entities.customers.MartingaleStrat
+import model.entities.customers.RiskProfile.Casual
+import model.entities.customers.RiskProfile.Impulsive
+import model.entities.customers.RiskProfile.Regular
+import model.entities.customers.RiskProfile.VIP
+import model.entities.customers.defaultRedBet
+import model.entities.games.Blackjack
+import model.entities.games.Roulette
+import model.entities.games.SlotMachine
 import utils.Vector2D
 
 /** Entity responsible for spawning new customers into the simulation.
@@ -24,10 +34,6 @@ import utils.Vector2D
   *   2D coordinates where customers will be spawned (with random variation)
   * @param strategy
   *   the spawning strategy that determines how many customers to create
-  * @param currentTime
-  *   internal simulation time counter for this spawner
-  * @param ticksToSpawn
-  *   interval in simulation ticks between spawning events
   */
 case class Spawner(
     id: String,
@@ -55,22 +61,40 @@ case class Spawner(
           strategy.customersAt(
             state.ticker.currentTick / state.ticker.spawnTick
           )
-        )(
-          Customer(
-            id = "cutomer-" + Random.nextInt(),
-            position = this.position.around(5.0),
-            direction = Vector2D(Random.between(0, 5), Random.between(0, 5)),
-            bankroll = Random.between(30, 5000),
-            favouriteGame = Random
-              .shuffle(
-                Seq(
-                  model.entities.games.Roulette,
-                  model.entities.games.Blackjack,
-                  model.entities.games.SlotMachine
-                )
-              )
-              .head
-          )
-        )
+        )(defaultCustomerCreation())
       )
     else state
+
+  private def defaultCustomerCreation(): Customer =
+    val pNumber = Random.between(1, 5)
+    val p = pNumber match
+      case 1 => Casual
+      case 2 => Regular
+      case 3 => Impulsive
+      case 4 => VIP
+    val br = p match
+      case Casual    => Random.between(50, 151)
+      case Regular   => Random.between(200, 1501)
+      case VIP       => Random.between(3000, 8001)
+      case Impulsive => Random.between(1500, 5001)
+    val fg = Random
+      .shuffle(
+        Seq(
+          Roulette,
+          Blackjack,
+          SlotMachine
+        )
+      )
+      .head
+    val bs = fg match
+      case Roulette    => MartingaleStrat[Customer](br * 0.02, defaultRedBet)
+      case Blackjack   => MartingaleStrat[Customer](br * 0.02, defaultRedBet)
+      case SlotMachine => FlatBetting[Customer](br * 0.05)
+
+    Customer()
+      .withPosition(this.position.around(5.0))
+      .withDirection(Vector2D(Random.between(0, 5), Random.between(0, 5)))
+      .withBankroll(br)
+      .withFavouriteGames(fg)
+      .withProfile(p)
+      .withBetStrategy(bs)

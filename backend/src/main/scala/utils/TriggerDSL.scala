@@ -18,15 +18,19 @@ object TriggerDSL:
 
   def FrustAbove[A <: BoredomFrustration[A]](p: Double): Trigger[A] =
     new Trigger[A]:
-      def eval(c: A): Boolean = c.frustration > p
+      def eval(c: A): Boolean = c.frustration >= p
 
   def BoredomAbove[A <: BoredomFrustration[A]](p: Double): Trigger[A] =
     new Trigger[A]:
-      def eval(c: A): Boolean = c.boredom > p
+      def eval(c: A): Boolean = c.boredom >= p
 
   def BrRatioAbove[A <: Bankroll[A]](r: Double): Trigger[A] =
     new Trigger[A]:
-      def eval(c: A): Boolean = (c.bankroll / c.startingBankroll) > r
+      def eval(c: A): Boolean = c.bankrollRatio >= r
+
+  def BrRatioBelow[A <: Bankroll[A]](r: Double): Trigger[A] =
+    new Trigger[A]:
+      def eval(c: A): Boolean = c.bankrollRatio <= r
 
   def Always[A]: Trigger[A] = new Trigger[A]:
     def eval(c: A): Boolean = true

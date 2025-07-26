@@ -56,6 +56,11 @@ jobs:
           cd ..
           mkdir -p ./dist/docs
           cp -r ./docs/.vitepress/dist/* ./dist/docs
+      - name: Build ScalaDoc
+        run: |
+          sbt doc
+          mkdir -p ./dist/docs/scaladoc
+          cp -r ./backend/jvm/target/scala-*/api/* ./dist/docs/scaladoc
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

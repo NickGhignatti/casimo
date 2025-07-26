@@ -7,6 +7,7 @@ import org.scalatest.matchers.should.Matchers
 import utils.TriggerDSL.Always
 import utils.TriggerDSL.BoredomAbove
 import utils.TriggerDSL.BrRatioAbove
+import utils.TriggerDSL.BrRatioBelow
 import utils.TriggerDSL.FrustAbove
 import utils.TriggerDSL.Losses
 import utils.TriggerDSL.Trigger
@@ -20,6 +21,11 @@ class TestTriggerDSL extends AnyFunSuite with Matchers:
     val c = Customer().withBankroll(1000.0).updateBankroll(500.0)
     BrRatioAbove(1.4).eval(c) shouldBe true
     BrRatioAbove(2.0).eval(c) shouldBe false
+
+  test("BankrollRatioBelow trigger works correctly"):
+    val c = Customer().withBankroll(1000.0).updateBankroll(500.0)
+    BrRatioBelow(2.0).eval(c) shouldBe true
+    BrRatioBelow(1.4).eval(c) shouldBe false
 
   test("And trigger only passes if both do"):
     val c = Customer().withFrustration(80).withBoredom(90)

@@ -81,7 +81,7 @@ class TestSpawner extends AnyFunSuite:
     for customer <- newState.customers do
       assert(customer.direction.x >= 0 && customer.direction.x < 5)
       assert(customer.direction.y >= 0 && customer.direction.y < 5)
-      assert(customer.bankroll >= 30 && customer.bankroll < 5000)
+      assert(customer.bankroll >= 30 && customer.bankroll < 10000)
 
   test("Spawner should work with GaussianStrategy"):
     val spawner =
