@@ -4,7 +4,7 @@ import model.Ticker
 import model.entities.*
 import model.entities.customers.*
 import model.entities.customers.CustState.{Idle, Playing}
-import model.entities.customers.RiskProfile.VIP
+import model.entities.customers.RiskProfile.{Impulsive, VIP}
 import model.entities.games.*
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
@@ -32,7 +32,7 @@ class TestDecisionManager extends AnyFunSuite with Matchers:
     val idle = manager.update(List(customer))
     idle.head.customerState shouldBe Idle
 
-  /*test("Step Strategy should update correctly"):
+  test("Step Strategy should update correctly"):
     val ticked =
       (0 until normalTicker.blackjackTick.toInt).foldLeft(normalTicker)((t, _) =>
         t.update()
@@ -48,9 +48,13 @@ class TestDecisionManager extends AnyFunSuite with Matchers:
       List(mockGamePlayed),
       ticked
     )
+
     val manager = DecisionManager[Customer](newGame)
     val doubled = manager.update(List(customer))
-    doubled.head.placeBet().amount shouldBe 20.0*/
+    if newGame.head.getLastRoundResult.head.getMoneyGain > 0 then
+      doubled.head.placeBet().amount shouldBe 20.0
+    else
+      doubled.head.placeBet().amount shouldBe 10.0
 
   test("ContinuePlaying when thresholds not exceeded") :
     val ticked =
@@ -97,3 +101,31 @@ class TestDecisionManager extends AnyFunSuite with Matchers:
     val updatedCustomer = PostDecisionUpdater.updatePosition(List(oldCustomer),List(newCustomer))
     updatedCustomer.head.customerState shouldBe Idle
     updatedCustomer.head.position shouldBe oldCustomer.position
+
+  test("Leave the casino when condition triggered"):
+    val customer = Customer().withBoredom(99).withFrustration(99).withCustomerState(Idle).withProfile(Impulsive)
+    val manager = DecisionManager[Customer](Nil)
+    val nobody = manager.update(List(customer))
+    nobody.isEmpty shouldBe true
+
+  test("Unlock the game when stop playing"):
+    val ticked =
+      (0 until normalTicker.blackjackTick.toInt).foldLeft(normalTicker)((t, _) =>
+        t.update()
+      )
+    val mockGame = GameBuilder.blackjack(Vector2D.zero)
+    val secondGame = GameBuilder.slot(Vector2D.zero)
+    val customer = Customer().withBoredom(99).withFrustration(99).withCustomerState(Playing(mockGame))
+    val mockGamePlayed = mockGame.lock(customer.id).getOrElse(null)
+    val newGame = GameResolver.update(
+      List(customer),
+      List(mockGamePlayed,secondGame),
+      ticked
+    )
+    val manager = DecisionManager[Customer](newGame)
+    val idle = manager.update(List(customer))
+    val updatedGames = PostDecisionUpdater.updateGames(List(customer),idle,newGame)
+    
+    updatedGames.size shouldBe 2
+    newGame.head.gameState.currentPlayers shouldBe 1
+    updatedGames.head.gameState.currentPlayers shouldBe 0

@@ -66,12 +66,17 @@ case class Spawner(
     else state
 
   private def defaultCustomerCreation(): Customer =
-    val br = Random.between(50, 10000)
-    val p = br match
-      case b if b < 100   => Casual
-      case b if b < 1500  => Regular
-      case b if b < 5000  => Impulsive
-      case b if b < 10000 => VIP
+    val pNumber = Random.between(1, 5)
+    val p = pNumber match
+      case 1 => Casual
+      case 2 => Regular
+      case 3 => Impulsive
+      case 4 => VIP
+    val br = p match
+      case Casual    => Random.between(50, 151)
+      case Regular   => Random.between(200, 1501)
+      case VIP       => Random.between(3000, 8001)
+      case Impulsive => Random.between(1500, 5001)
     val fg = Random
       .shuffle(
         Seq(
@@ -84,7 +89,7 @@ case class Spawner(
     val bs = fg match
       case Roulette    => MartingaleStrat[Customer](br * 0.02, defaultRedBet)
       case Blackjack   => MartingaleStrat[Customer](br * 0.02, defaultRedBet)
-      case SlotMachine => FlatBetting[Customer](br * 0.04)
+      case SlotMachine => FlatBetting[Customer](br * 0.05)
 
     Customer()
       .withPosition(this.position.around(5.0))
