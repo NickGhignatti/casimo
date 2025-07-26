@@ -24,6 +24,7 @@ import model.entities.customers.RiskProfile.Impulsive
 import model.entities.customers.RiskProfile.Regular
 import model.entities.customers.RiskProfile.VIP
 import model.entities.customers.StatusProfile
+import model.entities.customers.defaultRedBet
 import model.entities.games.Blackjack
 import model.entities.games.Gain
 import model.entities.games.Game
@@ -35,6 +36,7 @@ import utils.DecisionNode
 import utils.DecisionTree
 import utils.Leaf
 import utils.MultiNode
+import utils.TriggerDSL.Always
 import utils.TriggerDSL.BoredomAbove
 import utils.TriggerDSL.BrRatioAbove
 import utils.TriggerDSL.BrRatioBelow
@@ -86,7 +88,17 @@ case class DecisionManager[
       SwitchRule(Impulsive, Blackjack, Martingale, Losses(3), OscarGrind, 0.10),
       SwitchRule(Impulsive, Roulette, Martingale, Losses(3), FlatBet, 0.07),
       SwitchRule(Impulsive, Roulette, FlatBet, BrRatioAbove(1), Martingale, 0.03),
-      SwitchRule(Impulsive, SlotMachine, FlatBet, FrustAbove(50), FlatBet, 0.02)
+      SwitchRule(Impulsive, SlotMachine, FlatBet, FrustAbove(50), FlatBet, 0.02),
+
+      SwitchRule(VIP,SlotMachine,Martingale, Always ,FlatBet,0.03),
+      SwitchRule(Impulsive,SlotMachine,Martingale, Always ,FlatBet,0.03),
+      SwitchRule(Casual,SlotMachine,Martingale, Always ,FlatBet,0.03),
+      SwitchRule(Regular,SlotMachine,Martingale, Always ,FlatBet,0.03),
+      SwitchRule(VIP,SlotMachine,OscarGrind, Always ,FlatBet,0.03),
+      SwitchRule(Impulsive,SlotMachine,OscarGrind, Always ,FlatBet,0.03),
+      SwitchRule(Casual,SlotMachine,OscarGrind, Always ,FlatBet,0.03),
+      SwitchRule(Regular,SlotMachine,OscarGrind, Always ,FlatBet,0.03),
+
     )
 //format: on
   object ConfigLoader:
@@ -117,10 +129,23 @@ case class DecisionManager[
           Some(c.stopPlaying.updateFrustration(-15.0 * (2 - mod.fMod)))
         case ChangeStrategy(s) =>
           Some(c.changeBetStrategy(s).updateBoredom(-15.0 * (2 - mod.bMod)))
-        case WaitForGame() => Some(c)
+        case WaitForGame() => Some(getNewGameBet(c))
         case Stay()        => Some(c)
         case LeaveCasino() => None
     }
+
+  private def getNewGameBet(c: A): A =
+    val rules = rulesByProfile(c.riskProfile)
+    rules
+      .collectFirst {
+        case rule
+            if rule.game == c.getGameOrElse.get.gameType && rule.strategy == c.betStrategy.betType && rule.trigger
+              .eval(c) =>
+          c.changeBetStrategy(betDefiner(rule, c))
+      }
+      .getOrElse(
+        c.changeBetStrategy(FlatBetting(c.bankroll * 0.01, defaultRedBet))
+      )
 
   private def updateInGameBehaviours(c: A, mod: Modifiers): A =
     val updatedGame = games.find(_.id == c.getGameOrElse.get.id).get
