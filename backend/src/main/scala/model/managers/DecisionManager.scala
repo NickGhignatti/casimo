@@ -76,28 +76,35 @@ case class DecisionManager[
       SwitchRule(VIP, Blackjack, Martingale, Losses(3), OscarGrind, 0.05),
       SwitchRule(VIP, Roulette, Martingale, Losses(4), OscarGrind, 0.05),
       SwitchRule(VIP, SlotMachine, FlatBet, FrustAbove(50) || BrRatioBelow(0.5), FlatBet, 0.015),
+      SwitchRule(VIP,SlotMachine,Martingale, Always ,FlatBet,0.03),
+      SwitchRule(VIP,SlotMachine,OscarGrind, Always ,FlatBet,0.03),
+      SwitchRule(VIP,Blackjack,FlatBet, Always ,Martingale,0.03),
+      SwitchRule(VIP,Roulette,FlatBet, Always ,Martingale,0.03),
       // Regular
       SwitchRule(Regular, Blackjack, OscarGrind, BrRatioAbove(1.3), Martingale, 0.015),
       SwitchRule(Regular, Blackjack, Martingale, Losses(3), OscarGrind, 0.02),
       SwitchRule(Regular, Roulette, OscarGrind, BrRatioAbove(1.3), Martingale, 0.015),
       SwitchRule(Regular, Roulette, Martingale, Losses(3), OscarGrind, 0.02),
       SwitchRule(Regular, SlotMachine, FlatBet, FrustAbove(60) || BrRatioBelow(0.5), FlatBet, 0.01),
+      SwitchRule(Regular,SlotMachine,Martingale, Always ,FlatBet,0.03),
+      SwitchRule(Regular,SlotMachine,OscarGrind, Always ,FlatBet,0.03),
+      SwitchRule(Regular,Blackjack,FlatBet, Always ,OscarGrind,0.02),
+      SwitchRule(Regular,Roulette,FlatBet, Always ,OscarGrind,0.02),
       // Casual
       SwitchRule(Casual, SlotMachine, FlatBet, FrustAbove(50) || BrRatioBelow(0.7), FlatBet, 0.015),
+      SwitchRule(Casual,SlotMachine,Martingale, Always ,FlatBet,0.03),
+      SwitchRule(Casual,SlotMachine,OscarGrind, Always ,FlatBet,0.03),
+      SwitchRule(Casual,Blackjack,FlatBet, Always ,OscarGrind,0.03),
+      SwitchRule(Casual,Roulette,FlatBet, Always ,FlatBet,0.03),
       // Impulsive
       SwitchRule(Impulsive, Blackjack, Martingale, Losses(3), OscarGrind, 0.10),
       SwitchRule(Impulsive, Roulette, Martingale, Losses(3), FlatBet, 0.07),
       SwitchRule(Impulsive, Roulette, FlatBet, BrRatioAbove(1), Martingale, 0.03),
       SwitchRule(Impulsive, SlotMachine, FlatBet, FrustAbove(50), FlatBet, 0.02),
-
-      SwitchRule(VIP,SlotMachine,Martingale, Always ,FlatBet,0.03),
       SwitchRule(Impulsive,SlotMachine,Martingale, Always ,FlatBet,0.03),
-      SwitchRule(Casual,SlotMachine,Martingale, Always ,FlatBet,0.03),
-      SwitchRule(Regular,SlotMachine,Martingale, Always ,FlatBet,0.03),
-      SwitchRule(VIP,SlotMachine,OscarGrind, Always ,FlatBet,0.03),
+      SwitchRule(Impulsive,Blackjack,FlatBet, Always ,Martingale,0.02),
       SwitchRule(Impulsive,SlotMachine,OscarGrind, Always ,FlatBet,0.03),
-      SwitchRule(Casual,SlotMachine,OscarGrind, Always ,FlatBet,0.03),
-      SwitchRule(Regular,SlotMachine,OscarGrind, Always ,FlatBet,0.03),
+      SwitchRule(Impulsive,Roulette,FlatBet, Always ,Martingale,0.03),
 
     )
 //format: on
