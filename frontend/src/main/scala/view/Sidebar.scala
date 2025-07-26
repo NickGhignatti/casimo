@@ -10,7 +10,7 @@ class Sidebar:
   def init(canvasManager: CanvasManager): Unit =
     components.foreach { comp =>
       val element = dom.document.createElement("div").asInstanceOf[html.Div]
-      element.className = "draggable-component"
+      element.className = s"draggable-component component-${comp.toLowerCase}"
       element.textContent = comp
       element.dataset.update("type", comp)
       sidebar.appendChild(element)

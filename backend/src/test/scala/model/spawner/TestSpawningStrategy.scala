@@ -43,7 +43,7 @@ class TestSpawningStrategy extends AnyFunSuite:
   test("GaussianStrategy should respect base offset"):
     val strategy =
       GaussianStrategy(100, 10.0, 2.0, 10)
-    assert(strategy.customersAt(100.0) == 10)
+    assert(strategy.customersAt(99.0) == 10)
     assert(strategy.customersAt(10.0) == 110)
 
   test("StepStrategy should return low rate before start time"):

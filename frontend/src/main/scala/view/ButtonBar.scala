@@ -57,7 +57,7 @@ class ButtonBar(
           Some(
             dom.window.setInterval(
               () => eventBus.writer.onNext(Event.SimulationTick),
-              1000 / 60
+              1000 / model.now().frameRate
             )
           )
         )

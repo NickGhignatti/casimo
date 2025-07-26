@@ -8,6 +8,8 @@ package model.entities.spawner
   * step functions.
   */
 trait SpawningStrategy:
+  protected def hourPerDay: Double = 24.0
+
   /** Calculates the number of customers to spawn at the given time.
     *
     * @param time
@@ -51,10 +53,11 @@ case class GaussianStrategy(
     base: Int = 0
 ) extends SpawningStrategy:
   override def customersAt(time: Double): Int =
+    val dayTime = time % hourPerDay
     if (stdDev <= 0) {
-      if (math.abs(time - mean) < 1e-9) (base + peak).toInt else base
+      if (math.abs(dayTime - mean) < 1e-9) (base + peak).toInt else base
     } else {
-      val exponent = -0.5 * math.pow((time - mean) / stdDev, 2)
+      val exponent = -0.5 * math.pow((dayTime - mean) / stdDev, 2)
       val value = base + peak * math.exp(exponent)
       math.round(value).toInt.max(0)
     }
@@ -83,9 +86,10 @@ case class StepStrategy(
     endTime: Double
 ) extends SpawningStrategy:
   override def customersAt(time: Double): Int =
-    if (startTime > endTime) then
-      if (time <= endTime || time >= startTime) then highRate else lowRate
-    else if (time >= startTime && time <= endTime) then highRate
+    val dayTime = time % hourPerDay
+    if startTime > endTime then
+      if dayTime <= endTime || dayTime >= startTime then highRate else lowRate
+    else if dayTime >= startTime && dayTime <= endTime then highRate
     else lowRate
 
 /** Builder class for constructing and composing spawning strategies using a
