@@ -5,6 +5,7 @@ import com.raquo.laminar.api.L.Var
 import com.raquo.laminar.api.L.unsafeWindowOwner
 import model.SimulationState
 import model.entities.Entity
+import model.entities.customers.CustState
 import model.entities.customers.RiskProfile.Casual
 import model.entities.customers.RiskProfile.Impulsive
 import model.entities.customers.RiskProfile.Regular
@@ -161,7 +162,9 @@ class CanvasManager(
         case Regular   => "green"
         case VIP       => "red"
         case Impulsive => "magenta"
-      ctx.strokeStyle = ctx.fillStyle
+      ctx.strokeStyle = customer.customerState match
+        case CustState.Playing(_) => "black"
+        case _                    => ctx.fillStyle
       ctx.fill()
       ctx.stroke()
     }
