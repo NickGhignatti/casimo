@@ -98,12 +98,7 @@ case class Update(customerManager: DefaultMovementManager):
             )
 
       case UpdateCustomersPosition =>
-        update(state | customerManager, UpdateGames)
-
-      case UpdateGames =>
-        val updatedGames =
-          GameResolver.update(state.customers.toList, state.games, state.ticker)
-        update(state.copy(games = updatedGames), UpdateSimulationBankrolls)
+        update(state | customerManager, UpdateSimulationBankrolls)
 
       case UpdateSimulationBankrolls =>
         val updatedBankroll =
@@ -113,11 +108,25 @@ case class Update(customerManager: DefaultMovementManager):
       case UpdateCustomersState =>
         val updatedCustomerState =
           DecisionManager[Customer](state.games).update(state.customers)
-        val postDecisionUpdate = PostDecisionUpdater.updatePosition(
+        val pDUPosition = PostDecisionUpdater.updatePosition(
           state.customers,
           updatedCustomerState
         )
-        state.copy(customers = postDecisionUpdate)
+        val pDUGames = PostDecisionUpdater.updateGames(
+          state.customers,
+          updatedCustomerState,
+          state.games
+        )
+
+        update(
+          state.copy(customers = pDUPosition, games = pDUGames),
+          UpdateGames
+        )
+
+      case UpdateGames =>
+        val updatedGames =
+          GameResolver.update(state.customers.toList, state.games, state.ticker)
+        state.copy(games = updatedGames)
 
       case AddCustomers(strategy) =>
         state.setSpawner(

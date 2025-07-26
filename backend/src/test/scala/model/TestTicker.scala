@@ -1,6 +1,8 @@
 package model
 
-import model.entities.games.{Blackjack, Roulette, SlotMachine}
+import model.entities.games.Blackjack
+import model.entities.games.Roulette
+import model.entities.games.SlotMachine
 import org.scalatest.funsuite.AnyFunSuite
 
 class TestTicker extends AnyFunSuite:

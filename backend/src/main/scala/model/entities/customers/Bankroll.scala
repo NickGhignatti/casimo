@@ -16,4 +16,6 @@ trait Bankroll[T <: Bankroll[T]]:
     )
     withBankroll(newBankroll, true)
 
+  def bankrollRatio: Double = bankroll / startingBankroll
+
   def withBankroll(newBankroll: Double, update: Boolean = false): T

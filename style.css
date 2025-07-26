@@ -57,6 +57,10 @@ body {
     font-weight: bold;
 }
 
+.component-slot { background-color: #910909; }
+.component-blackjack { background-color: #24ba16; }
+.component-roulette { background-color: #aa16ba; }
+
 #button-bar {
     grid-column: 1;
     grid-row: 2;

@@ -47,7 +47,7 @@ class SlotComponent(initialModel: SlotMachineGame)
   override val model: Var[SlotMachineGame] = Var(initialModel)
 
   def render(ctx: dom.CanvasRenderingContext2D): Unit =
-    ctx.fillStyle = "#3498db"
+    ctx.fillStyle = "#910909"
     val modelComponent = model.now()
     ctx.fillRect(
       modelComponent.position.x,
@@ -57,7 +57,7 @@ class SlotComponent(initialModel: SlotMachineGame)
     )
 
     // Draw border
-    ctx.strokeStyle = "#2980b9"
+    ctx.strokeStyle = "#470505"
     ctx.lineWidth = 2
     ctx.strokeRect(
       modelComponent.position.x,
@@ -74,7 +74,7 @@ class RouletteComponent(initialModel: RouletteGame)
   override val model: Var[RouletteGame] = Var(initialModel)
 
   def render(ctx: dom.CanvasRenderingContext2D): Unit =
-    ctx.fillStyle = "#3498db"
+    ctx.fillStyle = "#aa16ba"
     val modelComponent = model.now()
     ctx.fillRect(
       modelComponent.position.x,
@@ -84,7 +84,7 @@ class RouletteComponent(initialModel: RouletteGame)
     )
 
     // Draw border
-    ctx.strokeStyle = "#2980b9"
+    ctx.strokeStyle = "#590c61"
     ctx.lineWidth = 2
     ctx.strokeRect(
       modelComponent.position.x,
@@ -101,7 +101,7 @@ class BlackJackComponent(initialModel: BlackJackGame)
   override val model: Var[BlackJackGame] = Var(initialModel)
 
   def render(ctx: dom.CanvasRenderingContext2D): Unit =
-    ctx.fillStyle = "#3498db"
+    ctx.fillStyle = "#24ba16"
     val modelComponent = model.now()
     ctx.fillRect(
       modelComponent.position.x,
@@ -111,7 +111,7 @@ class BlackJackComponent(initialModel: BlackJackGame)
     )
 
     // Draw border
-    ctx.strokeStyle = "#2980b9"
+    ctx.strokeStyle = "#125c0b"
     ctx.lineWidth = 2
     ctx.strokeRect(
       modelComponent.position.x,

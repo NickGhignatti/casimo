@@ -9,3 +9,7 @@ trait Player[T <: Player[T]] extends Movable[T] with Entity:
   def isPlaying: Boolean
   def play(game: Game): T
   def stopPlaying: T
+
+trait ChangingFavouriteGamePlayer[T <: ChangingFavouriteGamePlayer[T]]
+    extends Player[T]:
+  def withFavouriteGame(gameType: GameType): T

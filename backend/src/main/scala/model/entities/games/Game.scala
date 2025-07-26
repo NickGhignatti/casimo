@@ -25,6 +25,9 @@ object Roulette extends GameType
 /** Game type representing blackjack games */
 object Blackjack extends GameType
 
+/** Game's types present in the current implementation */
+val gameTypesPresent: Seq[GameType] = Seq(SlotMachine, Roulette, Blackjack)
+
 /** Abstract base trait for all casino games in the simulation.
   *
   * Represents a game entity that can be positioned in 2D space, maintains

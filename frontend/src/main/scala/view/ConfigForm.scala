@@ -17,7 +17,7 @@ case class ConfigForm(update: Var[Update], model: Var[SimulationState]):
       updater: (DefaultMovementManager, Double) => DefaultMovementManager
   )
   private val parameters = List(
-    Parameter("Max Speed", Var(20.0), (m, v) => m.copy(maxSpeed = v)),
+    Parameter("Max Speed", Var(2.0), (m, v) => m.copy(maxSpeed = v)),
     Parameter(
       "Perception Radius",
       Var(100.0),
@@ -26,17 +26,17 @@ case class ConfigForm(update: Var[Update], model: Var[SimulationState]):
     Parameter("Avoid Radius", Var(50.0), (m, v) => m.copy(avoidRadius = v)),
     Parameter(
       "Alignment Weight",
-      Var(1.0),
+      Var(0.1),
       (m, v) => m.copy(alignmentWeight = v)
     ),
     Parameter(
       "Cohesion Weight",
-      Var(1.0),
+      Var(0.1),
       (m, v) => m.copy(cohesionWeight = v)
     ),
     Parameter(
       "Separation Weight",
-      Var(1.0),
+      Var(0.1),
       (m, v) => m.copy(separationWeight = v)
     ),
     Parameter(
@@ -46,13 +46,18 @@ case class ConfigForm(update: Var[Update], model: Var[SimulationState]):
     ),
     Parameter(
       "Sitting Radius",
-      Var(100.0),
+      Var(30.0),
       (m, v) => m.copy(sittingRadius = v)
     ),
     Parameter(
       "Boredom increase",
-      Var(0.1),
+      Var(0.2),
       (m, v) => m.copy(boredomIncrease = v)
+    ),
+    Parameter(
+      "Random movement weight",
+      Var(0.2),
+      (m, v) => m.copy(randomMovementWeight = v)
     )
   )
   // Spawning strategy selection
