@@ -1825,3 +1825,7 @@ The choice of this testing technology has different pros:
 ### Development progress, backlog, iterations
 
 ### Final comments
+#### Galeri Marco
+It was a great experience to engaging a challenge of this size after all the knowledge and consciousness acquired on the software development domain.
+Even if not very accurate the simulation of a SCRUM methodology was interesting and at first defining and estimating the task correctly was quite tricky.
+I also think that the team work we carried out, even though we had different strengths, was excellent and let us deliver the work on time without any additional effort and with a great quality.
