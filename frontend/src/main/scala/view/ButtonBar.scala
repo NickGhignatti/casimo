@@ -64,6 +64,7 @@ class ButtonBar(
       case "Reset" =>
         eventBus.writer.onNext(Event.ResetSimulation)
         canvasManager.reset()
+        modal.resetPlot()
         if (timerId.now().isDefined) {
           dom.window.clearInterval(timerId.now().get)
         }

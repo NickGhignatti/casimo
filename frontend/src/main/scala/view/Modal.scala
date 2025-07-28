@@ -20,11 +20,24 @@ class Modal(
   private val gamesBankroll: Var[List[Double]] = Var(List.empty)
   private val customersBankroll: Var[List[Double]] = Var(List.empty)
 
+  private val plotCanvas = Var[Option[html.Canvas]](None)
+
   import org.nspl.canvasrenderer.given
   import org.nspl.given
 
   def open(): Unit = isVisible.set(true)
   def close(): Unit = isVisible.set(false)
+
+  def resetPlot(): Unit =
+    gamesBankroll.set(List.empty)
+    customersBankroll.set(List.empty)
+
+    try
+      val newCanvas = createPlot()
+      plotCanvas.set(Some(newCanvas))
+    catch
+      case e: Exception =>
+        println(s"Error creating plot after reset: ${e.getMessage}")
 
   private def updateBankrolls(): Unit =
     gamesBankroll.set(
@@ -121,8 +134,6 @@ class Modal(
     canvas
 
   def init(): HtmlElement =
-    val plotCanvas = Var[Option[html.Canvas]](None)
-
     dom.window.setInterval(
       () =>
         dataManager.set(

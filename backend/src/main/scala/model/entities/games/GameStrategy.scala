@@ -17,7 +17,7 @@ trait GameStrategy:
     *   BetResult indicating win (Success) or loss (Failure) with monetary
     *   amounts
     */
-  def use(): BetResult
+  def use(history: GameHistory = GameHistory(List.empty)): BetResult
 
 /** Executes the strategy and returns the betting result.
   *
@@ -107,7 +107,7 @@ case class SlotStrategyBuilder(
   */
 case class SlotStrategyInstance(betAmount: Double, condition: () => Boolean)
     extends GameStrategy:
-  override def use(): BetResult =
+  override def use(history: GameHistory): BetResult =
     val values =
       for _ <- 1 to 5 yield Random.nextInt(5) + 1
     if condition() && values.distinct.size == 1 then
@@ -185,13 +185,120 @@ case class RouletteStrategyInstance(
     targets: List[Int],
     condition: () => Boolean
 ) extends GameStrategy:
-  override def use(): BetResult =
-    if condition() then
+  private trait BetType:
+    def payout: Int
+
+  private object BetType:
+    case object StraightUp extends BetType:
+      val payout = 35
+    case object Split extends BetType:
+      val payout = 17
+    case object Street extends BetType:
+      val payout = 11
+    case object Corner extends BetType:
+      val payout = 8
+    case object SixLine extends BetType:
+      val payout = 5
+    case object Column extends BetType:
+      val payout = 2
+    case object Dozen extends BetType:
+      val payout = 2
+    case object RedBlack extends BetType:
+      val payout = 1
+    case object OddEven extends BetType:
+      val payout = 1
+    case object HighLow extends BetType:
+      val payout = 1
+
+  private val redNumbers =
+    Set(1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36)
+
+  private def determineBetType(targetsSize: Int): BetType = targetsSize match
+    case 1  => BetType.StraightUp
+    case 2  => BetType.Split
+    case 3  => BetType.Street
+    case 4  => BetType.Corner
+    case 6  => BetType.SixLine
+    case 12 => BetType.Column // or Dozen
+    case 18 => BetType.RedBlack // or OddEven or HighLow
+    case _  => BetType.StraightUp // Default fallback
+
+  private def calculateHouseEdge(
+      consecutiveWins: Int,
+      noTurns: Int,
+      betAmount: Double,
+      betType: BetType,
+      maxHouseEdge: Double = 0.15
+  ): Double =
+    val validatedTurns = Math.max(1, Math.min(20, noTurns))
+    val validatedMaxEdge = Math.max(0.01, Math.min(1.0, maxHouseEdge))
+
+    val baseEdge = 0.027 // Standard 2.7% European roulette edge
+
+    // Progressive edge based on consecutive wins (scaled by houseEdgeTurns)
+    val progressiveEdge =
+      consecutiveWins * (0.008 * validatedTurns / 10.0)
+
+    // Volume-based edge (more bets = worse odds for player)
+    val volumeEdge = Math.min(
+      noTurns * (0.0002 * validatedTurns / 10.0),
+      0.03 * validatedTurns / 10.0
+    )
+
+    // Bet size penalty (discourages large bets)
+    val betSizeEdge =
+      if betAmount > 100 then
+        Math.min(
+          (betAmount - 100) * (0.00005 * validatedTurns / 10.0),
+          0.025 * validatedTurns / 10.0
+        )
+      else 0.0
+
+    val betTypeModifier = betType match
+      case BetType.StraightUp =>
+        0.005 * validatedTurns / 10.0 // Extra edge on single numbers
+      case BetType.RedBlack | BetType.OddEven | BetType.HighLow =>
+        0.003 * validatedTurns / 10.0 // Small extra on even money
+      case _ => 0.0
+
+    // Calculate total edge
+    val totalEdge =
+      baseEdge + progressiveEdge + volumeEdge + betSizeEdge + betTypeModifier
+
+    // Cap at maximum allowed edge
+    Math.min(totalEdge, validatedMaxEdge)
+
+  override def use(history: GameHistory): BetResult =
+    if !condition() then Result.Failure(betAmount)
+    else
       val winningNumber = Random.nextInt(37)
+      val betType = determineBetType(targets.size)
+      val houseEdgeMultiplier = 1.0 - calculateHouseEdge(
+        history.gains.map(_.getMoneyGain).reverse.takeWhile(_ >= 0).length,
+        history.gains.length,
+        betAmount,
+        betType
+      )
       if targets.contains(winningNumber) then
-        Result.Success(betAmount * 37 / targets.size)
+        betType match
+          case BetType.StraightUp =>
+            Result.Success(betAmount * betType.payout)
+
+          case BetType.RedBlack | BetType.OddEven | BetType.HighLow =>
+            // Even money bets: 1:1 but lose on 0 (green)
+            if winningNumber == 0 then Result.Failure(betAmount)
+            else Result.Success(betAmount * betType.payout)
+
+          case BetType.Column | BetType.Dozen =>
+            // 2:1 bets but lose on 0
+            if winningNumber == 0 then Result.Failure(betAmount)
+            else Result.Success(betAmount * betType.payout)
+
+          case _ =>
+            val adjustedPayout =
+              betAmount * betType.payout * houseEdgeMultiplier
+            Result.Success(adjustedPayout)
       else Result.Failure(betAmount)
-    else Result.Failure(betAmount)
 
 /** Builder for constructing blackjack betting strategies.
   *
@@ -266,22 +373,75 @@ case class BlackJackStrategyInstance(
     minimumValue: Int,
     condition: () => Boolean
 ) extends GameStrategy:
-  @tailrec
-  private def dealCard(cardsValue: Int, stopValue: Int): Int =
-    val currentValue = cardsValue + Random.nextInt(10) + 1
-    if currentValue > stopValue then currentValue
-    else dealCard(currentValue, stopValue)
 
-  override def use(): BetResult =
-    val dealerValue = dealCard(0, 17)
-    val playerValue = dealCard(0, minimumValue)
-    if condition() && (dealerValue > 21 || (playerValue > dealerValue && playerValue <= 21))
-    then
-      Result.Success(betAmount * playerValue match
-        case 21 => 3
-        case _  => 2
-      )
-    else Result.Failure(betAmount)
+  private def dealHand(): Int =
+    val card1 = Random.nextInt(10) + 1
+    val card2 = Random.nextInt(10) + 1
+    val total = card1 + card2
+
+    // Handle Aces (simplified - count as 11 if beneficial, 1 otherwise)
+    val newTotal =
+      if (card1 == 1 && total + 10 <= 21) then total + 10 else total
+    val lastTotal =
+      if (card2 == 1 && total + 10 <= 21) then newTotal + 10 else newTotal
+
+    lastTotal
+
+  private def hitUntilStand(initialValue: Int, standValue: Int): Int =
+    @tailrec
+    def hit(current: Int): Int =
+      if current >= standValue || current > 21 then current
+      else
+        val newCard = Random.nextInt(10) + 1
+        val newTotal = current + newCard
+        hit(newTotal)
+
+    hit(initialValue)
+
+  override def use(history: GameHistory): BetResult =
+    // Deal initial hands
+    val dealerInitial = dealHand()
+    val playerInitial = dealHand()
+
+    // Player plays first (hits until reaching minimumValue or busting)
+    val playerFinal =
+      if playerInitial < minimumValue then
+        hitUntilStand(playerInitial, minimumValue)
+      else playerInitial
+
+    // Player busts - automatic loss
+    if playerFinal > 21 then Result.Failure(betAmount)
+
+    // Dealer plays (must hit on 16, stand on 17)
+    val dealerFinal =
+      if dealerInitial < 17 then hitUntilStand(dealerInitial, 17)
+      else dealerInitial
+
+    // Determine winner
+    val result: BetResult = (playerFinal, dealerFinal) match
+      // Player blackjack (21 with 2 cards) vs dealer blackjack - push
+      case (21, 21) if playerInitial == 21 && dealerInitial == 21 =>
+        Result.Success(0.0) // Push - return bet
+
+      // Player blackjack wins (pays 3:2)
+      case (21, _) if playerInitial == 21 && dealerInitial != 21 =>
+        Result.Success(betAmount * 1.5)
+
+      // Dealer busts, player doesn't
+      case (p, d) if d > 21 && p <= 21 =>
+        Result.Success(betAmount)
+
+      // Both under 21 - higher wins
+      case (p, d) if p <= 21 && d <= 21 =>
+        if p > d then Result.Success(betAmount)
+        else if p == d then Result.Success(0) // Push
+        else Result.Failure(betAmount)
+
+      // Player busts (already handled above, but for completeness)
+      case _ => Result.Failure(betAmount)
+
+    // Apply the condition check
+    if condition() then result else Result.Failure(betAmount)
 
 /** Domain Specific Language (DSL) for game strategy creation.
   *

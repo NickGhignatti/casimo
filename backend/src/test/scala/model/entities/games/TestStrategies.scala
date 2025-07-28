@@ -59,6 +59,12 @@ class TestStrategies extends AnyFunSuite:
 
     assert(strategy.targets == List(0) && strategy.betAmount == 0.5)
 
+  test("RouletteStrategy should not throw error if instantiated correctly"):
+    val bankRoll = 10.0
+    val strategy = use(RouletteStrategy) when (bankRoll > 0.0)
+
+    val result = strategy.use()
+
   test("BlackJackStrategy should throw error when bet is negative"):
     val bankRoll = 10.0
     val error = intercept[IllegalArgumentException](
@@ -76,3 +82,9 @@ class TestStrategies extends AnyFunSuite:
     val strategy = use(BlackJackStrategy) when (bankRoll > 0.0)
 
     assert(strategy.minimumValue == 17 && strategy.betAmount == 0.5)
+
+  test("BlackJackStrategy should not throw error if instantiated correctly"):
+    val bankRoll = 10.0
+    val strategy = use(BlackJackStrategy) accept 17 when (bankRoll > 0.0)
+
+    val result = strategy.use()
