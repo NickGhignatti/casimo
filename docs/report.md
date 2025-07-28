@@ -52,6 +52,9 @@ The manager can configure the spacial organization of the casino (such walls and
 - **Customer**: who enters the casino and plays games.
 - **Game**: a game that can be played by customers, such as roulette, blackjack and slot machine.
 - **Door**: a door that allows customers to enter the casino. It is where the customers enter the casino. It will be called **Spawner** from now on
+- **Wall**: a wall is a collidable entity which delimit where the customer can go and allow to represent in a more precise way
+    internal structure of the casinò
+- **Bet**: a bet is presented from a customer in order to play a game
 ```mermaid
 classDiagram
 class Customer {
@@ -83,6 +86,19 @@ Customer --> Obstacle : avoids
 Game --|> Obstacle
 Wall --|> Obstacle
 ```
+
+```mermaid
+sequenceDiagram
+    participant Customer
+    participant Game
+    participant Bet
+
+    Customer->>Bet: create Bet
+    Customer->>Game: play(Bet)
+    Game-->>Customer: return Result
+
+```
+
 ### Functional requirements
 
 #### User requirements
@@ -307,7 +323,6 @@ Also, DOM changes are direct without the need of virtual-DOM abstraction, avoidi
 
 - **Continuous Deployment**  
   Since Scala.js outputs JavaScript and HTML, our pipeline can **automatically build, test, and deploy** the application on every change. This continuous deployment setup ensures the latest version is always live without manual intervention needed.
-### Diagrams
 
 ## Detailed Design
 ### Relevant design choices
@@ -1429,11 +1444,11 @@ These operators return new `Trigger` instances that encapsulate the combined log
 
 By implementing `TriggerDSL`, I significantly simplified the declaration of dynamic conditions within the `DecisionManager`'s configuration (`SwitchRule`s and decision tree nodes). This design choice dramatically improves the **readability**, **maintainability**, and **extensibility** of our simulation's decision logic.
 
-### Nicolò Ghignatti
+### Ghignatti Nicolò
 #### Result
-Having to deal with data which can have two states (win or loss for a bet, for example) can be quite annoying so, I've
-decided to implement a monad which can do it for us. Basically it is a enum which can have 2 states: a
-`Success` or a `Failure`:
+When dealing with data that can exist in one of two possible states (such as a bet being a win or a loss), 
+it is important to model this duality in a way that is expressive, maintainable, and promotes safe error handling. 
+In my implementation, I addressed this problem by defining a custom monadic data type—an enum called Result—which can represent either `Success` or `Failure`:
 ```scala
 package utils
 
@@ -1459,11 +1474,16 @@ enum Result[+T, +E]:
 
   def isFailure: Boolean = !isSuccess
 ```
-This kind of implementation help also in the error handling
+By implementing Result as an algebraic data type (using Scala's enums), I make the two potential outcomes explicit in the type system, avoiding error-prone flag variables or nullable values. 
+This design follows patterns found in functional programming (such as `Either` or `Option`) and encourages a declarative approach to error handling.
+
+By providing the `map` and `flatMap` methods, my Result type acts as a monad. 
+This enables safe chaining of computations, where errors can be propagated automatically without resorting to exceptions or manual checks after each step.
 
 #### Games
-I've dealt with the game implementation in their totality. The crucial point was dealing with the customers, so useful APIs
-have been implemented, allowing the players to join games and play them.
+In my implementation, the core challenge was orchestrating customer participation in games alongside the flexible definition of game logic. 
+To address this, I structured the solution into several layers: game APIs for player interactions, 
+explicit state management for tracking participants, and a strategy DSL (domain-specific language) to facilitate the clean definition of game logic and rules.
 ```scala
 class Game extends Entity:
   def gameType: GameType
@@ -1471,40 +1491,8 @@ class Game extends Entity:
   def unlock: Result
   def play: Result
 ```
-An important task was to manage the customers joining a game, allowing the to join if possible, otherwise block them.
-This mechanism has been implemented in a `GameState` which manage the join/leave mechanism:
-Instead the logic of the games was implemented using an internal DSL, which expose useful stuff to implement strategies
-in an easy way:
-```scala
-// this is an example of how the game strategy DSL was implemented
-trait GameStrategy:
-  def use(): Result[Double, Double]
-
-object SlotStrategy:
-  def apply: SlotStrategyBuilder = SlotStrategyBuilder()
-
-case class SlotStrategyBuilder( betAmount, condition):
-    def bet(amount: Double): SlotStrategyBuilder =
-      require(amount > 0.0, "Bet amount must be positive")
-      this.copy(betAmount = Some(amount))
-
-    def when(cond: => Boolean): SlotStrategyInstance =
-      SlotStrategyInstance(betAmount.getOrElse(0.0), () => cond)
-
-case class SlotStrategyInstance(betAmount, condition) extends GameStrategy:
-  override def use(): Result[Double, Double] =
-    val values =
-      for _ <- 1 to 5 yield Random.nextInt(5) + 1
-    if condition() && values.distinct.size == 1 then
-      Result.Success(betAmount * 10)
-    else Result.Failure(betAmount)
-```
-Allowing an easy creation like the following:
-```scala 3
-val bankroll = 10.0
-use(SlotStrategy) bet 5.0 when (bankRoll > 0.0)
-```
-In order to keep track of the customer playing a game I decided to subordinate the functions to a state, which is called `GameState`
+A significant requirement is controlling which customers can join or leave a game and under what circumstances. 
+To solve this, I've encapsulated all the logic pertaining to player management within the `GameState` class:
 
 ```scala 3
 case class GameState(
@@ -1534,11 +1522,51 @@ case class GameState(
     else
       Result.Failure(this)
 ```
+
+This design centralizes join/leave logic into an immutable value object that can be exhaustively tested and reasoned about. 
+The use of Result enforces error awareness (for example, when the game is full or empty), and decisions are made transparent to the caller
+
+To facilitate the development of varied and potentially complex game rules without convoluting the core application, I opted to design an internal DSL for describing game strategies. 
+This DSL enables concise, readable expressions for configuring the conditions and payouts of games, abstracting away lower-level concerns:
+```scala
+// this is an example of how the game strategy DSL was implemented
+trait GameStrategy:
+  def use(): Result[Double, Double]
+
+object SlotStrategy:
+  def apply: SlotStrategyBuilder = SlotStrategyBuilder()
+
+case class SlotStrategyBuilder( betAmount, condition):
+    def bet(amount: Double): SlotStrategyBuilder =
+      require(amount > 0.0, "Bet amount must be positive")
+      this.copy(betAmount = Some(amount))
+
+    def when(cond: => Boolean): SlotStrategyInstance =
+      SlotStrategyInstance(betAmount.getOrElse(0.0), () => cond)
+
+case class SlotStrategyInstance(betAmount, condition) extends GameStrategy:
+  override def use(): Result[Double, Double] =
+    val values =
+      for _ <- 1 to 5 yield Random.nextInt(5) + 1
+    if condition() && values.distinct.size == 1 then
+      Result.Success(betAmount * 10)
+    else Result.Failure(betAmount)
+```
+Allowing an easy creation like the following:
+```scala 3
+val bankroll = 10.0
+use(SlotStrategy) bet 5.0 when (bankRoll > 0.0)
+```
+The DSL is implemented as a builder pattern, providing a fluent interface that guides users through valid configurations of a game strategy. 
+The logic for evaluating a bet and computing outcomes (both wins and losses) is encapsulated within the strategy instance.
+
 #### Game Resolver
 
-To deal with the interactions between customers and games I decided to use the **mediator pattern** which use a third entity
-in order to manage the communication between games and customers
+In order to manage the complex interactions between customers and games, I chose to implement the mediator pattern. 
+Rather than allowing customers and games to communicate directly with each other, a central mediator—the GameResolver object—handles the orchestration of communication. 
+This approach decouples the interacting entities, promoting maintainability and scalability, especially as the system grows in complexity.
 
+The GameResolver serves as the mediator, coordinating play sessions between games and customers:
 ```scala 3
 object GameResolver:
   private def playGame(game: Game, customers: List[Customer]): Game =
@@ -1561,53 +1589,37 @@ object GameResolver:
     games.map(g => playGame(g, customers))
 ```
 
-Where updates the games according to the result of the last round of play by adding a new item in the history of the game
-
+The update method iterates through all games and, for each game, identifies relevant customers (those currently playing that game). 
+It then processes each customer's bet, uses the result to update the game's history, and returns the modified game instances
 #### Spawner (Door)
 
-The `Spawner` is the entity designed to spawn the customers according to a logic, every tick is called the spawn method which 
-decide to spawn a certain number of customers, according to the spawn strategy:
+The `Spawner` is responsible for controlling how customers are introduced into the simulation over time. 
+It implements a time-based spawning mechanism that ensures customers are added in a controlled and realistic manner rather than all at once or in an erratic way.
 
+The core functionality is encapsulated in the `spawn` method, which is invoked every simulation tick with the current `SimulationState`:
 ```scala 3
-def spawn(state: SimulationState): SimulationState =
-  if currentTime % ticksToSpawn == 0 then
+ def spawn(state: SimulationState): SimulationState =
+  if state.ticker.isReadyToSpawn then
     state.copy(
       customers = state.customers ++ Seq.fill(
-        strategy.customersAt(currentTime / ticksToSpawn)
-      )(
-        Customer(
-          s"customer-${Random.nextInt()}",
-          this.position.around(5.0),
-          Vector2D(Random.between(0, 5), Random.between(0, 5)),
-          bankroll = Random.between(30, 5000),
-          favouriteGames = Seq(
-            Random
-              .shuffle(
-                Seq(
-                  model.entities.games.Roulette,
-                  model.entities.games.Blackjack,
-                  model.entities.games.SlotMachine
-                )
-              )
-              .head
-          )
+        strategy.customersAt(
+          state.ticker.currentTick / state.ticker.spawnTick
         )
-      ),
-      spawner = Some(this.copy(currentTime = currentTime + 1))
+      )(defaultCustomerCreation())
     )
-  else state.copy(spawner = Some(this.copy(currentTime = currentTime + 1)))
+  else state
 ```
-To avoid a non-realistic and chaotic spawn I decided to spawn customers every `ticksToSpawn` ticks which is an integer 
-representing the number of ticks necessary for a spawn round
 
 #### Spawning Strategy
-The `SpawningStrategy` entity is quite simple, it takes as input the time passed in the simulation, and it outputs the number 
-of customers that should be spawned according the selected strategy:
+The `SpawningStrategy` trait defines the core abstraction for determining customer arrival dynamics in the simulation. 
+It takes a continuous input—the elapsed simulation time—and produces an integer count of customers to spawn at that instant:
 ```scala 3
 trait SpawningStrategy:
   def customersAt(time: Double): Int
 ```
-An example is the famous Gaussian curve to model a bell spawning strategy:
+This interface supports a wide variety of spawning behaviors by parameterizing the number of customers as a function of simulation time.
+
+A common, intuitive spawning pattern is modeled by the Gaussian (bell-curve) strategy, which reflects a predictable rise and fall in customer arrivals around a central peak time:
 ```scala 3
 case class GaussianStrategy(
     peak: Double,
@@ -1624,7 +1636,11 @@ case class GaussianStrategy(
       math.round(value).toInt.max(0)
     }
 ```
-In order to allow to other to define custom spawning strategy, I decided to design a DSL by allowing to create a custom strategy, possible to create through the builder:
+This strategy models real-world phenomena such as fluctuating user activity over time, making it ideal for scenarios where spawn intensity is expected to peak and wane predictably.
+Other common strategy can be found too, like the constant or the step one.
+
+To promote flexibility and encourage extensibility, I designed a domain-specific language (DSL) centered around a SpawningStrategyBuilder. 
+This builder enables the creation and customization of spawning strategies through a fluent API:
 ```scala 3
 class SpawningStrategyBuilder private (private val strategy: SpawningStrategy):
     def gaussian(
@@ -1637,7 +1653,8 @@ class SpawningStrategyBuilder private (private val strategy: SpawningStrategy):
     def custom(f: Double => Int): SpawningStrategyBuilder =
       new SpawningStrategyBuilder((time: Double) => f(time))
 ```
-Or customizing predefined/custom strategy while building the strategy:
+To further empower users to tune and combine strategies easily, the builder provides several transformation operations 
+that produce new modified strategy instances, supporting method chaining:
 ```scala 3
 class SpawningStrategyBuilder private (private val strategy: SpawningStrategy):
   // DSL operations
@@ -1664,7 +1681,7 @@ class SpawningStrategyBuilder private (private val strategy: SpawningStrategy):
         value.max(min).min(max)
     new SpawningStrategyBuilder(newStrategy)
 ```
-In order to make easier strategies to be created I simplified the offset and scale operations through operators:
+To improve ergonomics, I also implemented operator overloads for + and * on SpawningStrategy via implicit wrappers:
 ```scala 3
 object SpawningStrategyBuilder:
   implicit class StrategyWrapper(strategy: SpawningStrategy):
@@ -1676,9 +1693,10 @@ object SpawningStrategyBuilder:
 ```
 
 #### Walls
-To introduce this kind of entities, which has a position, a size and the possibility to be resized, I decided to structure it
-like a mixin, first I decided to implement the following traits:
+To represent entities in the simulation that have a spatial presence—namely a 2D position, size dimensions, 
+and the ability to be resized—I opted for a modular trait-based design leveraging Scala 3's powerful traits and mixin composition.
 
+The design begins with small, focused traits encapsulating discrete aspects of spatial characteristics:
 ```scala 3
 trait Positioned:
   val position: Vector2D
@@ -1686,20 +1704,25 @@ trait Positioned:
 trait Sized:
   val width: Double
   val height: Double
+```
 
+Building on these, I introduced a `Collidable` trait that requires both position and size, 
+hinting that such entities can participate in collision detection or spatial reasoning:
+```scala 3
 trait Collidable extends Sized with Positioned:
-  // several operations  
+```
+Further refining the abstraction, `CollidableEntity` combines `Collidable` with the core `Entity` trait, 
+identifying it as a domain-level object that can be tracked and manipulated in the system.
 
-trait CollidableEntity extends Collidable with Entity
-
+To support dynamic resizing, I designed the `SizeChangingEntity` trait with methods returning the instance updated with new size parameters:
+```scala 3
 trait SizeChangingEntity extends Sized:
   def withWidth(newWidth: Double): this.type
   def withHeight(newHeight: Double): this.type
   def withSize(newWidth: Double, newHeight: Double): this.type
 ```
 
-Once introduced these traits, which resulted useful for other entities which has common behaviours with the walls, like customers,
-write the mixin is quite simple:
+These traits are then mixed into case classes representing specific entities. For instance, the `Wall` is modeled as:
 ```scala 3
 case class Wall(
     id: String,
@@ -1714,17 +1737,16 @@ case class Wall(
 ```
 
 #### Update
-The update implementation try to simulate what a simulation loop looks like in my head. The tail recursive structure is 
-ideated in order to separate all the different phases in order to separate all the various moments in the simulation.
-
+To model the iterative progression of the simulation, I designed the update method as a tail-recursive function that sequentially processes discrete phases of the simulation. 
+This approach reflects my conceptualization of a simulation loop segmented into clear, manageable steps that each transform the overall state.
 ```scala 3
 @tailrec
 final def update(state: SimulationState, event: Event): SimulationState =
   event match
-    case SimulationTick => 
+    case SimulationTick =>
       update(newState, UpdateCustomersPosition)
 
-    case UpdateCustomersPosition => 
+    case UpdateCustomersPosition =>
       update(state | customerManager, UpdateGames)
 
     case UpdateGames =>
@@ -1736,7 +1758,154 @@ final def update(state: SimulationState, event: Event): SimulationState =
     case UpdateCustomersState =>
       state.copy(customers = updatedCustomerState)
 ```
+This tail-recursive, event-dispatched update method provides a clean, modular, and functional approach to simulate system progression.
 
+#### Ticker
+
+The `Ticker` entity serves as the central timing mechanism in the simulation, orchestrating when different game types should process their rounds and when customer spawning events take place. 
+It abstracts real-world time into discrete simulation ticks, enabling consistent and configurable update scheduling.
+It also manages the timing for spawning new customers, allowing the simulation to generate participants at realistic, steady intervals.
+
+```scala 3
+case class Ticker(
+  currentTick: Double,
+  targetFramerate: Double = 60.0,
+  slotInterval: Double = 0.2,
+  rouletteInterval: Double = 1.0,
+  blackjackInterval: Double = 0.7,
+  spawnInterval: Double = 0.5
+):
+  def slotTick: Double = slotInterval * targetFramerate
+  def rouletteTick: Double = rouletteInterval * targetFramerate
+  def blackjackTick: Double = blackjackInterval * targetFramerate
+  def spawnTick: Double = spawnInterval * targetFramerate
+
+  def update(): Ticker = copy(currentTick = currentTick + 1)
+
+  def isGameReady(gameType: GameType): Boolean = ...
+  def isReadyToSpawn: Boolean = currentTick % spawnTick == 0
+```
+
+#### DataManager & GameHistory
+The `DataManager` acts as a facade over the simulation’s internal state, providing convenient and encapsulated access to 
+aggregate data and computed metrics derived from the current simulation snapshot. 
+It abstracts away direct interaction with the low-level state representation (`SimulationState`), presenting a clean interface focused on high-level financial insights:
+
+```scala 3
+case class DataManager(state: SimulationState):
+
+  def currentGamesBankroll: Double =
+    state.games.map(_.bankroll).sum
+
+  def currentCustomersBankroll: Double =
+    state.customers.map(_.bankroll).sum
+```
+
+It works with the `GameHistory` an entity which goal is to accurately record and analyze the financial outcomes for each game and its participants,
+I introduced two complementary domain classes: `Gain` and `GameHistory`. 
+These classes model individual gain/loss events and aggregate them over the lifetime of a game, supporting both detailed audit trails and summary statistics.
+
+```scala 3
+case class GameHistory(gains: List[Gain]):
+  def overallGains: Double = gains.map(_.getMoneyGain).sum
+  def update(customerId: String, gain: Double): GameHistory =
+    this.copy(gains = gains :+ Gain(customerId, gain))
+```
+
+```scala 3
+class Gain(from: String, of: Double):
+  def getMoneyGain: Double = this.of
+  def getCustomerWhichPlayed: String = this.from
+```
+
+#### UI
+I've to deal with most of the UI and frontend in the application, core concepts in the frontend are:
+- **ButtonBar**: Provides a UI panel with buttons to control the simulation, which send update messages through the `eventBus`
+    ```scala 3
+    buttons = ["Add", "Run", "Reset", "Save", "Load", "Data"]
+    buttons.foreach { button =>
+        createButton(button)
+        onClick -> match button:
+            case "Add" => eventBus.writer.onNext(AddCustomers)
+            case "Run" => eventBus.writer.onNext(Start)
+            case "Reset" => eventBus.writer.onNext(Reset)
+            case "Save" => ??? // placeholder
+            case "Load" => ???
+            case "Data" => modal.open()
+    }
+    ```
+- **CanvasManager**: Manages drawing and interaction on the simulation canvas, including static elements (walls, games) and dynamic entities (customers).
+- **Component**: Defines reusable UI components wrapping domain entities, that know how to render themselves and handle hit detection.
+    ```scala 3
+    class WallComponent(initialModel: Wall) extends EntityComponent[Wall]:
+      override val model: Var[Wall] = Var(initialModel)
+    
+      def render(ctx: dom.CanvasRenderingContext2D): Unit =
+        ctx.fillStyle = "#3498db"
+        ctx.fillRect(model.now().position.x, model.now().position.y, model.now().width, model.now().height)
+        ctx.strokeStyle = "#2980b9"
+        ctx.lineWidth = 2
+        ctx.strokeRect(model.now().position.x, model.now().position.y, model.now().width, model.now().height)
+    
+      def contains(point: Vector2D): Boolean = model.now().contains(point)
+    
+      def resize(width: Double, height: Double): Unit =
+        model.update(wall => wall.withSize(width, height))
+    ```
+- `SideBar`: Creates a list of draggable UI components representing entities that users can drag onto the simulation canvas.
+- `DragAndDrop`: Create a component which can be dragged from the sidebar and dropped in the canvas
+    ```scala 3
+    def makeDraggable(element: HTMLElement, canvasManager: CanvasManager): Unit =
+        element.draggable = true
+    
+        element.addEventListener(
+          "dragstart",
+          { (e: DragEvent) =>
+            e.dataTransfer.setData("text/plain", element.dataset("type"))
+            e.dataTransfer.effectAllowed = DataTransferEffectAllowedKind.copy
+          }
+        )
+    
+        val canvas = dom.document.getElementById("main-canvas")
+        canvas.addEventListener(
+          "dragover",
+          { (e: DragEvent) =>
+            e.preventDefault()
+            e.dataTransfer.dropEffect = DataTransferDropEffectKind.copy
+          }
+        )
+    
+        canvas.addEventListener(
+          "drop",
+          { (e: DragEvent) =>
+            e.preventDefault()
+            val componentType = e.dataTransfer.getData("text/plain")
+            val rect = canvas.getBoundingClientRect()
+            val x = e.clientX - rect.left
+            val y = e.clientY - rect.top
+    
+            if (canvasManager.entityIsAlreadyPresent(Vector2D(x, y))) {
+              componentType match
+                case "Wall" =>
+                  canvasManager.addWallComponent(
+                    WallComponent(Wall(Vector2D(x, y), 40, 30))
+                  )
+                case "Slot" =>
+                  canvasManager.addSlotComponent(
+                    SlotComponent(GameBuilder.slot(Vector2D(x, y)))
+                  )
+                case "BlackJack" =>
+                  canvasManager.addBlackJackComponent(
+                    BlackJackComponent(GameBuilder.blackjack(Vector2D(x, y)))
+                  )
+                case "Roulette" =>
+                  canvasManager.addRouletteComponent(
+                    RouletteComponent(GameBuilder.roulette(Vector2D(x, y)))
+                  )
+            }
+          }
+        )
+    ```
 ### Patrignani Luca
 #### Customer movements
 The customer movements are modeled according to the previously presented architecture: a trait `Movable` is defined as such
@@ -1829,3 +1998,12 @@ The choice of this testing technology has different pros:
 It was a great experience to engaging a challenge of this size after all the knowledge and consciousness acquired on the software development domain.
 Even if not very accurate the simulation of a SCRUM methodology was interesting and at first defining and estimating the task correctly was quite tricky.
 I also think that the team work we carried out, even though we had different strengths, was excellent and let us deliver the work on time without any additional effort and with a great quality.
+#### Ghignatti Nicolò
+Looking back on this project, I really appreciated working with Scala and its strong functional programming capabilities.
+Using SCRUM gave the whole team a clear process: short sprints, regular stand-ups, and lots of feedback helped keep us focused and adaptable throughout development, 
+by using the agile board I didn't lose the focus on what I was doing while being able to know what others where doing.
+A minus to this methodology is the fact that rely on precise time estimation, and sometimes respect the original one was difficult.
+We tried TDD, which was great for creating reliable, well-documented code and made refactoring much less stressful. 
+However, in the early, rapidly changing stages, TDD sometimes slowed things down and tests often had to be rewritten as design and architecture evolved, which 
+made me update tests or even add them after (not respecting TDD methodology). 
+Some of Scala’s more advanced features were also tricky to test upfront (like ScalaJs which was excluded from the testing due being a frontend framework).
