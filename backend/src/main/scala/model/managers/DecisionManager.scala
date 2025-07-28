@@ -4,11 +4,11 @@ import scala.util.Random
 
 import model.entities.ChangingFavouriteGamePlayer
 import model.entities.Entity
-import model.entities.Player
 import model.entities.customers.Bankroll
 import model.entities.customers.BetStratType
 import model.entities.customers.BettingStrategy
 import model.entities.customers.BoredomFrustration
+import model.entities.customers.CustState.Idle
 import model.entities.customers.CustomerState
 import model.entities.customers.FlatBet
 import model.entities.customers.FlatBetting
@@ -46,7 +46,7 @@ import utils.TriggerDSL.Trigger
 
 case class DecisionManager[
     A <: Bankroll[A] & BoredomFrustration[A] & CustomerState[A] &
-      HasBetStrategy[A] & Player[A] & Entity & StatusProfile
+      HasBetStrategy[A] & Entity & StatusProfile
 ](games: List[Game])
     extends BaseManager[Seq[A]]:
   private val gameList = games.map(_.gameType).distinct
@@ -57,7 +57,7 @@ case class DecisionManager[
     val modifiers: Map[RiskProfile, Modifiers] = Map(
       RiskProfile.VIP -> Modifiers(Limits(tp = 3.0, sl = 0.3), 1.30, 0.80),
       RiskProfile.Regular -> Modifiers(Limits(2.5, 0.3), 1.0, 1.0),
-      RiskProfile.Casual -> Modifiers(Limits(1.5, 0.5), 1.40, 1.30),
+      RiskProfile.Casual -> Modifiers(Limits(2.0, 0.5), 1.40, 1.30),
       RiskProfile.Impulsive -> Modifiers(Limits(5.0, 0.1), 0.70, 1.5)
     )
   // Rule & Future External Config
@@ -131,11 +131,11 @@ case class DecisionManager[
 
       decision match
         case ContinuePlaying() =>
-          Some(updateInGameBehaviours(c, mod).updateBoredom(3.0 * mod.bMod))
+          Some(updateInGameBehaviours(c, mod).updateBoredom(5.0 * mod.bMod))
         case StopPlaying() =>
-          Some(c.stopPlaying.updateFrustration(-15.0 * (2 - mod.fMod)))
+          Some(c.changeState(Idle).updateFrustration(-20.0 * (2 - mod.fMod)))
         case ChangeStrategy(s) =>
-          Some(c.changeBetStrategy(s).updateBoredom(-15.0 * (2 - mod.bMod)))
+          Some(c.changeBetStrategy(s).updateBoredom(-10.0 * (2 - mod.bMod)))
         case WaitForGame() => Some(getNewGameBet(c))
         case Stay()        => Some(c)
         case LeaveCasino() => None
@@ -161,11 +161,11 @@ case class DecisionManager[
       case Some(g) =>
         if g.getMoneyGain > 0 then
           c.updateFrustration(
-            (5 / c.bankrollRatio.max(0.5).min(2.0)) * mod.fMod
+            (5 / c.bankrollRatio.max(0.7).min(2.0)) * mod.fMod
           ).updateAfter(-g.getMoneyGain)
         else
           c.updateFrustration(
-            (-5 / c.bankrollRatio.max(0.5).min(2.0)) * (2 - mod.fMod)
+            (-3 / c.bankrollRatio.max(0.7).min(2.0)) * (2 - mod.fMod)
           ).updateAfter(-g.getMoneyGain)
 
       case _ => c
@@ -201,8 +201,8 @@ case class DecisionManager[
     def leaveRequirements(c: A): Boolean =
       val mod = ProfileModifiers.modifiers(c.riskProfile)
       val trigger: Trigger[A] = BoredomAbove(
-        (80 * mod.bMod).min(95.0)
-      ) || FrustAbove((80 * mod.fMod).min(95.0))
+        (80 * mod.bMod).min(98.0)
+      ) || FrustAbove((80 * mod.fMod).min(85.0))
         || BrRatioAbove(mod.limits.tp) || BrRatioBelow(mod.limits.sl)
       trigger.eval(c)
     DecisionNode[A, CustomerDecision](
@@ -213,8 +213,8 @@ case class DecisionManager[
 
   private def stopContinueNode(
       profile: RiskProfile,
-      bThreshold: Double = 70,
-      fThreshold: Double = 60
+      bThreshold: Double = 60,
+      fThreshold: Double = 50
   ): DecisionTree[A, CustomerDecision] =
     def stopPlayingRequirements(c: A): Boolean =
       val mod = ProfileModifiers.modifiers(profile)
@@ -244,8 +244,7 @@ case class DecisionManager[
         }
         .getOrElse(ContinuePlaying())
     }
-
-  def betDefiner(rule: SwitchRule, c: A): BettingStrategy[A] =
+  private def betDefiner(rule: SwitchRule, c: A): BettingStrategy[A] =
     rule.nextStrategy match
       case FlatBet =>
         FlatBetting(c.bankroll * rule.betPercentage, c.betStrategy.option)
@@ -262,10 +261,7 @@ object PostDecisionUpdater:
   def updatePosition[
       P <: MovableWithPrevious[P] & CustomerState[P] &
         ChangingFavouriteGamePlayer[P] & Entity
-  ](
-      before: Seq[P],
-      post: Seq[P]
-  ): List[P] =
+  ](before: Seq[P], post: Seq[P]): List[P] =
     val (hasStopPlaying, unchangedState, remained) =
       groupForChangeOfState[P](before, post)
 
