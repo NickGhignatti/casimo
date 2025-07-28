@@ -42,7 +42,7 @@ This approach allows for timely identification and correction of potential bugs 
 The TDD development process consists of three main steps:
 - Red Phase (testing): a test is written to describe the expected behavior of a component or feature. Since the implementation is not yet in place, the test initially fails.
 - Green Phase (implementation): the component or feature is then implemented to ensure that the previously written test passes successfully.
-  -Refactor Phase: after the test passes, the code is refactored to improve its quality and readability, ensuring that the test continues to pass.
+- Refactor Phase: after the test passes, the code is refactored to improve its quality and readability, ensuring that the test continues to pass.
 ## Requirement Specification
 ### Business requirements
 The application is intended to be used by the manager of a [casino](https://en.wikipedia.org/wiki/Casino) who wants to simulate the behaviour of customers inside a given configuration of the casino in order to predict the revenue of the facility.
@@ -87,6 +87,7 @@ Wall --|> Obstacle
 
 #### User requirements
 ##### Customers
+###### Movements
 The customers move around the casino according to a [boid](https://en.wikipedia.org/wiki/Boids)-like model. This modeling is taken by the first assigment of PCD course, which is available at [this repo](https://github.com/pcd-2024-2025/assignment-01). Customers are modeled by a `position` and a `velocity` and three rules are applied to them:
 - **Separation**: Customers try to maintain a minimum distance from each other
 ```
@@ -174,6 +175,20 @@ Other parameters that influence the boids behavior are:
 
 All of these parameters can be configured by the user in order to simulate different scenarios.
 When a customer is close to a game of its liking, that is the distance between the customer's and game's position is less than `SITTING_RADIUS`, the player sits and plays the game. While a customer is playing it does not move.
+###### In-game behaviours
+When playing the customers try to play at the best of their capabilities following predetermined strategy that reflect their personality.
+The strategies used by the customer are well known bet scheme used in real casino, trying to emulate a real scenario, these strategies include:
+- **Flat bet (or Percentage bet)**: An amount equal to a fixed percentage of their current bankroll is used to perform a bet.
+- **Martingale (Negative Progression)**: This highly aggressive strategy aims to recover all previous losses and gain a profit equal to the initial stake with a single win. It operates by **doubling your bet after every loss**. Once a win occurs, you **return to your original base bet** and start the progression again.
+- **Oscar grind (Positive progression)**: This strategy aims to achieve a profit of a **single bet amount** called **unit**, after which the sequence of bets (the "cycle") is considered complete and a new one begins. You start with a predefined **base betting unit**. After a **loss**, the next bet **remains unchanged**. After a **win**, the bet **increases by one unit**. However, if increasing the bet would cause the total cycle profit to **exceed the one-unit goal**, the bet is reduced to precisely reach that profit with the next win and this **concludes the cycle**.
+
+A strategies of those is chosen for the customer based on the game is playing and their personality that are grouped in 4 main categories:
+- **VIP**: A special customer that's really rich, it doesn't bother to lose their money, but they get bored easily, this type of customer are paired with **entertaining strategy** like Martingale
+- **Regular**: An average customer that comes regularly to the casino, it doesn't bring much money and can use various strategies.
+- **Casual**: A beginner customer that rarely goes to the casino, it brings only a little amount of money and is not inclined to lose it, prefer basic strategy.
+- **Impulsive**: A customer guided by emotion, it brings more money than he can afford and play aggressively to win big prize, he's determined to lose all of his money.
+
+These personalities, combined with other elements such as **emotional states** and how the current account balance compares to the initial starting balance, also influence the decision to switch between games or exit the casino.
 
 ##### Games
 The Games module manages the placement, configuration, and behavior of the games within the casino.
@@ -386,73 +401,148 @@ Each event type triggers specific state transformation logic.
 The `SimulationState` serves as the context, while different events represent state transition triggers. The `Update` class
 acts as the state manager, coordinating transitions between different simulation phases.
 
+#### Trait-Based Composition
 
-#### Customer Composition
+Trait-based composition is a fundamental design approach of our system, promoting **modularity**, **extensibility**, and robust **type safety**. Instead of relying on rigid inheritance hierarchies, we construct complex entities by combining discrete, reusable units of behavior defined as Scala traits. This strategy significantly enhances code adaptability and simplifies future modifications.
 
-We choose to implement the `Customer` behavior using **F‑bounded polymorphic traits**. This choice brings some great feature enabling a **modular** and **extensible** design.
+* **Modular Behavior Definition:**
+  * Each trait encapsulates a single, well-defined behavior or set of related functionalities (e.g., `Bankroll` for financial operations, `StatusProfile` for status management).
+  * This promotes a clear separation of concerns, making individual units easier to understand, test, and maintain in isolation.
 
-```scala 3
-case class Customer(
-                           id: String,
-                           bankroll: Double,
-                           customerState: CustState = Idle
-                   ) extends Entity,
-        Bankroll[Customer],
-        CustomerState[Customer]:
+* **Flexible Entity Construction:**
+  * Classes are built by "mixing in" multiple traits using Scala's multiple inheritance.
+  * This allows for dynamic assembly of functionalities, letting different entities selectively acquire the behaviors they need without sharing unnecessary inheritance chains.
+  * Adding new features to an existing class simply involves defining a new trait and mixing it in, minimizing changes to existing code (Open/Closed Principle).
 
-  protected def updatedBankroll(newRoll: Double): Customer =
-    this.copy(bankroll = newRoll)
+* **Enhanced Code Reusability:**
+  * Traits defining common interfaces can be used across disparate parts of the system, fostering consistency and reducing code duplication.
+  * Generic interfaces or functions can be defined with **trait bounds** (e.g., `def update[T <: Movable[T] & Entity](customer: T)`), allowing them to operate on any object that implements the required traits, regardless of its specific class hierarchy. This maximizes code reuse by focusing on behavioral contracts.
 
-  protected def changedState(newState: CustState): Customer =
-    this.copy(customerState = newState)
+##### Trait-Based Composition Diagram
+To visually illustrate our trait-based composition approach, consider the following UML class diagram. This diagram highlights how individual traits define discrete functionalities that are then mixed into concrete classes, demonstrating the flexibility and modularity of the design.
+
+```mermaid
+classDiagram
+    direction TD
+
+    %% Traits defining core capabilities
+    class Moveable {
+        <<trait>>
+        +position: Vector2D
+        +direction: Vector2D
+        +move(): void
+    }
+
+    class BettingStrategy {
+        <<trait>>
+        +strat: BetStrategy
+        +placeBet(): Bet
+    }
+
+    class Entity {
+        <<trait>>
+        +id: String
+    }
+
+    %% Concrete Class implementing multiple traits (Mixin Composition)
+    class Customer {
+    }
+
+    Customer ..|> Moveable : implements
+    Customer ..|> Entity : implements
+    Customer ..|> BettingStrategy : implements
+
+
+    %% Another possible Concrete Class with a different mixin set
+    class Waiter {
+      
+    }
+    Waiter ..|> Moveable : implements
+    Waiter ..|> Entity : implements
+
+
+    %% Generic Interface / Processor with Trait Bounds
+    class PositionManager {
+        <<interface>>
+        +updatePosition(entity: T <: Moveable & Entity): void
+    }
+
+    PositionManager --o Customer : can process
+    PositionManager --o Waiter : can process
+
+    
 ```
-```scala 3
-trait Bankroll[T <: Bankroll[T]]:
-  val bankroll: Double
-  require(
-    bankroll >= 0,
-    s"Bankroll amount must be positive, instead is $bankroll"
-  )
 
-  def updateBankroll(netValue: Double): T =
-    val newBankroll = bankroll + netValue
-    require(
-      newBankroll >= 0,
-      s"Bankroll amount must be positive, instead is $newBankroll"
-    )
-    updatedBankroll(newBankroll)
+**Explanation of the Diagram:**
 
-  protected def updatedBankroll(newBankroll: Double): T
+* **Traits:** `Moveable`, `Entity` and `BettingStrategy` are represented as classes with the `<<trait>>` stereotype. These define isolated units of behavior that can be reused across different parts of the system.
+* **Mixin Composition:** `Customer` and `Waiter` exemplify how concrete classes are formed by "mixing in" multiple traits (indicated by `..|>` arrows). This allows each class to inherit and combine distinct functionalities without a deep, rigid inheritance chain.
+* **Trait-Bounded Generics:** The `PositionManager` interface illustrates how generic types (`T`) are constrained by specific traits (e.g., `T <: Moveable & Entity`). This ensures that `PositionManager` can operate only on objects that provide the required behaviors. The associations (`--o`) indicate potential interactions.
+
+#### Decision Tree
+
+For robust and auditable entity decision-making, we employ a **Decision Tree pattern**. This design choice provides a structured, hierarchical, and highly explicit mechanism for evaluating complex conditions and selecting appropriate actions. Unlike imperative `if-else` cascades, our design encapsulates the decision logic within a composable tree structure, promoting clarity and maintainability.
+
+The core design principle revolves around a `sealed trait DecisionTree[Ctx, Res]`, which serves as the base for all node types. This ensures all possible node variations are known at compile time, enhancing type safety and enabling exhaustive pattern matching when traversing the tree. The tree structure allows for a declarative definition of behaviors, significantly improving the readability and traceability of complex decision flows.
+
+The key strengths of this design are:
+
+* **Explicit Decision Flow:** The tree structure inherently visualizes the decision logic, making it exceptionally clear and easy to understand compared to nested conditional statements. Each branch and node represents a specific decision point or outcome.
+* **High Modularity and Maintainability:** Each node type (`Leaf`, `DecisionNode`, `MultiNode`) is a self-contained component. This modularity allows for the easy addition, modification, or removal of decision paths by adjusting the tree structure. This significantly boosts maintainability and reduces the risk of introducing side effects.
+* **Flexibility in Branching:** The design supports both binary (`DecisionNode`) and multi-way (`MultiNode`) branching, accommodating simple true/false conditions as well as discrete-valued decision points.
+
+By encapsulating decision logic within this structured tree, our system gains a transparent, adaptable, and robust mechanism for governing entity behaviors.
+
+#### Decision Tree Diagram
+
+This diagram illustrates the structure of our generic Decision Tree.
+
+```mermaid
+classDiagram
+    direction TD
+
+    class DecisionTree~Ctx, Res~ {
+        <<sealed trait>>
+        +eval(ctx: Ctx): Res
+    }
+
+    class Leaf~Ctx, Res~ {
+        +action: Ctx => Res
+        +eval(ctx: Ctx): Res
+    }
+
+    class DecisionNode~Ctx, Res~ {
+        +predicate: Ctx => Boolean
+        +trueBranch: DecisionTree~Ctx, Res~
+        +falseBranch: DecisionTree~Ctx, Res~
+        +eval(ctx: Ctx): Res
+    }
+
+    class MultiNode~Ctx, Key, Res~ {
+        +keyOf: Ctx => Key
+        +branches: Map<Key, DecisionTree~Ctx, Res~>
+        +default: DecisionTree~Ctx, Res~
+        +eval(ctx: Ctx): Res
+    }
+
+    DecisionTree <|-- Leaf : extends
+    DecisionTree <|-- DecisionNode : extends
+    DecisionTree <|-- MultiNode : extends
+
+    DecisionNode --> DecisionTree : trueBranch
+    DecisionNode --> DecisionTree : falseBranch
+    MultiNode --> DecisionTree : branches
+    MultiNode --> DecisionTree : default
 ```
+**Explanation of the Diagram:**
 
-The key strength of this design are:
-
-- **Strong type safety**  
-  F‑bounded traits restrict generic parameters to subtypes of the trait itself, preventing accidental type error at compile time.
-
-- **Precise APIs and seamless mvu updates**  
-  By encoding the concrete subtype via `C <: Trait[C]`, trait methods can return `C` directly, enabling `.copy(...)` function in the Customer producing a new instance in a clean and optimize way. This avoids casts or losing type specificity in method returns making updating state easier.
-
-```scala 3
-val newCustomer = Customer(id = "myCustomer", bankroll = 50.0)
-val updatedCustomer = newCustomer.updateBankroll(-20.0)
-// ad-hoc method for update that checks that bankroll don't go below zero
-```
-- **Modular and extensible architecture**  
-  Each behavior (e.g., bankroll, boredom, status) is isolated within its own trait. This allows introducing new behaviour without altering existing implementations by just defining the trait and mix it in.
-```scala 3
-case class Customer(
-                           id: String,
-                           bankroll: Double,
-                           customerState: CustState = Idle,
-                           boredom: Double
-                   ) extends Entity,
-        Bankroll[Customer],
-        CustomerState[Customer],
-        Boredom[Customer]: // Just adding a new behaviour to the Customer by composition
-
-```
-By leveraging these traits composition system, our `Customer` model stays **type safe**, **cohesive**, and easy to evolve, supporting future expansion of behaviors and customer types without compromising the maintainability.
+* **`DecisionTree<Ctx, Res>`:** This `sealed trait` forms the root of our decision tree hierarchy. It defines the common `eval` method that all decision tree nodes must implement, taking a context `Ctx` and returning a result `Res`.
+* **`Leaf<Ctx, Res>`:** Represents the terminal nodes of the tree. It "implements" `DecisionTree` and holds an `action` function that produces the final `Res` from the `Ctx`.
+* **`DecisionNode<Ctx, Res>`:** Represents binary branching points. It "implements" `DecisionTree` and contains a `predicate` function and two branches (`trueBranch`, `falseBranch`), both of type `DecisionTree<Ctx, Res>`, illustrating the recursive nature of the tree structure.
+* **`MultiNode<Ctx, Key, Res>`:** Represents multi-way branching. It also "implements" `DecisionTree` and uses a `keyOf` function to select a branch from a `Map` of `branches`, with a `default` branch for unmatched keys. This also shows a recursive composition.
+* **Relationships:**
+  * `--|>` (Realization/Implements): Shows that `Leaf`, `DecisionNode`, and `MultiNode` are concrete implementations of the `DecisionTree` trait.
+  * `-->` (Association): Indicates that `DecisionNode` and `MultiNode` contain references to other `DecisionTree` instances, forming the tree structure. The labels `trueBranch`, `falseBranch`, `branches`, and `default` clarify the role of these associations.
 
 #### Customers spawner
 
@@ -909,6 +999,436 @@ problem of UI-state desynchronization that plagues many web applications.
 
 ## Implementation
 ### Student contributions
+### Galeri Marco
+#### Customer Composition
+
+I choose to implement the `Customer` behavior using **F‑bounded polymorphic traits** composition. This choice brings some great feature enabling a **modular** and **extensible** design. The various implementation resides within the `model.entities.customers` package.
+
+```scala 3
+case class Customer(
+                           id: String,
+                           bankroll: Double,
+                           customerState: CustState = Idle
+                   ) extends Entity,
+        Bankroll[Customer],
+        CustomerState[Customer]:
+
+  protected def updatedBankroll(newRoll: Double): Customer =
+    this.copy(bankroll = newRoll)
+
+  protected def changedState(newState: CustState): Customer =
+    this.copy(customerState = newState)
+```
+```scala 3
+trait Bankroll[T <: Bankroll[T]]:
+  val bankroll: Double
+  require(
+    bankroll >= 0,
+    s"Bankroll amount must be positive, instead is $bankroll"
+  )
+
+  def updateBankroll(netValue: Double): T =
+    val newBankroll = bankroll + netValue
+    require(
+      newBankroll >= 0,
+      s"Bankroll amount must be positive, instead is $newBankroll"
+    )
+    updatedBankroll(newBankroll)
+
+  protected def updatedBankroll(newBankroll: Double): T
+```
+
+The key strength of this design are:
+
+- **Strong type safety**  
+  F‑bounded traits restrict generic parameters to subtypes of the trait itself, preventing accidental type error at compile time.
+
+- **Precise APIs and seamless mvu updates**  
+  By encoding the concrete subtype via `C <: Trait[C]`, trait methods can return `C` directly, enabling `.copy(...)` function in the Customer producing a new instance in a clean and optimize way. This avoids casts or losing type specificity in method returns making updating state easier.
+
+```scala 3
+val newCustomer = Customer().withId("example-1")
+val updatedCustomer = newCustomer.updateBankroll(-20.0)
+// ad-hoc method for update that checks that bankroll don't go below zero
+```
+- **Modular and extensible architecture**  
+  Each behavior (e.g., bankroll, boredom, status) is isolated within its own trait. This allows introducing new behaviour without altering existing implementations by just defining the trait and mix it in.
+```scala 3
+case class Customer(
+                           id: String,
+                           bankroll: Double,
+                           customerState: CustState = Idle,
+                           boredom: Double
+                   ) extends Entity,
+        Bankroll[Customer],
+        CustomerState[Customer],
+        Boredom[Customer]: // Just adding a new behaviour to the Customer by composition
+
+```
+By leveraging these traits composition system, our `Customer` model stays **type safe**, **cohesive**, and easy to evolve, supporting future expansion of behaviors and customer types without compromising the maintainability.
+
+#### Betting Strategy
+
+I implemented this class for managing diverse casino betting strategies, enabling entities to place realistic and logically consistent bets across a variety of games. My primary goal with this implementation was to offer a **simple and convenient API** for generating sensible bets while enforcing **strong and realistic betting logic**.
+
+I achieved this through the previously discuss trait-based composition that defines the common contract for all betting behaviors, along with concrete implementations for specific strategies.
+
+##### Core Betting Strategy
+
+The foundation of my betting system is the `BettingStrategy` trait, which defines the common interface for all concrete betting strategies.
+
+```scala 3
+trait BettingStrategy[A <: Bankroll[A] & CustomerState[A]]:
+  val betAmount: Double
+  val option: List[Int]
+  // ... requirements and abstract methods
+  def betType: BetStratType
+  def placeBet(ctx: A): Bet
+  def updateAfter(ctx: A, result: Double): BettingStrategy[A]
+  protected def checkRequirement(ctx: A): Unit =
+    require(
+      betAmount <= ctx.bankroll,
+      s"Bet amount must be equal or less of the total bankroll, instead is $betAmount when the bankroll is ${ctx.bankroll}"
+    )
+    require(
+      ctx.customerState != Idle,
+      "Bet should be placed only if the customer is playing a game"
+    )
+```
+
+* **Generics and Type Bounds:** `BettingStrategy[A <: Bankroll[A] & CustomerState[A]]` ensures that any entity `A` using a betting strategy must at least possess a `Bankroll` and a `CustomerState`.
+* **`betAmount` and `option`:** These define the current stake and any game-specific options (e.g., a roulette number).
+* **`betType`:** An abstract method returning a `BetStratType` (e.g., `FlatBet`, `Martingale`, `OscarGrind`), allowing for runtime identification of the strategy.
+* **`placeBet(ctx: A): Bet`:** This abstract method generates a game-specific `Bet` (e.g., `RouletteBet`, `SlotBet`). It takes the entity's current context (`ctx`) to inform the bet.
+* **`updateAfter(ctx: A, result: Double): BettingStrategy[A]`:** This abstract method is crucial as allows step strategies (e.g., `Martingale`) to update their internal state based on the outcome of the previous bet (`result`). This is where the core logic of progression resides.
+* **`checkRequirement(ctx: A)`:** A protected helper method I included that enforces essential preconditions, such as the bet amount not exceeding the bankroll and the customer being in a `Playing` state. This ensures robust and realistic betting behavior.
+
+##### `HasBetStrategy` Trait: Integrating Strategies with Entities
+
+The `HasBetStrategy` trait facilitates seamless integration of betting strategies directly into entities that require decision-making capabilities.
+
+```scala 3
+trait HasBetStrategy[T <: HasBetStrategy[T] & Bankroll[T] & CustomerState[T]]:
+  this: T =>
+  val betStrategy: BettingStrategy[T]
+
+  def placeBet(): Bet = betStrategy.placeBet(this)
+
+  def updateAfter(result: Double): T =
+    withBetStrategy(betStrategy.updateAfter(this, result))
+
+  def changeBetStrategy(newStrat: BettingStrategy[T]): T =
+    withBetStrategy(newStrat)
+
+  def withBetStrategy(newStrat: BettingStrategy[T]): T
+```
+
+* **Self-Type Annotation (`this: T =>`):** I used this to ensure that any class mixing in `HasBetStrategy` *is* itself of type `T`, enabling methods to return `this` (or copies of `this`) with the correct specific type.
+* **`placeBet()`:** A convenient method that delegates to the underlying `betStrategy.placeBet()`, automatically passing the current entity instance as the context.
+* **`updateAfter()`:** Delegates the result update to the strategy and then applies the updated strategy back to the entity using `withBetStrategy`, maintaining immutability.
+* **`changeBetStrategy()`:** Allows for dynamic switching of betting strategies at runtime, promoting adaptability.
+* **`withBetStrategy()`:** An abstract method that forces the concrete entity to provide a way to create a new instance with an updated betting strategy (using `copy()` for case classes), reinforcing immutability.
+
+##### Concrete Betting Strategy Implementations
+
+I provided several concrete implementations of `BettingStrategy`, each encapsulating a distinct betting logic:
+
+* **`FlatBetting[A]`:**
+
+  * **Purpose:** Implements a flat betting strategy where the bet amount remains constant regardless of previous outcomes.
+  * **Implementation:** The `updateAfter` method simply returns `this` as the strategy's internal state doesn't change. The `placeBet` method dynamically creates a `Bet` type based on the `gameType` within the `Playing` state, supporting `SlotMachine`, `Roulette`, and `Blackjack`.
+
+* **`MartingaleStrat[A]`:**
+
+  * **Purpose:** Implements the classic Martingale strategy, doubling the bet after a loss to recover previous losses.
+  * **Implementation:** It maintains `baseBet` and `lossStreak`. The `nextBet()` helper calculates the doubled bet. In `updateAfter`, I increment `lossStreak` and update `betAmount` if there's a loss, resetting them to `baseBet` if there's a win.
+
+* **`OscarGrindStrat[A]`:**
+
+  * **Purpose:** Implements the Oscar's Grind strategy, aiming for a single unit profit per cycle by increasing bets after wins and keeping them constant after losses.
+  * **Implementation:** It tracks `baseBet`, `betAmount`, `startingBankroll`, and `lossStreak`. The `updateAfter` method contains the specific Oscar's Grind logic: resetting to `baseBet` and a new `startingBankroll` upon reaching a cycle profit, increasing the bet after a win (if not yet at profit goal), and maintaining the bet after a loss.
+
+Each strategy is implemented as an **immutable `case class`**, ensuring that `updateAfter` methods return new instances of the strategy with updated internal states, adhering to functional programming principles. Companion objects for each strategy provide convenient `apply` methods for easy instantiation with various parameters.
+
+This comprehensive set of traits and concrete classes provides a highly **modular**, **extensible**, and **type-safe** framework for integrating sophisticated betting behaviors into my simulation entities.
+
+#### Decision Tree
+
+The Decision Tree pattern is implemented using Scala's `sealed trait` and `case class` features, providing a type-safe and functional approach to defining decision logic. The core implementation resides within the `utils` package.
+
+The foundational element is the `sealed trait DecisionTree[Ctx, Res]`, which serves as an abstract base for all node types. This trait defines a single abstract method, `eval(ctx: Ctx): Res`, which is responsible for evaluating the tree (or subtree) from a given context (`Ctx`) to produce a result (`Res`). The `sealed` keyword ensures that all direct implementors of `DecisionTree` are known within the same compilation unit, enabling exhaustive pattern matching on tree structures, which is beneficial for compilers and static analysis.
+
+Concrete implementations of `DecisionTree` are provided by three `case class` types, each representing a specific kind of node:
+
+* **`Leaf[Ctx, Res]`**:
+
+  * **Purpose:** Represents an endpoint in the decision path, where a final action is taken without further branching.
+  * **Implementation:** It holds an `action` of type `Ctx => Res`. Its `eval` method simply applies this `action` function to the provided context.
+
+* **`DecisionNode[Ctx, Res]`**:
+
+  * **Purpose:** Represents a binary branching point, making a decision based on a boolean condition.
+  * **Implementation:** It contains a `predicate` of type `Ctx => Boolean`, along with two `DecisionTree[Ctx, Res]` instances: `trueBranch` and `falseBranch`. The `eval` method applies the `predicate` to the context; if `true`, it delegates evaluation to `trueBranch.eval(ctx)`, otherwise to `falseBranch.eval(ctx)`. This recursive structure allows for arbitrary depth in binary decisions.
+
+* **`MultiNode[Ctx, Key, Res]`**:
+
+  * **Purpose:** Facilitates multi-way branching based on a key extracted from the context, similar to a `switch` or `match` statement.
+  * **Implementation:** It takes a `keyOf` function (`Ctx => Key`) to determine the branching key. A `branches` `Map[Key, DecisionTree[Ctx, Res]]` holds the various decision paths corresponding to different keys. A `default` `DecisionTree[Ctx, Res]` is provided to handle cases where the `keyOf` result does not have a matching entry in the `branches` map. The `eval` method retrieves the appropriate branch from the map (or uses the `default`) and delegates evaluation to it. This provides a clean way to manage discrete, categorical decisions.
+
+This functional and immutable implementation leverages Scala's strong type system and pattern matching capabilities to create a robust, readable, and highly maintainable decision-making component. The use of functions (`predicate`, `action`, `keyOf`) directly within the case classes allows for flexible and dynamic decision logic to be injected into the tree structure.
+
+#### DecisionManager
+
+My goal with the `DecisionManager` class is to provide entities within the simulation with the most accurate and complex decision-making capabilities possible, leading to a highly **realistic simulation**. Furthermore, I designed the system to be highly configurable, utilizing various tables for multipliers and default rules that can be easily modified and potentially personalized by an end-user in the future.
+
+The `DecisionManager` is a component that leverages the previously discussed **Decision Tree pattern** to process entity states and determine their next actions. It is instantiated with a list of available `Game`s in the simulation environment.
+
+```scala 3
+case class DecisionManager[
+    A <: Bankroll[A] & BoredomFrustration[A] & CustomerState[A] &
+      HasBetStrategy[A] & Entity & StatusProfile
+](games: List[Game])
+    extends BaseManager[Seq[A]]:
+  private val gameList = games.map(_.gameType).distinct
+  // ... rest of the code
+```
+
+##### Configuration and Rule Management
+
+To achieve the desired flexibility and future customizability, I've incorporated several configuration elements:
+
+* **`ProfileModifiers`:** This object defines **multipliers and limits** associated with different `RiskProfile`s (e.g., `VIP`, `Regular`, `Casual`, `Impulsive`). These modifiers dynamically adjust thresholds for boredom, frustration, take-profit (TP), and stop-loss (SL) limits. This allows each customer type to react differently to their in-game experience, contributing significantly to simulation realism.
+
+  ```scala 3
+  private case class Limits(tp: Double, sl: Double)
+  private case class Modifiers(limits: Limits, bMod: Double, fMod: Double)
+  private object ProfileModifiers:
+    val modifiers: Map[RiskProfile, Modifiers] = Map(
+      RiskProfile.VIP -> Modifiers(Limits(tp = 3.0, sl = 0.3), 1.30, 0.80),
+      // ... other profiles
+    )
+  ```
+
+* **`SwitchRule`:** This `case class` defines a **single rule for switching betting strategies or games**. Each rule specifies the `RiskProfile`, current `GameType`, current `BetStratType`, a `Trigger` (a dynamic condition), the `nextStrategy`, and a `betPercentage` for the new strategy. These rules form the core logic for how customers adapt their play style.
+
+* **`DefaultConfig`:** I've centralized all predefined `SwitchRule`s within this object. This provides a clear, single source for the default behaviors. The `ConfigLoader` then loads these rules into `rulesByProfile`, a `Map` that groups rules by `RiskProfile` for efficient lookup during decision evaluation. This structure is designed to be easily externalized in the future, allowing end-users to customize rules without recompiling the core logic.
+
+  ```scala 3
+  object DefaultConfig:
+    val switchRules: List[SwitchRule] = List(
+      // VIP rules
+      SwitchRule(VIP, Blackjack, Martingale, Losses(3), OscarGrind, 0.05),
+      SwitchRule(VIP, SlotMachine, FlatBet, FrustAbove(50) || BrRatioBelow(0.5), FlatBet, 0.015),
+      // ... extensive list of rules for all profiles
+    )
+  ```
+
+#### Decision-Making Flow
+
+The central operation of the `DecisionManager` is the `update` method, which processes a sequence of customers and applies decision logic to each.
+
+```scala 3
+def update(customers: Seq[A]): Seq[A] =
+  val tree = buildDecisionTree // Build the decision tree for this cycle
+  customers.flatMap { c =>
+    val mod = ProfileModifiers.modifiers(c.riskProfile)
+    val decision = tree.eval(c) // Evaluate customer's decision
+
+    decision match
+      case ContinuePlaying() =>
+        Some(updateInGameBehaviours(c, mod).updateBoredom(5.0 * mod.bMod))
+      case StopPlaying() =>
+        Some(c.changeState(Idle).updateFrustration(-20.0 * (2 - mod.fMod)))
+      // ... other decision outcomes
+  }
+```
+
+For each customer, the manager evaluates a dynamically constructed **Decision Tree** (`buildDecisionTree`) to determine the customer's next action (`CustomerDecision`). This `CustomerDecision` is then pattern-matched to trigger appropriate updates to the customer's state (e.g., bankroll, boredom, frustration, betting strategy, game played). This use of the Decision Tree pattern ensures that the decision-making process is explicit, traceable, and easily modifiable.
+
+#### Decision Tree Construction (`buildDecisionTree`)
+
+The `buildDecisionTree` method dynamically constructs the specific decision tree used by the `DecisionManager`. This tree guides the evaluation flow for each customer.
+
+```scala 3
+private def buildDecisionTree: DecisionTree[A, CustomerDecision] =
+  DecisionNode[A, CustomerDecision](
+    predicate = _.isPlaying, // Is the customer currently playing a game?
+    trueBranch = gameNode,     // If yes, proceed to game-specific logic
+    falseBranch = leaveStayNode // If no, decide whether to leave or stay
+  )
+```
+
+This root node immediately branches based on whether a customer is currently playing a game or is idle. Subsequent private methods (`gameNode`, `profileNode`, `leaveStayNode`, `stopContinueNode`, `strategySwitchNode`) recursively define subtrees, progressively narrowing down the decision based on granular conditions.
+
+* **`gameNode`:** Checks if the customer is currently playing a game (i.e., if there was a recent round result for them). If not, they might `WaitForGame()`, waiting for the next round to come.
+* **`profileNode`:** This is a `MultiNode` that branches based on the customer's `riskProfile`, dispatching to profile-specific decision subtrees (e.g., `stopContinueNode(VIP)`). This is where the personalized behavior based on `RiskProfile` comes into play.
+* **`leaveStayNode`:** Decides whether an idle customer should `LeaveCasino()` or `Stay()` based on aggregate thresholds of boredom, frustration, and bankroll ratio (TP/SL limits).
+* **`stopContinueNode`:** Within game-specific branches, this node decides if a customer should `StopPlaying()` (e.g., due to high boredom/frustration, hitting TP/SL limits, or insufficient funds for the next bet) or `ContinuePlaying()` (potentially with a strategy switch).
+* **`strategySwitchNode`:** This `Leaf` node evaluates the `SwitchRule`s for the specific customer's profile, current game, and betting strategy. If a rule's `Trigger` evaluates to true, the customer's `BettingStrategy` is changed using `betDefiner`; otherwise, they `ContinuePlaying()` with their current strategy. This is a critical point for dynamic adaptation.
+
+##### Supporting Logic (`updateInGameBehaviours`, `getNewGameBet`, `betDefiner`)
+
+* **`updateInGameBehaviours(c: A, mod: Modifiers): A`:** This method is responsible for updating a customer's frustration and the betting strategy's internal state based on the *last round's outcome* in the game they played. It accesses the `Game` object to get `getLastRoundResult` and adjusts frustration based on money gain/loss and `bankrollRatio`, incorporating `ProfileModifiers` for realism.
+* **`getNewGameBet(c: A): A`:** This function primarily handles scenarios where a customer just started a new game or needs an initial bet. It attempts to find a matching `SwitchRule` to determine the initial strategy and bet, falling back to a default `FlatBetting` if no specific rule applies.
+* **`betDefiner(rule: SwitchRule, c: A): BettingStrategy[A]`:** This utility function instantiates the correct `BettingStrategy` (`FlatBetting`, `MartingaleStrat`, `OscarGrindStrat`) based on the `rule.nextStrategy` and the customer's current `bankroll` and `betStrategy.option`, ensuring consistent bet amounts as a percentage of bankroll.
+
+The `DecisionManager` effectively orchestrates complex customer behaviors by combining a flexible rule-based configuration system with a structured, traversable Decision Tree. This design choice provides a highly **accurate** and **realistic** simulation environment for entity decision-making.
+
+#### PostDecisionUpdater
+
+To maintain a **functional programming paradigm** and manage potential side effects, I designed the `PostDecisionUpdater` object. This component is responsible for updating the simulation environment—specifically the customers' positions, their favorite games, and the state of the casino games—*after* all customer decisions for a given simulation tick have been processed by the `DecisionManager`. This clear separation of concerns ensures that the decision-making process remains pure and stateless, while any necessary modifications to the environment are handled in a dedicated, controlled phase.
+
+The `PostDecisionUpdater` operates by comparing the state of customers and games *before* and *after* the `DecisionManager` has processed them, applying the necessary environmental changes based on these state transitions.
+
+##### Updating Customer Positions and Preferences
+
+The `updatePosition` method focuses on customers whose state has changed from `Playing` to `Idle` (i.e., those who decided to `StopPlaying`).
+
+```scala 3
+object PostDecisionUpdater:
+  def updatePosition[
+      P <: MovableWithPrevious[P] & CustomerState[P] &
+        ChangingFavouriteGamePlayer[P] & Entity
+  ](before: Seq[P], post: Seq[P]): List[P] =
+    val (hasStopPlaying, unchangedState, remained) =
+      groupForChangeOfState[P](before, post)
+
+    val changePosition = hasStopPlaying.map { case (oldP, newP) =>
+      newP
+        .withPosition(oldP.previousPosition.get)
+        .withDirection(-newP.direction)
+        .withFavouriteGame(
+          Random.shuffle(gameTypesPresent.filter(_ != newP.favouriteGame)).head
+        )
+    }
+    val unchanged = unchangedState.map(_._2)
+    changePosition ++ unchanged
+```
+
+* **Identifying State Changes:** I first use `groupForChangeOfState` to identify customers who have transitioned from `Playing` to `Idle`.
+* **Repositioning:** For these customers, I update their position to their `previousPosition` (where they were before starting the game) and reverse their `direction`. This simulates them walking away from a game table.
+* **Changing Favorite Game:** To add realism, customers who stop playing also get a **new random favorite game** that is different from their previous one. This encourages exploration within the casino environment.
+* **Maintaining Other Customers:** Customers whose state did not change, or who left the casino entirely (handled by `DecisionManager` returning `None`), are filtered and maintained appropriately, ensuring only relevant updates occur.
+
+##### Updating Game States
+
+The `updateGames` method is responsible for modifying the state of the `Game` entities within the simulation. Specifically, it focuses on "unlocking" games that were previously occupied by customers who have now stopped playing them.
+
+```scala 3
+  def updateGames[P <: CustomerState[P] & Entity](
+      before: Seq[P],
+      post: Seq[P],
+      games: List[Game]
+  ): List[Game] =
+    val (hasStopPlaying, unchangedState, remained) =
+      groupForChangeOfState(before, post)
+    // ... logic to update games
+    val updatedGame =
+      gameToUnlock.map((g, c) => g.unlock(c.get.id)).map(r => r.option().get)
+    updatedGame ++ gameUnchanged.map((g, _) => g)
+```
+
+* **Identifying Freed Games:** Similar to customer updates, this method identifies which customers have stopped playing a game by comparing their `CustomerState` before and after decision processing.
+* **Unlocking Games:** For each game associated with a customer who stopped playing, I invoke the game's `unlock` method, making it available for other customers to join. This ensures that the simulation accurately reflects the availability of casino resources.
+* **Maintaining Other Games:** Games that were not affected by state changes (either still being played or already free) are passed through unchanged.
+
+##### Core Grouping Logic (`groupForChangeOfState`)
+
+Both `updatePosition` and `updateGames` rely on the private helper method `groupForChangeOfState`.
+
+```scala 3
+  private def groupForChangeOfState[P <: CustomerState[P] & Entity](
+      before: Seq[P],
+      post: Seq[P]
+  ): (List[(P, P)], List[(P, P)], Set[String]) =
+    val beforeMap = before.map(p => p.id -> p).toMap
+    val postMap = post.map(p => p.id -> p).toMap
+    val remained = beforeMap.keySet.intersect(postMap.keySet)
+    val (hasStopPlaying, unchangedState) = remained.toList
+      .map(id => (beforeMap(id), postMap(id)))
+      .partition { case (oldState, newState) =>
+        oldState.isPlaying != newState.isPlaying
+      }
+    (hasStopPlaying, unchangedState, remained)
+```
+
+This method compares the "before" and "after" states of customers by their IDs. It then partitions the customers who are still present in the simulation into two groups: those whose playing state (`isPlaying`) has changed, and those whose state has remained unchanged.
+
+By isolating these environmental updates into the `PostDecisionUpdater`, I ensure that the `DecisionManager` remains focused solely on determining optimal actions, while side effects are handled declaratively and immutably at a later stage, enhancing the overall **functional integrity** and **maintainability** of the simulation.
+
+#### Trigger
+
+To simplify the already complex configuration of the `DecisionManager` and to enhance the readability of our decision rules, I implemented a small, domain-specific language (DSL) called **`TriggerDSL`**. This DSL provides a concise and expressive way to define dynamic conditions that drive decision-making within the simulation. The primary goal was to make the definition of triggers as intuitive as human-readable statements, directly reflecting the conditions they represent.
+
+The core of the `TriggerDSL` is the `Trigger[A]` trait:
+
+```scala 3
+object TriggerDSL:
+  trait Trigger[A]:
+    def eval(c: A): Boolean
+  // ... concrete triggers and combinators
+```
+
+This trait defines a single abstract method, `eval(c: A): Boolean`, which evaluates the trigger against an entity's context (`A`) and returns a boolean result. The generic type `A` is typically a customer entity, enabling context-specific evaluations.
+
+##### Concrete Trigger Implementations
+
+I provided several factory methods within the `TriggerDSL` object to create concrete `Trigger` instances:
+
+* **`Losses[A](n: Int)`:**
+
+  * **Purpose:** Checks if a customer's current `lossStreak` (from betting strategies like `MartingaleStrat` or `OscarGrindStrat`) has reached or exceeded a specified number `n`.
+  * **Implementation:** It performs a type-safe pattern match on the `betStrategy` of the customer. If the strategy is a `MartingaleStrat` or `OscarGrindStrat`, it accesses their `lossStreak` property for evaluation.
+
+  <!-- end list -->
+
+  ```scala 3
+  def Losses[A <: Bankroll[A] & CustomerState[A] & HasBetStrategy[A]](
+      n: Int
+  ): Trigger[A] = new Trigger[A]:
+    def eval(c: A): Boolean =
+      c.betStrategy match
+        case m: MartingaleStrat[A] => m.lossStreak >= n
+        case o: OscarGrindStrat[A] => o.lossStreak >= n
+        case _                     => false
+  ```
+
+* **`FrustAbove[A](p: Double)`:** Checks if a customer's `frustration` level is above a given percentage `p`.
+
+* **`BoredomAbove[A](p: Double)`:** Checks if a customer's `boredom` level is above a given percentage `p`.
+
+* **`BrRatioAbove[A](r: Double)`:** Evaluates if a customer's `bankrollRatio` (current bankroll divided by starting bankroll) is above a ratio `r`. This is crucial for "take-profit" conditions.
+
+* **`BrRatioBelow[A](r: Double)`:** Determines if a customer's `bankrollRatio` is below a ratio `r`. This is used for "stop-loss" conditions.
+
+* **`Always[A]`:** A simple trigger that always evaluates to `true`. This is useful for default actions or conditions that always apply.
+
+These factory methods create anonymous class instances of `Trigger`, embedding the specific evaluation logic for each condition.
+
+#### Trigger Combinators (DSL Operators)
+
+To enable the construction of complex logical conditions, I extended the `Trigger[A]` trait with custom infix operators, transforming `TriggerDSL` into a powerful and intuitive composition tool:
+
+```scala 3
+  extension [A](a: Trigger[A])
+    infix def &&(b: Trigger[A]): Trigger[A] = new Trigger[A]:
+      def eval(c: A): Boolean = a.eval(c) && b.eval(c)
+
+    infix def ||(b: Trigger[A]): Trigger[A] = new Trigger[A]:
+      def eval(c: A): Boolean = a.eval(c) || b.eval(c)
+
+    def unary_! : Trigger[A] = new Trigger[A]:
+      def eval(c: A): Boolean = !a.eval(c)
+```
+
+* **`&&` (AND operator):** Allows chaining two triggers, where both must evaluate to `true` for the combined trigger to be `true`.
+* **`||` (OR operator):** Allows chaining two triggers, where at least one must evaluate to `true` for the combined trigger to be `true`.
+* **`unary_!` (NOT operator):** Inverts the result of a single trigger.
+
+These operators return new `Trigger` instances that encapsulate the combined logic, allowing for a fluent and expressive syntax in defining complex rules within the `DecisionManager`. For example, a rule can be defined as `FrustAbove(50) || BrRatioBelow(0.5)`, directly mimicking natural language.
+
+By implementing `TriggerDSL`, I significantly simplified the declaration of dynamic conditions within the `DecisionManager`'s configuration (`SwitchRule`s and decision tree nodes). This design choice dramatically improves the **readability**, **maintainability**, and **extensibility** of our simulation's decision logic.
+
 ### Nicolò Ghignatti
 #### Result
 Having to deal with data which can have two states (win or loss for a bet, for example) can be quite annoying so, I've
@@ -1263,7 +1783,7 @@ Game --> GameType
 Player --> GameType : favourite game
 ```
 #### Manager composition
-All movement managers are implemented independently from one another, to combine them a simple bash-like DSL is created: to combine two managers the `|` operator is used, similarly to what the `andThen` method does in Scala between two functions. This operator is also used to apply a manager to update the current state. In order to weight the contribution of each manager the trait `WeightedManager` is defined which supports the `*` operator. The `*` operator multiplies the contribution of the manager by a given weight. The following example shows how to obtain a manager which combines various components to obtain a boids-like movement:
+All movement managers are implemented independently of one another, to combine them a simple bash-like DSL is created: to combine two managers the `|` operator is used, similarly to what the `andThen` method does in Scala between two functions. This operator is also used to apply a manager to update the current state. In order to weight the contribution of each manager the trait `WeightedManager` is defined which supports the `*` operator. The `*` operator multiplies the contribution of the manager by a given weight. The following example shows how to obtain a manager which combines various components to obtain a boids-like movement:
 ```scala 3
 val boidManager : BaseManager[SimulationState] = BoidsAdapter(
   PerceptionLimiterManager(perceptionRadius)
