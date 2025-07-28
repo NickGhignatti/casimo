@@ -1,18 +1,14 @@
 package model.managers
 
 import model.entities.Entity
-import model.entities.Player
 import model.entities.customers.Bankroll
-import model.entities.customers.BoredomFrustration
 import model.entities.customers.CustState.Idle
 import model.entities.customers.CustState.Playing
 import model.entities.customers.CustomerState
-import model.entities.customers.HasBetStrategy
 import model.entities.games.Game
 
 case class CustomerBankrollManager[
-    A <: BoredomFrustration[A] & CustomerState[A] & Bankroll[A] &
-      HasBetStrategy[A] & Player[A] & Entity
+    A <: CustomerState[A] & Bankroll[A] & Entity
 ](games: List[Game])
     extends BaseManager[Seq[A]]:
   def update(customers: Seq[A]): Seq[A] =
