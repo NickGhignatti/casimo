@@ -268,9 +268,6 @@ Each game must maintain a consistent internal state, for example:
 - Usability:
   - GUI must allow intuitive drag-and-drop for map and game design
   - All configurable parameters should be accessible via forms or sliders
-- Reliability:
-  - The simulation must recover gracefully from internal errors without crashing
-  - Consistent logging should allow for post-mortem debugging
 
 ### Implementation requirements
 - Scala 3.3.5
