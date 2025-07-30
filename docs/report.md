@@ -1818,94 +1818,6 @@ class Gain(from: String, of: Double):
   def getCustomerWhichPlayed: String = this.from
 ```
 
-#### UI
-I've to deal with most of the UI and frontend in the application, core concepts in the frontend are:
-- **ButtonBar**: Provides a UI panel with buttons to control the simulation, which send update messages through the `eventBus`
-    ```scala 3
-    buttons = ["Add", "Run", "Reset", "Save", "Load", "Data"]
-    buttons.foreach { button =>
-        createButton(button)
-        onClick -> match button:
-            case "Add" => eventBus.writer.onNext(AddCustomers)
-            case "Run" => eventBus.writer.onNext(Start)
-            case "Reset" => eventBus.writer.onNext(Reset)
-            case "Save" => ??? // placeholder
-            case "Load" => ???
-            case "Data" => modal.open()
-    }
-    ```
-- **CanvasManager**: Manages drawing and interaction on the simulation canvas, including static elements (walls, games) and dynamic entities (customers).
-- **Component**: Defines reusable UI components wrapping domain entities, that know how to render themselves and handle hit detection.
-    ```scala 3
-    class WallComponent(initialModel: Wall) extends EntityComponent[Wall]:
-      override val model: Var[Wall] = Var(initialModel)
-    
-      def render(ctx: dom.CanvasRenderingContext2D): Unit =
-        ctx.fillStyle = "#3498db"
-        ctx.fillRect(model.now().position.x, model.now().position.y, model.now().width, model.now().height)
-        ctx.strokeStyle = "#2980b9"
-        ctx.lineWidth = 2
-        ctx.strokeRect(model.now().position.x, model.now().position.y, model.now().width, model.now().height)
-    
-      def contains(point: Vector2D): Boolean = model.now().contains(point)
-    
-      def resize(width: Double, height: Double): Unit =
-        model.update(wall => wall.withSize(width, height))
-    ```
-- `SideBar`: Creates a list of draggable UI components representing entities that users can drag onto the simulation canvas.
-- `DragAndDrop`: Create a component which can be dragged from the sidebar and dropped in the canvas
-    ```scala 3
-    def makeDraggable(element: HTMLElement, canvasManager: CanvasManager): Unit =
-        element.draggable = true
-    
-        element.addEventListener(
-          "dragstart",
-          { (e: DragEvent) =>
-            e.dataTransfer.setData("text/plain", element.dataset("type"))
-            e.dataTransfer.effectAllowed = DataTransferEffectAllowedKind.copy
-          }
-        )
-    
-        val canvas = dom.document.getElementById("main-canvas")
-        canvas.addEventListener(
-          "dragover",
-          { (e: DragEvent) =>
-            e.preventDefault()
-            e.dataTransfer.dropEffect = DataTransferDropEffectKind.copy
-          }
-        )
-    
-        canvas.addEventListener(
-          "drop",
-          { (e: DragEvent) =>
-            e.preventDefault()
-            val componentType = e.dataTransfer.getData("text/plain")
-            val rect = canvas.getBoundingClientRect()
-            val x = e.clientX - rect.left
-            val y = e.clientY - rect.top
-    
-            if (canvasManager.entityIsAlreadyPresent(Vector2D(x, y))) {
-              componentType match
-                case "Wall" =>
-                  canvasManager.addWallComponent(
-                    WallComponent(Wall(Vector2D(x, y), 40, 30))
-                  )
-                case "Slot" =>
-                  canvasManager.addSlotComponent(
-                    SlotComponent(GameBuilder.slot(Vector2D(x, y)))
-                  )
-                case "BlackJack" =>
-                  canvasManager.addBlackJackComponent(
-                    BlackJackComponent(GameBuilder.blackjack(Vector2D(x, y)))
-                  )
-                case "Roulette" =>
-                  canvasManager.addRouletteComponent(
-                    RouletteComponent(GameBuilder.roulette(Vector2D(x, y)))
-                  )
-            }
-          }
-        )
-    ```
 ### Patrignani Luca
 #### Customer movements
 The customer movements are modeled according to the previously presented architecture: a trait `Movable` is defined as such
@@ -1973,22 +1885,11 @@ val updatedState = state | boidManager
 
 ## Testing
 ### Technologies used
-For testing our code we used ScalaTest, probably, the most widely used and flexible testing framework for Scala.
-The choice of this testing technology has different pros:
-- **Rich Testing Styles**: With multiple built-in styles—such as FlatSpec, FunSuite, FunSpec, WordSpec, FreeSpec,
-  PropSpec, and FeatureSpec—ScalaTest enables you to write tests in the style that best fits your needs: xUnit, BDD,
-  nested specification, or property-based testing
-- **Powerful Matchers & DSL**: ScalaTest includes expressive matchers that allow fluent assertions
-- **Deep Ecosystem Integration**: ScalaTest integrates with build tools and frameworks including sbt, Maven, Gradle,
-  IntelliJ, Eclipse, and testing tools like JUnit, TestNG, ScalaCheck, JMock, EasyMock, Mockito, and Selenium
+As for testing, an effort was made to adopt the TDD approach as much as possible during source code development, in addiction to 
+scalatest which we used in order to follow the most idiomatic approach to tests development.
 
 ### Coverage level
-
-### Methodology used
-
-### Relevant examples
-
-### Other useful elements
+The coverage level is provided through the link to **CodeCov** in the docs page
 
 ## Retrospective
 ### Development progress, backlog, iterations
