@@ -102,8 +102,7 @@ sequenceDiagram
 ### Functional requirements
 
 #### User requirements
-##### Customers
-###### Movements
+##### Customers' movements
 The customers move around the casino according to a [boid](https://en.wikipedia.org/wiki/Boids)-like model. This modeling is taken by the first assigment of PCD course, which is available at [this repo](https://github.com/pcd-2024-2025/assignment-01). Customers are modeled by a `position` and a `velocity` and three rules are applied to them:
 - **Separation**: Customers try to maintain a minimum distance from each other
 ```
@@ -284,14 +283,6 @@ Each game must maintain a consistent internal state, for example:
 - Scalafmt 3.7.15
 - Scalafix
 - Codecov
-
-### Optional requirements
-- Monitoring of each customer's internal state (e.g., current bankroll, mood level) via GUI
-- A DSL to define custom (including non-Gaussian) curves related to:
-  - Customer flow over time
-  - Initial bankroll distribution of players
-  - Other dynamic simulation parameters
-- A GUI for monitoring real-time and aggregated data regarding the casino's performance
 
 ## Architectural Design
 ### Overall architecture
