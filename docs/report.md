@@ -1892,7 +1892,17 @@ scalatest which we used in order to follow the most idiomatic approach to tests 
 The coverage level is provided through the link to **CodeCov** in the docs page
 
 ## Retrospective
-### Development progress, backlog, iterations
+### Git hooks
+Initially git hooks have been chosen to be the tool for running tests and checking the format of code. In the end this approach has shown some flaws:
+- The commiting process has been extremely slowed down due to the execution all pipelines locally
+- It was possible to get around all checks by fixing the code but not staging those changes, in this case the hook would not fail
+- Hooks configuration's changes would be updated automatically.
+
+### Customer architecture
+The customer architecture has emerged later in the development. The lateness can be explained by the implementation requirements which were asked for the customer data and behaviour. This slowed down and worsened the games' design.
+
+### Scala.js
+Even though scala.js has allowed us to adopt a continuos deployment approach, the actual day-to-day work on devops has been very time-consuming and frustrating due to the incompatibility between scala.js and Scovarage.
 
 ### Final comments
 #### Galeri Marco
