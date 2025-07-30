@@ -1906,3 +1906,13 @@ We tried TDD, which was great for creating reliable, well-documented code and ma
 However, in the early, rapidly changing stages, TDD sometimes slowed things down and tests often had to be rewritten as design and architecture evolved, which 
 made me update tests or even add them after (not respecting TDD methodology). 
 Some of Scala’s more advanced features were also tricky to test upfront (like ScalaJs which was excluded from the testing due being a frontend framework).
+#### Luca Patrignani
+From my point of view there is incompatibility between these three points:
+- the limited amount of time to be spent on the project
+- the necessity of producing a small but still significant product, with some non-trivial features
+- the overall process complexity, which required
+  - reports for each meeting
+  - the use of tool such YouTrack for tasks
+  - TDD
+  - continuous integration and deployment
+and was time-consuming.
