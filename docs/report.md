@@ -1871,16 +1871,13 @@ So given an initial `SimulationState`, the `boidManager` can be applied to it to
 val state : SimulationState = ???
 val updatedState = state | boidManager
 ```
-
-### Important implementation aspects
-
 ## Testing
 ### Technologies used
 As for testing, an effort was made to adopt the TDD approach as much as possible during source code development, in addiction to 
 scalatest which we used in order to follow the most idiomatic approach to tests development.
 
 ### Coverage level
-The coverage level is provided through the link to **CodeCov** in the docs page
+The coverage level and insights are provided through the link to [CodeCov](https://app.codecov.io/gh/NickGhignatti/casimo).
 
 ## Retrospective
 ### Git hooks
